@@ -1,0 +1,35 @@
+name: FLOW EOD Scan
+on:
+  schedule:
+    # 15:45 Asia/Ho_Chi_Minh = 08:45 UTC
+    - cron: '45 8 * * 1-5'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scanner
+        run: pip install -e 'apps/scanner[dev]'
+      - name: Run deterministic tests
+        run: pytest -q apps/scanner/tests
+      - name: EOD pipeline placeholder guard
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FIREANT_API_KEY: ${{ secrets.FIREANT_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY']
+          missing=[k for k in required if not os.getenv(k)]
+          if missing:
+              raise SystemExit('Missing required deployment secrets: '+', '.join(missing))
+          print('Secrets configured; live pipeline wiring is ready for provider credential validation.')
+          PY
