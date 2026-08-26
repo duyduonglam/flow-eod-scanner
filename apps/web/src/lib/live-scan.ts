@@ -3,6 +3,9 @@ import { getSupabase } from '@/lib/supabase';
 import type { Decision, ScanRow } from '@/lib/types';
 
 type RawScanRow = Record<string, unknown>;
+type JoinedScanRow = RawScanRow & {
+  symbols?: { symbol?: unknown; exchange?: unknown } | { symbol?: unknown; exchange?: unknown }[];
+};
 
 const decisions: Decision[] = ['BUY', 'TEST BUY', 'BUY RETEST', 'WATCH', 'DO NOT CHASE', 'HOLD', 'TRIM', 'EXIT'];
 
@@ -20,9 +23,14 @@ function toText(value: unknown, fallback = ''): string {
   return typeof value === 'string' && value.length > 0 ? value : fallback;
 }
 
-function normalizeRow(row: RawScanRow): ScanRow {
+function embeddedSymbol(row: JoinedScanRow): string {
+  const relation = Array.isArray(row.symbols) ? row.symbols[0] : row.symbols;
+  return toText(row.symbol ?? relation?.symbol);
+}
+
+function normalizeRow(row: JoinedScanRow): ScanRow {
   return {
-    symbol: toText(row.symbol),
+    symbol: embeddedSymbol(row),
     market_date: toText(row.market_date),
     close: toNumber(row.close),
     flow_score: toNumber(row.flow_score ?? row.total_score),
@@ -45,15 +53,51 @@ function normalizeRow(row: RawScanRow): ScanRow {
   };
 }
 
-export async function getLatestScanRows() {
+async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
   const db = getSupabase();
+  if (!db) return null;
+
+  const { data, error } = await db
+    .from('scan_results')
+    .select('*, symbols!inner(symbol, exchange)')
+    .eq('market_date', marketDate)
+    .order('rank', { ascending: true });
+
+  if (error || !data?.length) return null;
+  return data.map((row) => normalizeRow(row as JoinedScanRow));
+}
+
+export async function getAvailableScanDates() {
+  const db = getSupabase();
+  if (!db) return [];
+
+  const { data, error } = await db
+    .from('scan_results')
+    .select('market_date')
+    .order('market_date', { ascending: false })
+    .limit(240);
+
+  if (error || !data?.length) return [];
+  return Array.from(new Set(data.map((row) => toText(row.market_date)).filter(Boolean)));
+}
+
+export async function getScanRows(marketDate?: string | null) {
+  const db = getSupabase();
+  const dates = await getAvailableScanDates();
   if (!db) {
-    return { rows: demoRows, dataStatus: 'DEMO', marketDate: null, source: 'demo' as const };
+    return { rows: demoRows, dataStatus: 'DEMO', marketDate: null, source: 'demo' as const, dates };
+  }
+
+  if (marketDate) {
+    const selectedRows = await getRowsForDate(marketDate);
+    if (selectedRows?.length) {
+      return { rows: selectedRows, dataStatus: 'LIVE', marketDate, source: 'live' as const, dates };
+    }
   }
 
   const { data, error } = await db.from('latest_scan_results').select('*').order('rank', { ascending: true });
   if (error || !data?.length) {
-    return { rows: demoRows, dataStatus: 'DEMO', marketDate: null, source: 'demo' as const };
+    return { rows: demoRows, dataStatus: 'DEMO', marketDate: null, source: 'demo' as const, dates };
   }
 
   const rows = data.map(normalizeRow);
@@ -62,5 +106,10 @@ export async function getLatestScanRows() {
     dataStatus: 'LIVE',
     marketDate: rows[0]?.market_date ?? null,
     source: 'live' as const,
+    dates,
   };
+}
+
+export async function getLatestScanRows() {
+  return getScanRows();
 }

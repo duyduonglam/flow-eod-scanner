@@ -20,12 +20,9 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
   return (
     <>
       <div className="toolbar">
-        <div className="tabs">
-          <button className="tab active">All</button>
-          <button className="tab">BUY</button>
-          <button className="tab">BUY RETEST</button>
-          <button className="tab">TEST BUY</button>
-          <button className="tab">WATCH</button>
+        <div>
+          <div className="sectionLabel">Bang ket qua</div>
+          <div className="tableSub">Sap xep theo diem tong va chat luong tin hieu</div>
         </div>
         <div className="dataStamp">{dataStamp ?? 'EOD validated - 15:45 ICT'}</div>
       </div>
@@ -38,8 +35,7 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
               <th>Tin hieu chinh</th>
               <th>Tin tuc noi bat</th>
               <th>Entry Zone</th>
-              <th>Stop</th>
-              <th>Stop Distance</th>
+              <th>Stop &amp; Distance %</th>
               <th>1R</th>
               <th>2R</th>
               <th>3R</th>
@@ -63,9 +59,9 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
                 <td className="signal">{row.main_signal}</td>
                 <td className="signal muted">{row.headline_news || '-'}</td>
                 <td>{row.entry_low == null ? 'N/A' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
-                <td className="num">{fmt(row.stop_price)}</td>
-                <td className="num">
-                  {row.stop_distance_pct == null ? 'N/A' : `${fmt(row.stop_distance_pct, 1)}%`}
+                <td className="num stopCell">
+                  <strong>{fmt(row.stop_price)}</strong>
+                  <span>{row.stop_distance_pct == null ? 'N/A' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
                 </td>
                 <td className="num">{fmt(row.one_r)}</td>
                 <td className="num">{fmt(row.two_r)}</td>
@@ -73,7 +69,6 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
                 <td className="decision">
                   <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>
                 </td>
-                <td className="signal">{row.invalidation}</td>
               </tr>
             ))}
           </tbody>

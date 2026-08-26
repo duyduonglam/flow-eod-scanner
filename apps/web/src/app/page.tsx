@@ -1,11 +1,36 @@
 import { MarketHeader } from '@/components/market-header';
 import { ScanTable } from '@/components/scan-table';
-import { getLatestScanRows } from '@/lib/live-scan';
+import { getScanRows } from '@/lib/live-scan';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
-  const { rows, dataStatus, marketDate, source } = await getLatestScanRows();
+type HomeProps = {
+  searchParams: Promise<{ date?: string }>;
+};
+
+function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: string | null }) {
+  if (!dates.length) return null;
+
+  return (
+    <section className="historyRail" aria-label="Lich su scan">
+      <div>
+        <div className="sectionLabel">Lich su scan</div>
+        <div className="historyHint">Chon ngay de xem lai ket qua da luu</div>
+      </div>
+      <div className="dateChips">
+        {dates.map((date) => (
+          <a className={`dateChip ${date === selectedDate ? 'active' : ''}`} href={`/?date=${date}`} key={date}>
+            {date}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const { date } = await searchParams;
+  const { rows, dataStatus, marketDate, source, dates } = await getScanRows(date);
   const stamp = marketDate ? `Du lieu ${marketDate} - ${dataStatus}` : `${dataStatus} - du lieu mau`;
 
   return (
@@ -18,9 +43,12 @@ export default async function Home() {
             <div className="subtitle">Vietnam EOD signal dashboard</div>
           </div>
         </div>
-        <div className="subtitle">{source === 'live' ? 'LIVE Supabase' : 'DEMO fallback'}</div>
+        <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
+          {source === 'live' ? 'LIVE Supabase' : 'DEMO fallback'}
+        </div>
       </header>
       <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} />
+      <HistoryNav dates={dates} selectedDate={marketDate} />
       <ScanTable rows={rows} dataStamp={stamp} />
       <section className="notes">
         <h2>Nhan dinh quan trong</h2>
