@@ -14,14 +14,15 @@ class FakeProvider:
         return rows
 
 class FlakyProvider(FakeProvider):
-    def __init__(self):
+    def __init__(self, exc: BaseException | None = None):
         super().__init__()
         self.calls = 0
+        self.exc = exc or RuntimeError("Rate Limit Exceeded")
 
     def fetch_daily_prices(self, symbol,start_date,end_date):
         self.calls += 1
         if self.calls == 1:
-            raise RuntimeError("Rate Limit Exceeded")
+            raise self.exc
         return super().fetch_daily_prices(symbol,start_date,end_date)
 
 def test_pipeline_scans_and_returns_ranked_rows():
@@ -48,6 +49,15 @@ def test_pipeline_skips_symbol_when_providers_conflict():
 
 def test_pipeline_retries_transient_rate_limit():
     provider = FlakyProvider()
+
+    out = run_eod_pipeline(date(2026,8,25),['AAA'],[provider], retry_sleep_seconds=0)
+
+    assert out['status']=='OK'
+    assert out['scanned']==1
+    assert provider.calls==3
+
+def test_pipeline_retries_provider_system_exit_rate_limit():
+    provider = FlakyProvider(SystemExit(1))
 
     out = run_eod_pipeline(date(2026,8,25),['AAA'],[provider], retry_sleep_seconds=0)
 

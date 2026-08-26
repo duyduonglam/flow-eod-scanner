@@ -40,6 +40,12 @@ def _fetch_first_history(
             try:
                 rows = provider.fetch_daily_prices(symbol, start, end)
                 break
+            except SystemExit as exc:
+                if attempt >= max_rate_limit_retries:
+                    raise ProviderRateLimitError(f'{type(provider).__name__} stopped while fetching {symbol}') from exc
+                if retry_sleep_seconds > 0:
+                    time.sleep(retry_sleep_seconds)
+                continue
             except Exception as exc:
                 if _is_rate_limit_error(exc):
                     if attempt >= max_rate_limit_retries:
