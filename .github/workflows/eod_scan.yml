@@ -32,8 +32,12 @@ jobs:
           REQUESTED_MARKET_DATE: ${{ github.event.inputs.market_date }}
           TZ: Asia/Ho_Chi_Minh
         run: |
+          SCAN_ARGS=(--max-lookback-days 1 --retry-sleep-seconds 0 --max-rate-limit-retries 0)
           if [ -n "$REQUESTED_MARKET_DATE" ]; then
-            python -m flow_scanner.cli --date "$REQUESTED_MARKET_DATE" --max-lookback-days 1 --retry-sleep-seconds 0 --max-rate-limit-retries 0
-          else
-            python -m flow_scanner.cli --max-lookback-days 1 --retry-sleep-seconds 0 --max-rate-limit-retries 0
+            SCAN_ARGS=(--date "$REQUESTED_MARKET_DATE" "${SCAN_ARGS[@]}")
+          fi
+
+          if ! timeout 4m python -m flow_scanner.cli "${SCAN_ARGS[@]}"; then
+            echo "::warning::Live provider scan did not complete. Keeping the latest published Supabase scan on the dashboard."
+            echo "Live provider scan did not complete; dashboard keeps the latest published Supabase scan." >> "$GITHUB_STEP_SUMMARY"
           fi
