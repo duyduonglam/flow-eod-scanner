@@ -34,8 +34,9 @@ class VnStockProvider:
     network packages. Current vnstock APIs may vary by release, so this adapter
     normalizes either common dataframe schema: time/tradingDate + OHLCV.
     """
-    def __init__(self, source: str = 'VCI'):
+    def __init__(self, source: str = 'VCI', history_bars: int = 300):
         self.source = source
+        self.history_bars = history_bars
 
     def list_symbols(self) -> list[dict[str, str]]:
         try:
@@ -51,11 +52,20 @@ class VnStockProvider:
 
     def fetch_daily_prices(self, symbol: str, start_date: date, end_date: date) -> list[OHLCVRecord]:
         try:
-            from vnstock import Vnstock  # type: ignore
+            from vnstock.api.quote import Quote  # type: ignore
         except ImportError as exc:
-            raise RuntimeError('vnstock is not installed') from exc
-        stock = Vnstock().stock(symbol=symbol, source=self.source)
-        df = stock.quote.history(start=start_date.isoformat(), end=end_date.isoformat(), interval='1D')
+            try:
+                from vnstock import Quote  # type: ignore
+            except ImportError:
+                raise RuntimeError('vnstock is not installed') from exc
+        try:
+            quote = Quote(symbol=symbol, source=self.source)
+        except TypeError:
+            quote = Quote(symbol=symbol)
+        try:
+            df = quote.history(end=end_date.isoformat(), length=f'{self.history_bars}b', interval='1D')
+        except TypeError:
+            df = quote.history(start=start_date.isoformat(), end=end_date.isoformat(), interval='1D')
         rows: list[OHLCVRecord] = []
         for _, row in df.iterrows():
             raw_date = row.get('time', row.get('tradingDate'))
