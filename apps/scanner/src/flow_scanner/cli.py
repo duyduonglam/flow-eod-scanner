@@ -10,7 +10,7 @@ from flow_scanner.data.repository import SupabaseRepository
 from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
 
-MIN_SYMBOLS_FOR_MARKET_SCAN = 50
+MIN_SYMBOLS_FOR_MARKET_SCAN = 0
 
 
 def _env(name: str) -> str:
@@ -65,7 +65,7 @@ def main() -> None:
     parser.add_argument("--date", default=date.today().isoformat(), help="Requested market date in YYYY-MM-DD format.")
     parser.add_argument("--limit", type=int, default=10, help="Maximum ranked rows to publish.")
     parser.add_argument("--max-lookback-days", type=int, default=7, help="Fallback window for holidays or delayed data.")
-    parser.add_argument("--min-symbols", type=int, default=MIN_SYMBOLS_FOR_MARKET_SCAN, help="Refresh the market universe when Supabase has fewer active symbols.")
+    parser.add_argument("--min-symbols", type=int, default=MIN_SYMBOLS_FOR_MARKET_SCAN, help="Refresh the market universe when Supabase has fewer active symbols. Default keeps the configured Supabase universe to avoid free-provider rate limits.")
     args = parser.parse_args()
 
     repo = SupabaseRepository(_env("SUPABASE_URL"), _env("SUPABASE_SERVICE_ROLE_KEY"))
