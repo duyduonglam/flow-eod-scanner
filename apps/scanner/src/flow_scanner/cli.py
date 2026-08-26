@@ -44,12 +44,25 @@ def _refresh_symbol_universe(repo: SupabaseRepository, providers: list[object]) 
     return 0
 
 
-def _run_with_fallback(requested_date: date, symbols: list[str], providers: list[object], max_lookback_days: int) -> dict:
+def _run_with_fallback(
+    requested_date: date,
+    symbols: list[str],
+    providers: list[object],
+    max_lookback_days: int,
+    retry_sleep_seconds: float,
+    max_rate_limit_retries: int,
+) -> dict:
     last_error: Exception | None = None
     for offset in range(max_lookback_days + 1):
         market_date = requested_date - timedelta(days=offset)
         try:
-            result = run_eod_pipeline(market_date, symbols, providers)
+            result = run_eod_pipeline(
+                market_date,
+                symbols,
+                providers,
+                retry_sleep_seconds=retry_sleep_seconds,
+                max_rate_limit_retries=max_rate_limit_retries,
+            )
         except PipelineError as exc:
             last_error = exc
             continue
@@ -64,7 +77,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run FLOW EOD scanner and upsert Supabase results.")
     parser.add_argument("--date", default=date.today().isoformat(), help="Requested market date in YYYY-MM-DD format.")
     parser.add_argument("--limit", type=int, default=10, help="Maximum ranked rows to publish.")
-    parser.add_argument("--max-lookback-days", type=int, default=7, help="Fallback window for holidays or delayed data.")
+    parser.add_argument("--max-lookback-days", type=int, default=1, help="Fallback window for holidays or delayed data.")
+    parser.add_argument("--retry-sleep-seconds", type=float, default=65.0, help="Seconds to wait before retrying a provider rate limit.")
+    parser.add_argument("--max-rate-limit-retries", type=int, default=2, help="Provider rate-limit retries per symbol/date.")
     parser.add_argument("--min-symbols", type=int, default=MIN_SYMBOLS_FOR_MARKET_SCAN, help="Refresh the market universe when Supabase has fewer active symbols. Default keeps the configured Supabase universe to avoid free-provider rate limits.")
     args = parser.parse_args()
 
@@ -78,7 +93,14 @@ def main() -> None:
             symbols, symbol_ids = _load_symbols(repo)
     if not symbols:
         raise SystemExit("No active stock symbols found after attempting universe refresh.")
-    result = _run_with_fallback(date.fromisoformat(args.date), symbols, providers, args.max_lookback_days)
+    result = _run_with_fallback(
+        date.fromisoformat(args.date),
+        symbols,
+        providers,
+        args.max_lookback_days,
+        args.retry_sleep_seconds,
+        args.max_rate_limit_retries,
+    )
     market_date = str(result["market_date"])
     rows = list(result["rows"])
 

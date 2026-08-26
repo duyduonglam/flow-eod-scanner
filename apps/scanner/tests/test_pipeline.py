@@ -1,6 +1,7 @@
 from datetime import date, timedelta
+import pytest
 from flow_scanner.domain.models import OHLCVRecord
-from flow_scanner.pipeline import run_eod_pipeline
+from flow_scanner.pipeline import ProviderRateLimitError, run_eod_pipeline
 
 class FakeProvider:
     def __init__(self, growth=0.001, overrides=None):
@@ -73,6 +74,20 @@ def test_pipeline_retries_provider_system_exit_rate_limit():
     assert out['status']=='OK'
     assert out['scanned']==1
     assert provider.calls==3
+
+def test_pipeline_can_disable_rate_limit_retries():
+    provider = FlakyProvider()
+
+    with pytest.raises(ProviderRateLimitError):
+        run_eod_pipeline(
+            date(2026,8,25),
+            ['AAA'],
+            [provider],
+            retry_sleep_seconds=0,
+            max_rate_limit_retries=0,
+        )
+
+    assert provider.calls==1
 
 def test_pipeline_uses_bounded_history_window_to_limit_provider_requests():
     provider = CapturingProvider()

@@ -33,7 +33,7 @@ jobs:
           TZ: Asia/Ho_Chi_Minh
         run: |
           if [ -n "$REQUESTED_MARKET_DATE" ]; then
-            python -m flow_scanner.cli --date "$REQUESTED_MARKET_DATE"
+            python -m flow_scanner.cli --date "$REQUESTED_MARKET_DATE" --max-lookback-days 1 --retry-sleep-seconds 0 --max-rate-limit-retries 0
           else
-            python -m flow_scanner.cli
+            python -m flow_scanner.cli --max-lookback-days 1 --retry-sleep-seconds 0 --max-rate-limit-retries 0
           fi

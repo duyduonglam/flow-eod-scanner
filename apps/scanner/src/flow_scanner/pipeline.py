@@ -69,9 +69,17 @@ def run_eod_pipeline(
     index_symbol: str = 'VNINDEX',
     retry_sleep_seconds: float = 65.0,
     history_lookback_days: int = HISTORY_LOOKBACK_DAYS,
+    max_rate_limit_retries: int = 2,
 ) -> dict:
     start = market_date - timedelta(days=history_lookback_days)
-    index_histories = _fetch_first_history(providers, index_symbol, start, market_date, retry_sleep_seconds=retry_sleep_seconds)
+    index_histories = _fetch_first_history(
+        providers,
+        index_symbol,
+        start,
+        market_date,
+        retry_sleep_seconds=retry_sleep_seconds,
+        max_rate_limit_retries=max_rate_limit_retries,
+    )
     if not index_histories:
         raise PipelineError('No index history with at least 253 validated rows')
     index_history = index_histories[0][1]
@@ -81,7 +89,14 @@ def run_eod_pipeline(
     histories: dict[str, list[OHLCVRecord]] = {}
     conflicts: list[dict] = []
     for symbol in symbols:
-        candidates = _fetch_first_history(providers, symbol, start, market_date, retry_sleep_seconds=retry_sleep_seconds)
+        candidates = _fetch_first_history(
+            providers,
+            symbol,
+            start,
+            market_date,
+            retry_sleep_seconds=retry_sleep_seconds,
+            max_rate_limit_retries=max_rate_limit_retries,
+        )
         if not candidates:
             continue
         primary = candidates[0][1]
