@@ -13,6 +13,17 @@ class FakeProvider:
             rows.append(OHLCVRecord(symbol,d+timedelta(days=i),close,close*1.01,close*0.99,close,close,100000+i,'fake'))
         return rows
 
+class FlakyProvider(FakeProvider):
+    def __init__(self):
+        super().__init__()
+        self.calls = 0
+
+    def fetch_daily_prices(self, symbol,start_date,end_date):
+        self.calls += 1
+        if self.calls == 1:
+            raise RuntimeError("Rate Limit Exceeded")
+        return super().fetch_daily_prices(symbol,start_date,end_date)
+
 def test_pipeline_scans_and_returns_ranked_rows():
     out=run_eod_pipeline(date(2026,8,25),['AAA','BBB'],[FakeProvider()])
     assert out['status']=='OK'
@@ -34,3 +45,12 @@ def test_pipeline_skips_symbol_when_providers_conflict():
     out=run_eod_pipeline(date(2026,8,25),['AAA'],[a,b])
     assert out['scanned']==0
     assert out['conflicts'][0]['symbol']=='AAA'
+
+def test_pipeline_retries_transient_rate_limit():
+    provider = FlakyProvider()
+
+    out = run_eod_pipeline(date(2026,8,25),['AAA'],[provider], retry_sleep_seconds=0)
+
+    assert out['status']=='OK'
+    assert out['scanned']==1
+    assert provider.calls==3
