@@ -10,6 +10,7 @@ from flow_scanner.main import scan_universe
 class PipelineError(RuntimeError): pass
 class ProviderRateLimitError(RuntimeError): pass
 
+HISTORY_LOOKBACK_DAYS = 450
 RATE_LIMIT_MARKERS = (
     'rate limit',
     'rate limit exceeded',
@@ -67,8 +68,9 @@ def run_eod_pipeline(
     providers: list[object],
     index_symbol: str = 'VNINDEX',
     retry_sleep_seconds: float = 65.0,
+    history_lookback_days: int = HISTORY_LOOKBACK_DAYS,
 ) -> dict:
-    start = market_date - timedelta(days=800)
+    start = market_date - timedelta(days=history_lookback_days)
     index_histories = _fetch_first_history(providers, index_symbol, start, market_date, retry_sleep_seconds=retry_sleep_seconds)
     if not index_histories:
         raise PipelineError('No index history with at least 253 validated rows')

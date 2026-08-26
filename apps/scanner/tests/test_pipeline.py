@@ -25,6 +25,15 @@ class FlakyProvider(FakeProvider):
             raise self.exc
         return super().fetch_daily_prices(symbol,start_date,end_date)
 
+class CapturingProvider(FakeProvider):
+    def __init__(self):
+        super().__init__()
+        self.start_dates = []
+
+    def fetch_daily_prices(self, symbol,start_date,end_date):
+        self.start_dates.append(start_date)
+        return super().fetch_daily_prices(symbol,start_date,end_date)
+
 def test_pipeline_scans_and_returns_ranked_rows():
     out=run_eod_pipeline(date(2026,8,25),['AAA','BBB'],[FakeProvider()])
     assert out['status']=='OK'
@@ -64,3 +73,10 @@ def test_pipeline_retries_provider_system_exit_rate_limit():
     assert out['status']=='OK'
     assert out['scanned']==1
     assert provider.calls==3
+
+def test_pipeline_uses_bounded_history_window_to_limit_provider_requests():
+    provider = CapturingProvider()
+
+    run_eod_pipeline(date(2026,8,25),['AAA'],[provider])
+
+    assert provider.start_dates == [date(2025,6,1), date(2025,6,1)]
