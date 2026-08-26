@@ -1,5 +1,35 @@
 import { MarketHeader } from '@/components/market-header';
 import { ScanTable } from '@/components/scan-table';
-import { demoRows } from '@/lib/demo-data';
+import { getLatestScanRows } from '@/lib/live-scan';
 
-export default function Home(){return <main className="shell"><header className="topbar"><div className="brand"><div className="logo">F</div><div><div className="title">FLOW Scanner</div><div className="subtitle">Vietnam EOD signal dashboard</div></div></div><div className="subtitle">DEMO UI · chưa kết nối EOD</div></header><MarketHeader/><ScanTable rows={demoRows}/><section className="notes"><h2>Nhận định quan trọng</h2><ul><li>Ưu tiên mã có FLOW ≥85, RS cao và Swing UP; không mua chỉ vì tăng mạnh trong ngày.</li><li>DO NOT CHASE khi giá vượt quá vùng mua hợp lý; chờ retest thay vì tăng T+2 risk.</li><li>Dữ liệu bị xung đột giữa nguồn chính và fallback sẽ không được phép sinh Entry/Stop/R.</li></ul></section></main>}
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const { rows, dataStatus, marketDate, source } = await getLatestScanRows();
+  const stamp = marketDate ? `Du lieu ${marketDate} - ${dataStatus}` : `${dataStatus} - du lieu mau`;
+
+  return (
+    <main className="shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="logo">F</div>
+          <div>
+            <div className="title">FLOW Scanner</div>
+            <div className="subtitle">Vietnam EOD signal dashboard</div>
+          </div>
+        </div>
+        <div className="subtitle">{source === 'live' ? 'LIVE Supabase' : 'DEMO fallback'}</div>
+      </header>
+      <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} />
+      <ScanTable rows={rows} dataStamp={stamp} />
+      <section className="notes">
+        <h2>Nhan dinh quan trong</h2>
+        <ul>
+          <li>Uu tien ma co diem tong cao, RS tot va dong tien xac nhan; khong mua chi vi tang manh trong ngay.</li>
+          <li>DO NOT CHASE khi gia vuot qua vung mua hop ly; cho retest thay vi tang rui ro T+2.</li>
+          <li>Entry, Stop va 1R/2R/3R chi la tham chieu ky thuat, khong phai khuyen nghi mua ban ca nhan.</li>
+        </ul>
+      </section>
+    </main>
+  );
+}
