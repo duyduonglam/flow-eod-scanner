@@ -29,6 +29,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FIREANT_API_KEY: ${{ secrets.FIREANT_API_KEY }}
           OPENSTOCK_API_KEY: ${{ secrets.OPENSTOCK_API_KEY }}
+          VNSTOCK_SOURCE: TCBS
           REQUESTED_MARKET_DATE: ${{ github.event.inputs.market_date }}
           TZ: Asia/Ho_Chi_Minh
         run: |
