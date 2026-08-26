@@ -13,6 +13,8 @@ dependencies = ["requests>=2.31"]
 data = ["vnstock>=3.3"]
 dev = ["pytest>=8.0"]
 
+[project.scripts]
+flow-eod-scan = "flow_scanner.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

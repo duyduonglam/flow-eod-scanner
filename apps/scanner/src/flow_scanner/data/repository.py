@@ -26,12 +26,41 @@ class SupabaseRepository:
         response.raise_for_status()
         return response.json()
 
-    def upsert_scan_rows(self, rows: list[dict]) -> None:
+    def upsert_symbols(self, rows: list[dict]) -> None:
+        if not rows:
+            return
+        payload = [
+            {
+                'symbol': str(row['symbol']).upper(),
+                'exchange': row['exchange'],
+                'asset_type': 'stock',
+                'is_active': True,
+            }
+            for row in rows
+        ]
+        response = self.session.post(
+            f'{self.url}/rest/v1/symbols',
+            params={'on_conflict': 'symbol'},
+            headers=self._headers({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+
+    def _upsert(self, table: str, rows: list[dict], on_conflict: str) -> None:
         if not rows:
             return
         response = self.session.post(
-            f'{self.url}/rest/v1/scan_results',
-            headers=self._headers({'Prefer':'resolution=merge-duplicates'}),
-            json=rows, timeout=30,
+            f'{self.url}/rest/v1/{table}',
+            params={'on_conflict': on_conflict},
+            headers=self._headers({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+            json=rows,
+            timeout=30,
         )
         response.raise_for_status()
+
+    def upsert_scan_rows(self, rows: list[dict]) -> None:
+        self._upsert('scan_results', rows, 'market_date,symbol_id')
+
+    def upsert_stock_signal_rows(self, rows: list[dict]) -> None:
+        self._upsert('stock_signals', rows, 'market_date,symbol_id')

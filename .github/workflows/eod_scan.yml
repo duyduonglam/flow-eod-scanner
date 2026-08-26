@@ -1,9 +1,13 @@
 name: FLOW EOD Scan
 on:
   schedule:
-    # 15:45 Asia/Ho_Chi_Minh = 08:45 UTC
-    - cron: '45 8 * * 1-5'
+    # 16:00 Asia/Ho_Chi_Minh = 09:00 UTC
+    - cron: '0 9 * * *'
   workflow_dispatch:
+    inputs:
+      market_date:
+        description: Optional market date override in YYYY-MM-DD
+        required: false
 permissions:
   contents: read
 jobs:
@@ -16,20 +20,20 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install scanner
-        run: pip install -e 'apps/scanner[dev]'
+        run: pip install -e 'apps/scanner[dev,data]'
       - name: Run deterministic tests
         run: pytest -q apps/scanner/tests
-      - name: EOD pipeline placeholder guard
+      - name: Run EOD scan and publish
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FIREANT_API_KEY: ${{ secrets.FIREANT_API_KEY }}
+          OPENSTOCK_API_KEY: ${{ secrets.OPENSTOCK_API_KEY }}
+          REQUESTED_MARKET_DATE: ${{ github.event.inputs.market_date }}
+          TZ: Asia/Ho_Chi_Minh
         run: |
-          python - <<'PY'
-          import os
-          required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY']
-          missing=[k for k in required if not os.getenv(k)]
-          if missing:
-              raise SystemExit('Missing required deployment secrets: '+', '.join(missing))
-          print('Secrets configured; live pipeline wiring is ready for provider credential validation.')
-          PY
+          if [ -n "$REQUESTED_MARKET_DATE" ]; then
+            python -m flow_scanner.cli --date "$REQUESTED_MARKET_DATE"
+          else
+            python -m flow_scanner.cli
+          fi
