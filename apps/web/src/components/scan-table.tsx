@@ -29,8 +29,8 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
     <section className="scanSection">
       <div className="toolbar">
         <div>
-          <div className="sectionLabel">Bang ket qua</div>
-          <div className="tableSub">Sap xep theo diem tong, tin hieu va vung quan tri rui ro</div>
+          <div className="sectionLabel">Bảng kết quả</div>
+          <div className="tableSub">Sắp xếp theo điểm tổng, tín hiệu và vùng quản trị rủi ro</div>
         </div>
         <div className="dataStamp">{dataStamp ?? 'EOD validated - 15:45 ICT'}</div>
       </div>
@@ -38,10 +38,10 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
         <table className="scanTable">
           <thead>
             <tr>
-              <th>Ma</th>
-              <th>Diem tong</th>
-              <th>Tin hieu chinh</th>
-              <th>Tin tuc noi bat</th>
+              <th>Mã</th>
+              <th>Điểm tổng</th>
+              <th>Tín hiệu chính</th>
+              <th>Tin tức nổi bật</th>
               <th>Entry Zone</th>
               <th>Stop &amp; Distance %</th>
               <th>1R</th>

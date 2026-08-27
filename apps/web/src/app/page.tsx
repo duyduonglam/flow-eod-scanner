@@ -12,10 +12,10 @@ function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: st
   if (!dates.length) return null;
 
   return (
-    <section className="historyRail" aria-label="Lich su scan">
+    <section className="historyRail" aria-label="Lịch sử scan">
       <div>
-        <div className="sectionLabel">Lich su scan</div>
-        <div className="historyHint">Chon ngay da luu de xem lai watchlist</div>
+        <div className="sectionLabel">Lịch sử scan</div>
+        <div className="historyHint">Chọn ngày đã lưu để xem lại watchlist</div>
       </div>
       <div className="dateChips">
         {dates.map((date) => (
@@ -49,18 +49,18 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
             {source === 'live' ? 'Supabase LIVE' : 'Demo fallback'}
           </div>
-          <div className="headerDate">{marketDate ?? 'No market date'}</div>
+          <div className="headerDate">{marketDate ?? 'Chưa có ngày dữ liệu'}</div>
         </div>
       </header>
       <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} />
       <HistoryNav dates={dates} selectedDate={marketDate} />
       <ScanTable rows={rows} dataStamp={stamp} />
       <section className="notes">
-        <h2>Ghi chu EOD</h2>
+        <h2>Ghi chú EOD</h2>
         <ul>
-          <li>Uu tien ma co diem tong cao, RS tot va dong tien xac nhan.</li>
-          <li>Khong mua duoi khi gia da vuot xa Entry Zone hoac Stop Distance qua rong.</li>
-          <li>Day la watchlist dinh luong, khong phai tu van dau tu ca nhan.</li>
+          <li>Ưu tiên mã có điểm tổng cao, RS tốt và dòng tiền xác nhận.</li>
+          <li>Không mua đuổi khi giá đã vượt xa Entry Zone hoặc Stop Distance quá rộng.</li>
+          <li>Đây là watchlist định lượng, không phải tư vấn đầu tư cá nhân.</li>
         </ul>
       </section>
     </main>

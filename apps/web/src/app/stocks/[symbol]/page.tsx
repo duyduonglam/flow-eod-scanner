@@ -67,12 +67,12 @@ export default async function StockPage({ params, searchParams }: StockPageProps
       <header className="topbar">
         <div>
           <Link className="backLink" href={backHref}>
-            Quay lai scanner
+            Quay lại scanner
           </Link>
           <div className="detailTitle">
             {row.symbol} / {row.decision}
           </div>
-          <div className="subtitle">Ngay du lieu {row.market_date}</div>
+          <div className="subtitle">Ngày dữ liệu {row.market_date}</div>
         </div>
         <span className={`status ${decisionClass(row.decision)}`}>
           {row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`}
@@ -81,7 +81,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
 
       <div className="detailGrid">
         <section className="panel">
-          <h3>Tin hieu hien tai</h3>
+          <h3>Tín hiệu hiện tại</h3>
           <div className="kpis">
             <Metric label="Close" value={fmt(row.close)} />
             <Metric label="Score" value={row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`} />
@@ -90,17 +90,17 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           </div>
           <SignalChecks row={row} />
           <div className="detailBlock">
-            <span>Tin hieu chinh</span>
+            <span>Tín hiệu chính</span>
             <p>{row.main_signal || '-'}</p>
           </div>
           <div className="detailBlock">
-            <span>Tin tuc noi bat</span>
+            <span>Tin tức nổi bật</span>
             <p>{row.headline_news || '-'}</p>
           </div>
         </section>
 
         <section className="panel">
-          <h3>Ke hoach giao dich</h3>
+          <h3>Kế hoạch giao dịch</h3>
           <div className="kpis tradeKpis">
             <Metric label="Entry Zone" value={entry} />
             <Metric label="Stop" value={fmt(row.stop_price)} />
@@ -114,7 +114,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           </div>
           <div className="detailBlock">
             <span>Invalidation</span>
-            <p>{row.invalidation || 'Gia dong cua duoi Stop hoac Swing chuyen DOWN.'}</p>
+            <p>{row.invalidation || 'Giá đóng cửa dưới Stop hoặc Swing chuyển DOWN.'}</p>
           </div>
         </section>
       </div>
