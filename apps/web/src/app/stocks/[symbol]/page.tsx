@@ -33,11 +33,13 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function SignalChecks({ row }: { row: ScanRow }) {
   const checks = [
-    ['RS Rating', row.rs_rating == null ? '-' : String(row.rs_rating)],
-    ['Banker', row.banker == null ? '-' : `${fmt(row.banker, 1)}%`],
-    ['Retailer', row.retailer == null ? '-' : `${fmt(row.retailer, 1)}%`],
-    ['Swing', row.swing_direction ?? '-'],
-  ];
+    row.rs_rating == null ? null : ['RS Rating', String(row.rs_rating)],
+    row.banker == null ? null : ['Banker', `${fmt(row.banker, 1)}%`],
+    row.retailer == null ? null : ['Retailer', `${fmt(row.retailer, 1)}%`],
+    row.swing_direction == null ? null : ['Swing', row.swing_direction],
+  ].filter((check): check is [string, string] => check != null);
+
+  if (!checks.length) return null;
 
   return (
     <div className="checklist">
@@ -61,6 +63,12 @@ export default async function StockPage({ params, searchParams }: StockPageProps
   const backHref = row.market_date ? `/?date=${row.market_date}` : '/';
   const entry =
     row.entry_low == null || row.entry_high == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`;
+  const coreMetrics = [
+    row.close == null ? null : ['Close', fmt(row.close)],
+    ['Score', row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`],
+    ['Label', row.flow_label || '-'],
+    ['Decision', row.decision],
+  ].filter((metric): metric is [string, string] => metric != null);
 
   return (
     <main className="shell">
@@ -83,10 +91,9 @@ export default async function StockPage({ params, searchParams }: StockPageProps
         <section className="panel">
           <h3>Tín hiệu hiện tại</h3>
           <div className="kpis">
-            <Metric label="Close" value={fmt(row.close)} />
-            <Metric label="Score" value={row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`} />
-            <Metric label="Label" value={row.flow_label || '-'} />
-            <Metric label="Decision" value={row.decision} />
+            {coreMetrics.map(([label, value]) => (
+              <Metric label={label} value={value} key={label} />
+            ))}
           </div>
           <SignalChecks row={row} />
           <div className="detailBlock">
