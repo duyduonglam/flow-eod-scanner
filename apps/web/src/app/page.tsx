@@ -15,7 +15,7 @@ function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: st
     <section className="historyRail" aria-label="Lich su scan">
       <div>
         <div className="sectionLabel">Lich su scan</div>
-        <div className="historyHint">Chon ngay de xem lai ket qua da luu</div>
+        <div className="historyHint">Chon ngay da luu de xem lai watchlist</div>
       </div>
       <div className="dateChips">
         {dates.map((date) => (
@@ -31,31 +31,36 @@ function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: st
 export default async function Home({ searchParams }: HomeProps) {
   const { date } = await searchParams;
   const { rows, dataStatus, marketDate, source, dates } = await getScanRows(date);
-  const stamp = marketDate ? `Du lieu ${marketDate} - ${dataStatus}` : `${dataStatus} - du lieu mau`;
+  const stamp = marketDate ? `Du lieu ${marketDate} / ${dataStatus}` : `${dataStatus} / du lieu mau`;
 
   return (
     <main className="shell">
       <header className="topbar">
         <div className="brand">
-          <div className="logo">F</div>
+          <div className="logo">
+            <span>F</span>
+          </div>
           <div>
-            <div className="title">FLOW Scanner</div>
-            <div className="subtitle">Vietnam EOD signal dashboard</div>
+            <div className="title">FLOW EOD Scanner</div>
+            <div className="subtitle">RS + MCDX + FLOW dashboard</div>
           </div>
         </div>
-        <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
-          {source === 'live' ? 'LIVE Supabase' : 'DEMO fallback'}
+        <div className="headerMeta">
+          <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
+            {source === 'live' ? 'Supabase LIVE' : 'Demo fallback'}
+          </div>
+          <div className="headerDate">{marketDate ?? 'No market date'}</div>
         </div>
       </header>
       <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} />
       <HistoryNav dates={dates} selectedDate={marketDate} />
       <ScanTable rows={rows} dataStamp={stamp} />
       <section className="notes">
-        <h2>Nhan dinh quan trong</h2>
+        <h2>Ghi chu EOD</h2>
         <ul>
-          <li>Uu tien ma co diem tong cao, RS tot va dong tien xac nhan; khong mua chi vi tang manh trong ngay.</li>
-          <li>DO NOT CHASE khi gia vuot qua vung mua hop ly; cho retest thay vi tang rui ro T+2.</li>
-          <li>Entry, Stop va 1R/2R/3R chi la tham chieu ky thuat, khong phai khuyen nghi mua ban ca nhan.</li>
+          <li>Uu tien ma co diem tong cao, RS tot va dong tien xac nhan.</li>
+          <li>Khong mua duoi khi gia da vuot xa Entry Zone hoac Stop Distance qua rong.</li>
+          <li>Day la watchlist dinh luong, khong phai tu van dau tu ca nhan.</li>
         </ul>
       </section>
     </main>

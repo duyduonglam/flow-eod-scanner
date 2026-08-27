@@ -66,8 +66,8 @@ export default async function StockPage({ params, searchParams }: StockPageProps
     <main className="shell">
       <header className="topbar">
         <div>
-          <Link className="subtitle" href={backHref}>
-            Back to scanner
+          <Link className="backLink" href={backHref}>
+            Quay lai scanner
           </Link>
           <div className="detailTitle">
             {row.symbol} / {row.decision}
@@ -100,7 +100,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
         </section>
 
         <section className="panel">
-          <h3>Trade plan</h3>
+          <h3>Ke hoach giao dich</h3>
           <div className="kpis tradeKpis">
             <Metric label="Entry Zone" value={entry} />
             <Metric label="Stop" value={fmt(row.stop_price)} />

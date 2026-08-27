@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ScanRow } from '@/lib/types';
 
-const fmt = (value: number | null, digits = 2) => (value == null ? 'N/A' : value.toFixed(digits));
+const fmt = (value: number | null, digits = 2) => (value == null ? '-' : value.toFixed(digits));
 
 const decisionClass = (decision: string) =>
   decision === 'BUY'
@@ -14,15 +14,23 @@ const decisionClass = (decision: string) =>
           ? 'nochase'
           : decision === 'EXIT'
             ? 'exit'
-            : 'watch';
+          : 'watch';
+
+const scoreClass = (score: number | null) => {
+  if (score == null) return 'empty';
+  if (score >= 85) return 'strong';
+  if (score >= 70) return 'good';
+  if (score >= 55) return 'caution';
+  return 'weak';
+};
 
 export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: string }) {
   return (
-    <>
+    <section className="scanSection">
       <div className="toolbar">
         <div>
           <div className="sectionLabel">Bang ket qua</div>
-          <div className="tableSub">Sap xep theo diem tong va chat luong tin hieu</div>
+          <div className="tableSub">Sap xep theo diem tong, tin hieu va vung quan tri rui ro</div>
         </div>
         <div className="dataStamp">{dataStamp ?? 'EOD validated - 15:45 ICT'}</div>
       </div>
@@ -52,15 +60,25 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
                   {row.close != null ? <div className="muted">{fmt(row.close)}</div> : null}
                 </td>
                 <td>
-                  <span className="score">{row.flow_score == null ? 'N/A' : `${row.flow_score.toFixed(1)}%`}</span>
-                  <div className="muted">{row.flow_label}</div>
+                  <div className="scoreCell">
+                    <div>
+                      <span className={`score ${scoreClass(row.flow_score)}`}>
+                        {row.flow_score == null ? '-' : row.flow_score.toFixed(1)}
+                      </span>
+                      <span className="scoreUnit">/100</span>
+                    </div>
+                    <div className="scoreTrack" aria-hidden="true">
+                      <span style={{ width: `${Math.min(100, Math.max(0, row.flow_score ?? 0))}%` }} />
+                    </div>
+                    <div className="muted">{row.flow_label}</div>
+                  </div>
                 </td>
                 <td className="signal">{row.main_signal}</td>
                 <td className="signal muted">{row.headline_news || '-'}</td>
-                <td>{row.entry_low == null ? 'N/A' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
+                <td>{row.entry_low == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
                 <td className="num stopCell">
                   <strong>{fmt(row.stop_price)}</strong>
-                  <span>{row.stop_distance_pct == null ? 'N/A' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
+                  <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
                 </td>
                 <td className="num">{fmt(row.one_r)}</td>
                 <td className="num">{fmt(row.two_r)}</td>
@@ -73,6 +91,6 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
           </tbody>
         </table>
       </div>
-    </>
+    </section>
   );
 }
