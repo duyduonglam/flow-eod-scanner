@@ -40,17 +40,16 @@ export function ScanTable({ rows, dataStamp }: { rows: ScanRow[]; dataStamp?: st
               <th>2R</th>
               <th>3R</th>
               <th>Decision</th>
-              <th>Invalidation</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.symbol}>
                 <td>
-                  <Link className="symbol" href={`/stocks/${row.symbol}`}>
+                  <Link className="symbol" href={`/stocks/${row.symbol}?date=${row.market_date}`}>
                     {row.symbol}
                   </Link>
-                  <div className="muted">{fmt(row.close)}</div>
+                  {row.close != null ? <div className="muted">{fmt(row.close)}</div> : null}
                 </td>
                 <td>
                   <span className="score">{row.flow_score == null ? 'N/A' : `${row.flow_score.toFixed(1)}%`}</span>

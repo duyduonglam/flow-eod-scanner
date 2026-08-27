@@ -113,3 +113,9 @@ export async function getScanRows(marketDate?: string | null) {
 export async function getLatestScanRows() {
   return getScanRows();
 }
+
+export async function getScanRowBySymbol(symbol: string, marketDate?: string | null) {
+  const normalizedSymbol = symbol.toUpperCase();
+  const { rows } = await getScanRows(marketDate);
+  return rows.find((row) => row.symbol.toUpperCase() === normalizedSymbol) ?? null;
+}

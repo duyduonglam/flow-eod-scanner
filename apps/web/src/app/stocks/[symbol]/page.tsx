@@ -1,4 +1,123 @@
 import Link from 'next/link';
-import { demoRows } from '@/lib/demo-data';
+import { notFound } from 'next/navigation';
+import { getScanRowBySymbol } from '@/lib/live-scan';
+import type { Decision, ScanRow } from '@/lib/types';
 
-export default async function StockPage({params}:{params:Promise<{symbol:string}>}){const {symbol}=await params;const row=demoRows.find(x=>x.symbol===symbol.toUpperCase())||demoRows[0];const checks=[['Price > MA50',true],['Price > MA150',true],['Price > MA200',true],['MA50 > MA150',true],['MA50 > MA200',true],['MA150 > MA200',true],['MA200 rising',true],['Near 52W high',true],['>25% above 52W low',true],['RS > 90',(row.rs_rating||0)>90],['Banker > 90',(row.banker||0)>90]];return <main className="shell"><div className="topbar"><div><Link className="subtitle" href="/">← Quay lại scanner</Link><div className="title" style={{marginTop:8}}>{row.symbol} · {row.decision}</div></div><span className="status buyretest">{row.flow_score?.toFixed(1)}%</span></div><div className="detailGrid"><section className="panel"><h3>Tín hiệu hiện tại</h3><div className="kpis"><div className="kpi"><span>Price</span><strong>{row.close}</strong></div><div className="kpi"><span>RS</span><strong>{row.rs_rating??'N/A'}</strong></div><div className="kpi"><span>Banker</span><strong>{row.banker??'N/A'}%</strong></div><div className="kpi"><span>Retailer</span><strong>{row.retailer??'N/A'}%</strong></div></div><div className="checklist">{checks.map(([label,ok])=><div className="check" key={String(label)}><span>{String(label)}</span><span className={ok?'ok':'bad'}>{ok?'✓':'×'}</span></div>)}</div></section><section className="panel"><h3>Trade Plan</h3><div className="kpis"><div className="kpi"><span>Entry</span><strong>{row.entry_low}–{row.entry_high}</strong></div><div className="kpi"><span>Stop</span><strong>{row.stop_price}</strong></div><div className="kpi"><span>2R</span><strong>{row.two_r}</strong></div><div className="kpi"><span>Swing</span><strong>{row.swing_direction}</strong></div></div><p className="subtitle" style={{marginTop:16}}>Invalidation: {row.invalidation}</p><hr style={{border:0,borderTop:'1px solid #e4e7ec',margin:'18px 0'}}/><h3>AI Summary</h3><p style={{lineHeight:1.65,color:'#475467'}}>AI commentary sẽ chỉ giải thích dữ liệu scanner đã xác nhận; nó không được tự tạo FLOW score, giá, MCDX hoặc mức giao dịch.</p></section></div></main>}
+type StockPageProps = {
+  params: Promise<{ symbol: string }>;
+  searchParams: Promise<{ date?: string }>;
+};
+
+const fmt = (value: number | null | undefined, digits = 2) =>
+  value == null ? '-' : value.toFixed(digits);
+
+const decisionClass = (decision: Decision) =>
+  decision === 'BUY'
+    ? 'buy'
+    : decision === 'BUY RETEST'
+      ? 'buyretest'
+      : decision === 'TEST BUY'
+        ? 'testbuy'
+        : decision === 'DO NOT CHASE' || decision === 'EXIT'
+          ? 'nochase'
+          : 'watch';
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="kpi">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function SignalChecks({ row }: { row: ScanRow }) {
+  const checks = [
+    ['RS Rating', row.rs_rating == null ? '-' : String(row.rs_rating)],
+    ['Banker', row.banker == null ? '-' : `${fmt(row.banker, 1)}%`],
+    ['Retailer', row.retailer == null ? '-' : `${fmt(row.retailer, 1)}%`],
+    ['Swing', row.swing_direction ?? '-'],
+  ];
+
+  return (
+    <div className="checklist">
+      {checks.map(([label, value]) => (
+        <div className="check" key={label}>
+          <span>{label}</span>
+          <strong>{value}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default async function StockPage({ params, searchParams }: StockPageProps) {
+  const { symbol } = await params;
+  const { date } = await searchParams;
+  const row = await getScanRowBySymbol(symbol, date);
+
+  if (!row) notFound();
+
+  const backHref = row.market_date ? `/?date=${row.market_date}` : '/';
+  const entry =
+    row.entry_low == null || row.entry_high == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`;
+
+  return (
+    <main className="shell">
+      <header className="topbar">
+        <div>
+          <Link className="subtitle" href={backHref}>
+            Back to scanner
+          </Link>
+          <div className="detailTitle">
+            {row.symbol} / {row.decision}
+          </div>
+          <div className="subtitle">Ngay du lieu {row.market_date}</div>
+        </div>
+        <span className={`status ${decisionClass(row.decision)}`}>
+          {row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`}
+        </span>
+      </header>
+
+      <div className="detailGrid">
+        <section className="panel">
+          <h3>Tin hieu hien tai</h3>
+          <div className="kpis">
+            <Metric label="Close" value={fmt(row.close)} />
+            <Metric label="Score" value={row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`} />
+            <Metric label="Label" value={row.flow_label || '-'} />
+            <Metric label="Decision" value={row.decision} />
+          </div>
+          <SignalChecks row={row} />
+          <div className="detailBlock">
+            <span>Tin hieu chinh</span>
+            <p>{row.main_signal || '-'}</p>
+          </div>
+          <div className="detailBlock">
+            <span>Tin tuc noi bat</span>
+            <p>{row.headline_news || '-'}</p>
+          </div>
+        </section>
+
+        <section className="panel">
+          <h3>Trade plan</h3>
+          <div className="kpis tradeKpis">
+            <Metric label="Entry Zone" value={entry} />
+            <Metric label="Stop" value={fmt(row.stop_price)} />
+            <Metric
+              label="Distance"
+              value={row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}
+            />
+            <Metric label="1R" value={fmt(row.one_r)} />
+            <Metric label="2R" value={fmt(row.two_r)} />
+            <Metric label="3R" value={fmt(row.three_r)} />
+          </div>
+          <div className="detailBlock">
+            <span>Invalidation</span>
+            <p>{row.invalidation || 'Gia dong cua duoi Stop hoac Swing chuyen DOWN.'}</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
