@@ -53,6 +53,23 @@ function SignalChecks({ row }: { row: ScanRow }) {
   );
 }
 
+function HeadlineNews({ row }: { row: ScanRow }) {
+  if (!row.headline_news) return <p>-</p>;
+  return (
+    <div className="detailNews">
+      {row.headline_news_url ? (
+        <a href={row.headline_news_url} target="_blank" rel="noopener noreferrer">
+          {row.headline_news}
+          <span aria-hidden="true">↗</span>
+        </a>
+      ) : (
+        <p>{row.headline_news}</p>
+      )}
+      {row.headline_news_source ? <span>{row.headline_news_source}</span> : null}
+    </div>
+  );
+}
+
 export default async function StockPage({ params, searchParams }: StockPageProps) {
   const { symbol } = await params;
   const { date } = await searchParams;
@@ -102,7 +119,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           </div>
           <div className="detailBlock">
             <span>Tin tức nổi bật</span>
-            <p>{row.headline_news || '-'}</p>
+            <HeadlineNews row={row} />
           </div>
         </section>
 

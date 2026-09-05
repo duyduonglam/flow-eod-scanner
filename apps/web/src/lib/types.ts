@@ -1,13 +1,28 @@
 export type Decision = 'BUY' | 'TEST BUY' | 'BUY RETEST' | 'WATCH' | 'DO NOT CHASE' | 'HOLD' | 'TRIM' | 'EXIT';
 
+export type NewsItem = {
+  title: string;
+  url: string | null;
+  source: string;
+  published_at: string | null;
+  market_date: string;
+  symbol?: string | null;
+  category?: string | null;
+  sentiment?: 'POSITIVE' | 'NEUTRAL' | 'RISK' | null;
+};
+
 export type ScanRow = {
   symbol: string;
+  symbol_id?: number | null;
   market_date: string;
   close: number | null;
   flow_score: number | null;
   flow_label: string;
   main_signal: string;
   headline_news?: string | null;
+  headline_news_url?: string | null;
+  headline_news_source?: string | null;
+  headline_news_published_at?: string | null;
   entry_low: number | null;
   entry_high: number | null;
   stop_price: number | null;

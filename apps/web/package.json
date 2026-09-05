@@ -1,10 +1,12 @@
 {
   "name": "flow-eod-web",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --experimental-strip-types --test src/lib/scan-view-model.test.ts src/lib/manual-scan.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
