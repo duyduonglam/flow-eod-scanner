@@ -1,7 +1,7 @@
 import type { MarketRegime, ScanRow } from '@/lib/types';
 
 const indexFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
-const compactFormatter = new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 });
+const liquidityFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
 
 function pct(value: number | null | undefined): string {
   if (value == null) return '-';
@@ -9,8 +9,8 @@ function pct(value: number | null | undefined): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-function compact(value: number | null | undefined): string {
-  return value == null ? '-' : compactFormatter.format(value);
+function liquidity(value: number | null | undefined): string {
+  return value == null ? '-' : `${liquidityFormatter.format(value)} Nghìn tỉ`;
 }
 
 function changeClass(value: number | null | undefined): string {
@@ -69,18 +69,19 @@ export function MarketHeader({
   const marketMode = marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa');
   const sessionLabel = dataStatus === 'LIVE' ? 'Scan EOD đã lưu' : 'Dữ liệu minh họa';
   const indexChangeClass = changeClass(marketRegime?.index_change_pct);
-  const liquidityChangeClass = marketRegime?.distribution_flag ? 'down' : 'up';
+  const liquidityChangeClass =
+    marketRegime?.liquidity_value == null ? '' : marketRegime?.distribution_flag ? 'down' : 'up';
+  const scanStateLabel = dataStatus === 'LIVE' ? 'Scan đã lưu' : sessionLabel;
 
   return (
     <div className="marketGrid">
       <div className="marketCard marketMain">
         <div>
-          <div className="marketLabel">Phiên dữ liệu</div>
-          <div className="marketValue">{marketDate ?? 'Demo'}</div>
-          <div className="subtitle">{sessionLabel}</div>
-        </div>
-        <div>
-          <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
+          <div className="marketLabel">Phiên dữ liệu {marketDate ?? 'Demo'}</div>
+          <div className="compactLine">
+            <span>{scanStateLabel}</span>
+            <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
+          </div>
         </div>
       </div>
       <div className="marketCard marketIndex">
@@ -88,19 +89,17 @@ export function MarketHeader({
           <MarketIcon type="index" />
           {marketRegime?.index_symbol || 'VNINDEX'}
         </div>
-        <div className={`metricValue ${indexChangeClass}`}>
-          {marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}
-        </div>
-        <div className={`metricHint ${indexChangeClass}`}>
-          {pct(marketRegime?.index_change_pct)}
+        <div className={`compactMetricLine ${indexChangeClass}`}>
+          <span>{marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}</span>
+          <span>{pct(marketRegime?.index_change_pct)}</span>
         </div>
       </div>
       <div className="marketCard marketBreadth">
         <div className="marketLabel withIcon">
           <MarketIcon type="breadth" />
-          Breadth
+          Mã tăng/Mã giảm
         </div>
-        <div className="metricValue breadthValue">
+        <div className="compactMetricLine breadthValue">
           {advancers == null || decliners == null ? (
             '-'
           ) : (
@@ -111,27 +110,25 @@ export function MarketHeader({
             </>
           )}
         </div>
-        <div className="metricHint">Mã tăng / mã giảm</div>
       </div>
       <div className="marketCard marketLiquidity">
         <div className="marketLabel withIcon">
           <MarketIcon type="liquidity" />
           Thanh khoản
         </div>
-        <div className={`metricValue ${liquidityChangeClass}`}>{compact(marketRegime?.liquidity_value)}</div>
-        <div className={`metricHint ${liquidityChangeClass}`}>
-          {marketRegime?.distribution_flag ? 'Có dấu hiệu phân phối' : 'Giá trị giao dịch'}
-        </div>
+        <div className={`compactMetricLine ${liquidityChangeClass}`}>{liquidity(marketRegime?.liquidity_value)}</div>
       </div>
       <div className="marketCard marketLeader">
         <div className="marketLabel withIcon">
           <MarketIcon type="leader" />
           Dẫn sóng
         </div>
-        <div className="metricValue accent">{leader?.symbol ?? '-'}</div>
-        <div className="metricHint">
-          {leader?.flow_score == null ? '-' : `${leader.flow_score.toFixed(1)} /100`}
-          {averageScore == null ? '' : ` · TB ${averageScore.toFixed(1)}`}
+        <div className="compactMetricLine accent">
+          <span>{leader?.symbol ?? '-'}</span>
+          <span>
+            {leader?.flow_score == null ? '-' : `${leader.flow_score.toFixed(1)}/100`}
+            {averageScore == null ? '' : ` · TB ${averageScore.toFixed(1)}`}
+          </span>
         </div>
       </div>
     </div>

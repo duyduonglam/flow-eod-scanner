@@ -357,12 +357,60 @@ select:focus-visible {
   margin-top: 7px;
 }
 
+.compactLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 820;
+  line-height: 1.35;
+}
+
 .metricValue {
   color: var(--ink);
   font-size: 26px;
   font-weight: 860;
   letter-spacing: 0;
   margin-top: 8px;
+}
+
+.compactMetricLine {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.compactMetricLine > span:first-child {
+  font-size: 22px;
+  font-weight: 880;
+}
+
+.compactMetricLine > span + span {
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.compactMetricLine.up,
+.compactMetricLine .up {
+  color: var(--green);
+}
+
+.compactMetricLine.down,
+.compactMetricLine .down {
+  color: var(--red);
+}
+
+.compactMetricLine.accent {
+  color: var(--green);
 }
 
 .metricValue.accent {
