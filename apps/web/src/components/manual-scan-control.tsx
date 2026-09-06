@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent, type MouseEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -25,11 +25,13 @@ function messageFromResponse(payload: unknown, fallback: string): string {
 export function ManualScanControl({ defaultDate }: ManualScanControlProps) {
   const [marketDate, setMarketDate] = useState(dateInputValue(defaultDate));
   const [secret, setSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
   const [state, setState] = useState<SubmitState>('idle');
   const [message, setMessage] = useState('Tự động: 16:00 Asia/Ho_Chi_Minh hằng ngày.');
 
-  async function submitManualScan(event: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) {
+  async function submitManualScan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (state === 'submitting') return;
     setState('submitting');
     setMessage('Đang gửi lệnh quét...');
 
@@ -57,12 +59,14 @@ export function ManualScanControl({ defaultDate }: ManualScanControlProps) {
   }
 
   return (
-    <section className="manualScanPanel" aria-label="Quét thủ công">
+    <section className={`manualScanPanel ${state}`} aria-label="Quét thủ công">
       <div className="manualScanCopy">
         <div className="sectionLabel">Quét thủ công</div>
-        <div className="historyHint">{message}</div>
+        <div className="historyHint" aria-live="polite">
+          {message}
+        </div>
       </div>
-      <form className="manualScanForm" onSubmit={submitManualScan}>
+      <form className="manualScanForm" onSubmit={submitManualScan} noValidate>
         <input
           className="manualScanInput"
           aria-label="Ngày quét"
@@ -70,16 +74,27 @@ export function ManualScanControl({ defaultDate }: ManualScanControlProps) {
           value={marketDate}
           onChange={(event) => setMarketDate(event.currentTarget.value)}
         />
-        <input
-          className="manualScanInput manualScanSecret"
-          aria-label="Mã kích hoạt"
-          type="password"
-          value={secret}
-          onChange={(event) => setSecret(event.currentTarget.value)}
-          placeholder="Mã kích hoạt"
-          autoComplete="one-time-code"
-        />
-        <button className="manualScanButton" type="button" onClick={submitManualScan} disabled={state === 'submitting'}>
+        <div className="secretField">
+          <input
+            className="manualScanInput manualScanSecret"
+            aria-label="Mã kích hoạt"
+            type={showSecret ? 'text' : 'password'}
+            value={secret}
+            onChange={(event) => setSecret(event.currentTarget.value)}
+            placeholder="Mã kích hoạt"
+            autoComplete="one-time-code"
+          />
+          <button
+            className="secretToggle"
+            type="button"
+            aria-label={showSecret ? 'Ẩn mã kích hoạt' : 'Hiện mã kích hoạt'}
+            aria-pressed={showSecret}
+            onClick={() => setShowSecret((value) => !value)}
+          >
+            {showSecret ? 'Ẩn' : 'Hiện'}
+          </button>
+        </div>
+        <button className="manualScanButton" type="submit" disabled={state === 'submitting'}>
           {state === 'submitting' ? 'Đang gửi' : 'Quét ngay'}
         </button>
       </form>

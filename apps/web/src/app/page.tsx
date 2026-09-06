@@ -22,7 +22,12 @@ function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: st
       </div>
       <div className="dateChips">
         {dates.map((date) => (
-          <a className={`dateChip ${date === selectedDate ? 'active' : ''}`} href={`/?date=${date}`} key={date}>
+          <a
+            className={`dateChip ${date === selectedDate ? 'active' : ''}`}
+            href={`/?date=${date}`}
+            key={date}
+            aria-current={date === selectedDate ? 'page' : undefined}
+          >
             {date}
           </a>
         ))}
@@ -50,7 +55,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
           <div>
             <div className="title">FLOW EOD Scanner</div>
-            <div className="subtitle">RS + MCDX + FLOW dashboard</div>
+            <div className="subtitle">Bàn quét cuối ngày cho tín hiệu RS, MCDX và FLOW</div>
           </div>
         </div>
         <div className="headerMeta">

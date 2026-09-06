@@ -1,0 +1,10 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["apps/web/src"],
+  "locale": "vi-VN",
+  "ownership": {
+    "Date": "native",
+    "Scrollbar": "global stylesheet"
+  },
+  "requiredCapabilities": ["Date", "Scrollbar"]
+}

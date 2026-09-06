@@ -8,8 +8,7 @@ type StockPageProps = {
   searchParams: Promise<{ date?: string }>;
 };
 
-const fmt = (value: number | null | undefined, digits = 2) =>
-  value == null ? '-' : value.toFixed(digits);
+const fmt = (value: number | null | undefined, digits = 2) => (value == null ? '-' : value.toFixed(digits));
 
 const decisionClass = (decision: Decision) =>
   decision === 'BUY'
@@ -78,8 +77,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
   if (!row) notFound();
 
   const backHref = row.market_date ? `/?date=${row.market_date}` : '/';
-  const entry =
-    row.entry_low == null || row.entry_high == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`;
+  const entry = row.entry_low == null || row.entry_high == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`;
   const coreMetrics = [
     row.close == null ? null : ['Close', fmt(row.close)],
     ['Score', row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`],
@@ -128,10 +126,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           <div className="kpis tradeKpis">
             <Metric label="Entry Zone" value={entry} />
             <Metric label="Stop" value={fmt(row.stop_price)} />
-            <Metric
-              label="Distance"
-              value={row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}
-            />
+            <Metric label="Distance" value={row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`} />
             <Metric label="1R" value={fmt(row.one_r)} />
             <Metric label="2R" value={fmt(row.two_r)} />
             <Metric label="3R" value={fmt(row.three_r)} />

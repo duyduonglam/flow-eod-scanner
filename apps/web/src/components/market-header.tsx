@@ -34,9 +34,7 @@ export function MarketHeader({
           <div className="subtitle">{dataStatus === 'LIVE' ? 'Dữ liệu scan đã lưu' : 'Dữ liệu minh họa'}</div>
         </div>
         <div>
-          <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>
-            {dataStatus}
-          </span>
+          <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{dataStatus}</span>
         </div>
       </div>
       <div className="marketCard">
@@ -47,9 +45,7 @@ export function MarketHeader({
       <div className="marketCard">
         <div className="marketLabel">Mã mạnh nhất</div>
         <div className="metricValue accent">{leader?.symbol ?? '-'}</div>
-        <div className="metricHint">
-          {leader?.flow_score == null ? '-' : `${leader.flow_score.toFixed(1)} /100`}
-        </div>
+        <div className="metricHint">{leader?.flow_score == null ? '-' : `${leader.flow_score.toFixed(1)} /100`}</div>
       </div>
       <div className="marketCard">
         <div className="marketLabel">Chất lượng</div>
