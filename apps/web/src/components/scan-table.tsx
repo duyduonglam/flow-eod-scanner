@@ -25,6 +25,23 @@ const scoreClass = (score: number | null) => {
   return 'weak';
 };
 
+function targetPercent(target: number | null, close: number | null): string | null {
+  if (target == null || close == null || close === 0) return null;
+  const value = ((target - close) / close) * 100;
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(1)}%`;
+}
+
+function RewardCell({ value, close }: { value: number | null; close: number | null }) {
+  const percent = targetPercent(value, close);
+  return (
+    <td className="num rewardCell">
+      <strong>{fmt(value)}</strong>
+      {percent ? <span>{percent}</span> : null}
+    </td>
+  );
+}
+
 function HeadlineNews({ row }: { row: ScanRow }) {
   if (!row.headline_news) return <span className="muted">-</span>;
 
@@ -97,11 +114,7 @@ export function ScanTable({
                     <Link className="symbol" href={`/stocks/${row.symbol}?date=${row.market_date}`}>
                       {row.symbol}
                     </Link>
-                    {row.close != null ? (
-                      <div className="symbolPrice">
-                        {priceFormatter.format(row.close)}
-                      </div>
-                    ) : null}
+                    {row.close != null ? <div className="symbolPrice">{priceFormatter.format(row.close)}</div> : null}
                     {showMarketDate ? <div className="symbolDate">{row.market_date}</div> : null}
                   </td>
                   <td>
@@ -127,9 +140,9 @@ export function ScanTable({
                     <strong>{fmt(row.stop_price)}</strong>
                     <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
                   </td>
-                  <td className="num">{fmt(row.one_r)}</td>
-                  <td className="num">{fmt(row.two_r)}</td>
-                  <td className="num">{fmt(row.three_r)}</td>
+                  <RewardCell value={row.one_r} close={row.close} />
+                  <RewardCell value={row.two_r} close={row.close} />
+                  <RewardCell value={row.three_r} close={row.close} />
                   <td className="decision">
                     <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>
                   </td>

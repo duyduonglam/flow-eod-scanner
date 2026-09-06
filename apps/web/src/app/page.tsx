@@ -28,8 +28,8 @@ export default async function Home({ searchParams }: HomeProps) {
             <span>F</span>
           </div>
           <div>
-            <div className="title">FLOW EOD Scanner</div>
-            <div className="subtitle">Bàn quét cuối ngày cho tín hiệu RS, MCDX và FLOW</div>
+            <div className="title">VNStock Market Intelligence</div>
+            <div className="subtitle">Bản đồ các mã cổ phiếu mạnh nhất thị trường Việt Nam</div>
           </div>
         </div>
         <div className="headerMeta">

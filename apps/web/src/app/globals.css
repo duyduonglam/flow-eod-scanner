@@ -235,9 +235,23 @@ select:focus-visible {
 }
 
 .marketCard {
+  position: relative;
   min-height: 124px;
   padding: 17px;
+  overflow: hidden;
   box-shadow: var(--shadow-soft);
+}
+
+.marketCard::after {
+  position: absolute;
+  right: -32px;
+  bottom: -42px;
+  width: 118px;
+  height: 118px;
+  content: "";
+  border-radius: 50%;
+  opacity: 0.38;
+  pointer-events: none;
 }
 
 .marketMain {
@@ -249,6 +263,38 @@ select:focus-visible {
     var(--surface);
 }
 
+.marketIndex {
+  background: linear-gradient(135deg, rgba(191, 47, 36, 0.08), #ffffff 62%);
+}
+
+.marketIndex::after {
+  background: var(--redbg);
+}
+
+.marketBreadth {
+  background: linear-gradient(135deg, rgba(15, 143, 95, 0.1), #ffffff 62%);
+}
+
+.marketBreadth::after {
+  background: var(--greenbg);
+}
+
+.marketLiquidity {
+  background: linear-gradient(135deg, rgba(24, 94, 168, 0.1), #ffffff 62%);
+}
+
+.marketLiquidity::after {
+  background: var(--bluebg);
+}
+
+.marketLeader {
+  background: linear-gradient(135deg, rgba(99, 49, 245, 0.1), #ffffff 62%);
+}
+
+.marketLeader::after {
+  background: #f0ebff;
+}
+
 .marketLabel,
 .sectionLabel {
   color: #43536a;
@@ -256,6 +302,39 @@ select:focus-visible {
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.marketLabel.withIcon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.marketIcon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.marketIcon.index {
+  color: var(--red);
+}
+
+.marketIcon.breadth {
+  color: var(--green);
+}
+
+.marketIcon.liquidity {
+  color: var(--blue);
+}
+
+.marketIcon.leader {
+  color: #6331f5;
 }
 
 .marketValue {
@@ -339,7 +418,7 @@ select:focus-visible {
 }
 
 .searchControl {
-  flex: 1.35;
+  flex: 2.1;
 }
 
 .dateControl {
@@ -347,7 +426,7 @@ select:focus-visible {
 }
 
 .scanControl {
-  flex: 1;
+  flex: 0.85;
   justify-content: flex-end;
 }
 
@@ -385,7 +464,7 @@ select:focus-visible {
 
 .searchInput,
 .manualScanInput {
-  width: min(340px, 100%);
+  width: min(520px, 100%);
   min-height: 42px;
   color: var(--ink);
   background: #ffffff;
@@ -776,6 +855,23 @@ select:focus-visible {
   color: #7a8798;
   font-size: 12px;
   font-weight: 700;
+}
+
+.rewardCell {
+  min-width: 70px;
+}
+
+.rewardCell strong {
+  display: block;
+  color: var(--green);
+}
+
+.rewardCell span {
+  display: block;
+  color: #087a50;
+  font-size: 12px;
+  font-weight: 760;
+  margin-top: 3px;
 }
 
 .metricHint.up {

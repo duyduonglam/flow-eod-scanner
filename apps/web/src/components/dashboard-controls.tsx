@@ -58,11 +58,6 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
   return (
     <section className={`controlBar ${state}`} aria-label="Điều khiển dashboard">
       <div className="controlGroup searchControl">
-        <div>
-          <label className="sectionLabel" htmlFor="ticker-search">
-            Tìm kiếm
-          </label>
-        </div>
         <form className="searchForm" action="/" method="get" role="search" noValidate>
           <div className="searchField">
             <input

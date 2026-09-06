@@ -18,6 +18,33 @@ function changeClass(value: number | null | undefined): string {
   return value < 0 ? 'down' : 'up';
 }
 
+function MarketIcon({ type }: { type: 'index' | 'breadth' | 'liquidity' | 'leader' }) {
+  const icon =
+    type === 'index' ? (
+      <path d="M5 15h3l2.4-7 4.2 13 3-8H21" />
+    ) : type === 'breadth' ? (
+      <>
+        <path d="M7 17V9" />
+        <path d="M12 17V5" />
+        <path d="M17 17v-6" />
+        <path d="M5 19h14" />
+      </>
+    ) : type === 'liquidity' ? (
+      <>
+        <path d="M12 3v18" />
+        <path d="M7 7.5c0-2 2-3.5 5-3.5s5 1.3 5 3.2c0 2.3-2.4 2.8-5 3.3s-5 1-5 3.3S9 17.5 12 17.5s5-1.4 5-3.5" />
+      </>
+    ) : (
+      <path d="m12 3 2.9 5.9 6.1.9-4.5 4.4 1.1 6.1L12 17.4l-5.6 2.9 1.1-6.1L3 9.8l6.1-.9L12 3Z" />
+    );
+
+  return (
+    <svg className={`marketIcon ${type}`} viewBox="0 0 24 24" aria-hidden="true">
+      {icon}
+    </svg>
+  );
+}
+
 export function MarketHeader({
   rows,
   dataStatus,
@@ -54,8 +81,11 @@ export function MarketHeader({
           <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
         </div>
       </div>
-      <div className="marketCard">
-        <div className="marketLabel">{marketRegime?.index_symbol || 'VNINDEX'}</div>
+      <div className="marketCard marketIndex">
+        <div className="marketLabel withIcon">
+          <MarketIcon type="index" />
+          {marketRegime?.index_symbol || 'VNINDEX'}
+        </div>
         <div className="metricValue">
           {marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}
         </div>
@@ -63,18 +93,27 @@ export function MarketHeader({
           {pct(marketRegime?.index_change_pct)}
         </div>
       </div>
-      <div className="marketCard">
-        <div className="marketLabel">Breadth</div>
+      <div className="marketCard marketBreadth">
+        <div className="marketLabel withIcon">
+          <MarketIcon type="breadth" />
+          Breadth
+        </div>
         <div className="metricValue">{breadth}</div>
         <div className="metricHint">Mã tăng / mã giảm</div>
       </div>
-      <div className="marketCard">
-        <div className="marketLabel">Thanh khoản</div>
+      <div className="marketCard marketLiquidity">
+        <div className="marketLabel withIcon">
+          <MarketIcon type="liquidity" />
+          Thanh khoản
+        </div>
         <div className="metricValue">{compact(marketRegime?.liquidity_value)}</div>
         <div className="metricHint">{marketRegime?.distribution_flag ? 'Có dấu hiệu phân phối' : 'Giá trị giao dịch'}</div>
       </div>
-      <div className="marketCard">
-        <div className="marketLabel">Dẫn sóng</div>
+      <div className="marketCard marketLeader">
+        <div className="marketLabel withIcon">
+          <MarketIcon type="leader" />
+          Dẫn sóng
+        </div>
         <div className="metricValue accent">{leader?.symbol ?? '-'}</div>
         <div className="metricHint">
           {leader?.flow_score == null ? '-' : `${leader.flow_score.toFixed(1)} /100`}
