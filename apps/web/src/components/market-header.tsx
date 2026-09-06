@@ -79,9 +79,9 @@ export function MarketHeader({
         <div>
           <div className="marketLabel">Phiên dữ liệu</div>
           <div className="marketValue">{marketDate ?? 'Demo'}</div>
-          <div className="compactLine">{scanStateLabel}</div>
         </div>
-        <div>
+        <div className="sessionStatusGroup">
+          <div className="compactLine">{scanStateLabel}</div>
           <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
         </div>
       </div>

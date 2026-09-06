@@ -351,21 +351,31 @@ select:focus-visible {
 
 .marketValue {
   color: var(--ink);
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 850;
   letter-spacing: 0;
   margin-top: 7px;
+}
+
+.sessionStatusGroup {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 7px;
+  text-align: right;
 }
 
 .compactLine {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 5px;
+  margin-top: 0;
   color: var(--ink);
-  font-size: 13px;
-  font-weight: 760;
+  font-size: 12px;
+  font-weight: 780;
   line-height: 1.35;
+  white-space: nowrap;
 }
 
 .metricValue {
@@ -390,12 +400,12 @@ select:focus-visible {
 }
 
 .compactMetricLine > span:first-child {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 880;
 }
 
 .compactMetricLine > span + span {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 820;
 }
 
