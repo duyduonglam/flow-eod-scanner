@@ -77,11 +77,12 @@ export function MarketHeader({
     <div className="marketGrid">
       <div className="marketCard marketMain">
         <div>
-          <div className="marketLabel">Phiên dữ liệu {marketDate ?? 'Demo'}</div>
-          <div className="compactLine">
-            <span>{scanStateLabel}</span>
-            <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
-          </div>
+          <div className="marketLabel">Phiên dữ liệu</div>
+          <div className="marketValue">{marketDate ?? 'Demo'}</div>
+          <div className="compactLine">{scanStateLabel}</div>
+        </div>
+        <div>
+          <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
         </div>
       </div>
       <div className="marketCard marketIndex">
