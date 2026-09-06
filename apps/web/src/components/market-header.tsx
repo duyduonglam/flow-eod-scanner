@@ -68,6 +68,7 @@ export function MarketHeader({
   const decliners = marketRegime?.breadth_decliners ?? null;
   const breadth = advancers == null || decliners == null ? '-' : `${advancers}/${decliners}`;
   const marketMode = marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa');
+  const sessionLabel = dataStatus === 'LIVE' ? 'Scan EOD đã lưu' : 'Dữ liệu minh họa';
 
   return (
     <div className="marketGrid">
@@ -75,7 +76,7 @@ export function MarketHeader({
         <div>
           <div className="marketLabel">Phiên dữ liệu</div>
           <div className="marketValue">{marketDate ?? 'Demo'}</div>
-          <div className="subtitle">{marketRegime?.summary ?? 'Dữ liệu scan đã lưu theo phiên EOD'}</div>
+          <div className="subtitle">{sessionLabel}</div>
         </div>
         <div>
           <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>

@@ -71,14 +71,16 @@ export function ScanTable({
   dataStamp,
   showMarketDate = false,
   emptyMessage = 'Chưa có kết quả cho bộ lọc hiện tại.',
+  sessionSummary,
 }: {
   rows: ScanRow[];
   dataStamp?: string;
   showMarketDate?: boolean;
   emptyMessage?: string;
+  sessionSummary?: string | null;
 }) {
   return (
-    <section className="scanSection">
+    <section className={`scanSection ${sessionSummary ? 'hasSessionSummary' : ''}`}>
       <div className="toolbar">
         <div>
           <div className="sectionLabel">Bảng kết quả</div>
@@ -160,6 +162,7 @@ export function ScanTable({
           </tbody>
         </table>
       </div>
+      {sessionSummary ? <div className="sessionSummary">{sessionSummary}</div> : null}
     </section>
   );
 }

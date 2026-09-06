@@ -61,6 +61,7 @@ export default async function Home({ searchParams }: HomeProps) {
         dataStamp={stamp}
         showMarketDate={Boolean(searchSymbol)}
         emptyMessage={searchSymbol ? `Không có dữ liệu lịch sử cho mã ${searchSymbol}.` : undefined}
+        sessionSummary={searchSymbol ? null : marketRegime?.summary}
       />
 
       {searchSymbol ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}

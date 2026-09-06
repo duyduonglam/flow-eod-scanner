@@ -236,8 +236,8 @@ select:focus-visible {
 
 .marketCard {
   position: relative;
-  min-height: 124px;
-  padding: 17px;
+  min-height: 104px;
+  padding: 14px 15px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
 }
@@ -256,15 +256,17 @@ select:focus-visible {
 
 .marketMain {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   background:
-    linear-gradient(135deg, rgba(15, 143, 95, 0.1), transparent 58%),
-    var(--surface);
+    linear-gradient(135deg, rgba(229, 247, 238, 0.98) 0%, rgba(255, 255, 255, 0.95) 47%, rgba(231, 241, 255, 0.92) 100%);
+  border-color: #c5e6d7;
 }
 
 .marketIndex {
-  background: linear-gradient(135deg, rgba(191, 47, 36, 0.08), #ffffff 62%);
+  background: linear-gradient(135deg, #fff3f4 0%, #ffffff 46%, #ffe7ea 100%);
+  border-color: #f3c8cf;
 }
 
 .marketIndex::after {
@@ -272,7 +274,8 @@ select:focus-visible {
 }
 
 .marketBreadth {
-  background: linear-gradient(135deg, rgba(15, 143, 95, 0.1), #ffffff 62%);
+  background: linear-gradient(135deg, #ebfbf3 0%, #ffffff 46%, #d9f7e8 100%);
+  border-color: #bfe9d3;
 }
 
 .marketBreadth::after {
@@ -280,7 +283,8 @@ select:focus-visible {
 }
 
 .marketLiquidity {
-  background: linear-gradient(135deg, rgba(24, 94, 168, 0.1), #ffffff 62%);
+  background: linear-gradient(135deg, #edf6ff 0%, #ffffff 46%, #dbeafe 100%);
+  border-color: #c5daf5;
 }
 
 .marketLiquidity::after {
@@ -288,7 +292,8 @@ select:focus-visible {
 }
 
 .marketLeader {
-  background: linear-gradient(135deg, rgba(99, 49, 245, 0.1), #ffffff 62%);
+  background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 46%, #ece6ff 100%);
+  border-color: #d9cdff;
 }
 
 .marketLeader::after {
@@ -311,9 +316,12 @@ select:focus-visible {
 }
 
 .marketIcon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   flex: 0 0 auto;
+  box-sizing: content-box;
+  padding: 4px;
+  border-radius: 9px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2.1;
@@ -323,34 +331,38 @@ select:focus-visible {
 
 .marketIcon.index {
   color: var(--red);
+  background: rgba(191, 47, 36, 0.1);
 }
 
 .marketIcon.breadth {
   color: var(--green);
+  background: rgba(15, 143, 95, 0.12);
 }
 
 .marketIcon.liquidity {
   color: var(--blue);
+  background: rgba(24, 94, 168, 0.12);
 }
 
 .marketIcon.leader {
   color: #6331f5;
+  background: rgba(99, 49, 245, 0.11);
 }
 
 .marketValue {
   color: var(--ink);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 850;
   letter-spacing: 0;
-  margin-top: 9px;
+  margin-top: 7px;
 }
 
 .metricValue {
   color: var(--ink);
-  font-size: 29px;
+  font-size: 26px;
   font-weight: 860;
   letter-spacing: 0;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .metricValue.accent {
@@ -418,15 +430,15 @@ select:focus-visible {
 }
 
 .searchControl {
-  flex: 2.1;
+  flex: 1 1 auto;
 }
 
 .dateControl {
-  flex: 0 0 260px;
+  flex: 0 0 232px;
 }
 
 .scanControl {
-  flex: 0.85;
+  flex: 0 0 224px;
   justify-content: flex-end;
 }
 
@@ -455,11 +467,20 @@ select:focus-visible {
   flex: 1;
 }
 
+.searchControl .searchForm {
+  justify-content: flex-start;
+}
+
 .searchField,
 .secretField {
   position: relative;
   display: flex;
   align-items: center;
+}
+
+.searchField {
+  flex: 1 1 auto;
+  min-width: 260px;
 }
 
 .searchInput,
@@ -478,6 +499,7 @@ select:focus-visible {
 }
 
 .searchInput {
+  width: 100%;
   padding-right: 40px;
   text-transform: uppercase;
 }
@@ -682,6 +704,21 @@ select:focus-visible {
   overflow: auto;
   border-radius: 0 0 var(--radius) var(--radius);
   scrollbar-gutter: stable;
+}
+
+.scanSection.hasSessionSummary .tableWrap {
+  border-radius: 0;
+}
+
+.sessionSummary {
+  color: #46546a;
+  background: linear-gradient(90deg, #f7fbff 0%, #ffffff 56%, #f2fff8 100%);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 12px 15px 14px;
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.55;
 }
 
 .scanTable {
