@@ -280,13 +280,13 @@ select:focus-visible {
 
 .riskon,
 .buy,
-.buyretest {
+.buyretest,
+.testbuy {
   color: #07633f;
   background: var(--greenbg);
 }
 
 .partial,
-.testbuy,
 .trim {
   color: var(--amber);
   background: var(--amberbg);
