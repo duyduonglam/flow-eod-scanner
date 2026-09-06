@@ -842,9 +842,9 @@ select:focus-visible {
 }
 
 .stopCell {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 4px;
+  justify-items: end;
 }
 
 .stopCell strong {

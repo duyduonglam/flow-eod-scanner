@@ -136,9 +136,11 @@ export function ScanTable({
                     <HeadlineNews row={row} />
                   </td>
                   <td>{row.entry_low == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
-                  <td className="num stopCell">
-                    <strong>{fmt(row.stop_price)}</strong>
-                    <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
+                  <td className="num">
+                    <div className="stopCell">
+                      <strong>{fmt(row.stop_price)}</strong>
+                      <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
+                    </div>
                   </td>
                   <RewardCell value={row.one_r} close={row.close} />
                   <RewardCell value={row.two_r} close={row.close} />
