@@ -691,15 +691,6 @@ select:focus-visible {
   margin-top: 3px;
 }
 
-.symbolPrice span {
-  display: block;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 760;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .symbolDate {
   color: var(--muted);
   font-size: 11px;

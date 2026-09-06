@@ -99,7 +99,6 @@ export function ScanTable({
                     </Link>
                     {row.close != null ? (
                       <div className="symbolPrice">
-                        <span>Giá hiện tại</span>
                         {priceFormatter.format(row.close)}
                       </div>
                     ) : null}

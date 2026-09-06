@@ -22,7 +22,7 @@ function messageFromResponse(payload: unknown, fallback: string): string {
 
 export function DashboardControls({ dates, selectedDate, query }: DashboardControlsProps) {
   const [state, setState] = useState<SubmitState>('idle');
-  const [message, setMessage] = useState('Tự động: 16:00 Asia/Ho_Chi_Minh hằng ngày.');
+  const [message, setMessage] = useState('');
 
   function selectDate(value: string) {
     if (!value) return;
@@ -60,9 +60,8 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
       <div className="controlGroup searchControl">
         <div>
           <label className="sectionLabel" htmlFor="ticker-search">
-            Tìm kiếm toàn bộ lịch sử
+            Tìm kiếm
           </label>
-          <div className="historyHint">Nhập mã để xem tất cả phiên đã lưu</div>
         </div>
         <form className="searchForm" action="/" method="get" role="search" noValidate>
           <div className="searchField">
@@ -94,7 +93,6 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
           <label className="sectionLabel" htmlFor="scan-date-select">
             Lịch sử Scan
           </label>
-          <div className="historyHint">Chọn phiên đã lưu</div>
         </div>
         <select
           id="scan-date-select"
@@ -116,9 +114,11 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
       <form className="controlGroup scanControl" onSubmit={submitManualScan} noValidate>
         <div>
           <div className="sectionLabel">Quét thủ công</div>
-          <div className="historyHint" aria-live="polite">
-            {message}
-          </div>
+          {message ? (
+            <div className="historyHint" aria-live="polite">
+              {message}
+            </div>
+          ) : null}
         </div>
         <button className="manualScanButton" type="submit" disabled={state === 'submitting'}>
           {state === 'submitting' ? 'Đang gửi' : 'Quét ngay'}
