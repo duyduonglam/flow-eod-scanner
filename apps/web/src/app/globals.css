@@ -69,13 +69,15 @@ a {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 3px solid rgba(24, 94, 168, 0.28);
   outline-offset: 2px;
 }
@@ -224,6 +226,7 @@ input:focus-visible {
 .notes,
 .searchPanel,
 .manualScanPanel,
+.controlBar,
 .searchResultBanner,
 .summaryPanel {
   background: var(--surface);
@@ -304,6 +307,7 @@ input:focus-visible {
 .searchPanel,
 .manualScanPanel,
 .historyRail,
+.controlBar,
 .searchResultBanner {
   display: flex;
   align-items: center;
@@ -312,6 +316,39 @@ input:focus-visible {
   margin-bottom: 14px;
   padding: 14px;
   box-shadow: var(--shadow-soft);
+}
+
+.controlBar {
+  align-items: stretch;
+  border-left: 4px solid var(--green);
+}
+
+.controlBar.error {
+  border-left-color: var(--red);
+}
+
+.controlBar.success {
+  border-left-color: var(--blue);
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchControl {
+  flex: 1.35;
+}
+
+.dateControl {
+  flex: 0 0 260px;
+}
+
+.scanControl {
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .manualScanPanel {
@@ -386,6 +423,7 @@ input:focus-visible {
 .searchClear,
 .searchClearIcon,
 .manualScanButton,
+.dateSelect,
 .secretToggle,
 .dateChip {
   cursor: pointer;
@@ -395,7 +433,8 @@ input:focus-visible {
 .searchButton,
 .searchClear,
 .manualScanButton,
-.secretToggle {
+.secretToggle,
+.dateSelect {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -404,6 +443,24 @@ input:focus-visible {
   font-size: 13px;
   font-weight: 820;
   white-space: nowrap;
+}
+
+.dateSelect {
+  width: 148px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #cbd7e5;
+  padding: 9px 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dateSelect:hover:not(:disabled) {
+  border-color: #aebbd0;
+}
+
+.dateSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
 }
 
 .searchButton {
@@ -634,6 +691,15 @@ input:focus-visible {
   margin-top: 3px;
 }
 
+.symbolPrice span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .symbolDate {
   color: var(--muted);
   font-size: 11px;
@@ -719,6 +785,14 @@ input:focus-visible {
   color: #7a8798;
   font-size: 12px;
   font-weight: 700;
+}
+
+.metricHint.up {
+  color: var(--green);
+}
+
+.metricHint.down {
+  color: var(--red);
 }
 
 .decision {
@@ -1044,6 +1118,7 @@ input:focus-visible {
   .searchPanel,
   .manualScanPanel,
   .historyRail,
+  .controlBar,
   .searchResultBanner,
   .toolbar {
     align-items: flex-start;
@@ -1053,9 +1128,14 @@ input:focus-visible {
   .headerMeta,
   .dateChips,
   .searchForm,
-  .manualScanForm {
+  .manualScanForm,
+  .controlGroup {
     justify-content: flex-start;
     width: 100%;
+  }
+
+  .controlGroup {
+    flex: 1 1 auto;
   }
 
   .headerDate {
@@ -1088,7 +1168,8 @@ input:focus-visible {
   }
 
   .searchForm,
-  .manualScanForm {
+  .manualScanForm,
+  .controlGroup {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1100,7 +1181,8 @@ input:focus-visible {
   .manualScanSecret,
   .searchButton,
   .searchClear,
-  .manualScanButton {
+  .manualScanButton,
+  .dateSelect {
     width: 100%;
   }
 }

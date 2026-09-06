@@ -4,6 +4,7 @@ import {
   buildWorkflowDispatchRequest,
   normalizeManualScanInput,
   readManualScanConfig,
+  todayInVietnam,
 } from './manual-scan.ts';
 
 test('builds a GitHub workflow dispatch request with an optional market date', () => {
@@ -57,9 +58,27 @@ test('normalizes valid manual scan dates and rejects invalid dates', () => {
   });
 });
 
-test('reports missing server-side manual scan configuration', () => {
+test('reports missing GitHub token for server-side manual scan configuration', () => {
   assert.deepEqual(readManualScanConfig({}), {
     ok: false,
-    missing: ['GITHUB_ACTIONS_DISPATCH_TOKEN', 'MANUAL_SCAN_SECRET'],
+    missing: ['GITHUB_ACTIONS_DISPATCH_TOKEN'],
   });
+});
+
+test('keeps manual scan secret optional for dashboard-triggered scans', () => {
+  assert.deepEqual(readManualScanConfig({ GITHUB_ACTIONS_DISPATCH_TOKEN: 'token-value' }), {
+    ok: true,
+    config: {
+      owner: 'duyduonglam',
+      repo: 'flow-eod-scanner',
+      workflow: 'eod_scan.yml',
+      ref: 'main',
+      token: 'token-value',
+      manualSecret: undefined,
+    },
+  });
+});
+
+test('formats the current scan date in Vietnam time', () => {
+  assert.equal(todayInVietnam(new Date('2026-09-05T18:15:00.000Z')), '2026-09-06');
 });

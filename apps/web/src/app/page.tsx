@@ -1,6 +1,5 @@
+import { DashboardControls } from '@/components/dashboard-controls';
 import { MarketHeader } from '@/components/market-header';
-import { ManualScanControl } from '@/components/manual-scan-control';
-import { ScanSearch } from '@/components/scan-search';
 import { ScanSummary } from '@/components/scan-summary';
 import { ScanTable } from '@/components/scan-table';
 import { getScanRows, getSessionNews } from '@/lib/live-scan';
@@ -11,34 +10,9 @@ type HomeProps = {
   searchParams: Promise<{ date?: string; q?: string }>;
 };
 
-function HistoryNav({ dates, selectedDate }: { dates: string[]; selectedDate: string | null }) {
-  if (!dates.length) return null;
-
-  return (
-    <section className="historyRail" aria-label="Lịch sử scan">
-      <div>
-        <div className="sectionLabel">Lịch sử scan</div>
-        <div className="historyHint">Chọn ngày đã lưu để xem lại watchlist</div>
-      </div>
-      <div className="dateChips">
-        {dates.map((date) => (
-          <a
-            className={`dateChip ${date === selectedDate ? 'active' : ''}`}
-            href={`/?date=${date}`}
-            key={date}
-            aria-current={date === selectedDate ? 'page' : undefined}
-          >
-            {date}
-          </a>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default async function Home({ searchParams }: HomeProps) {
   const { date, q } = await searchParams;
-  const { rows, dataStatus, marketDate, source, dates, searchSymbol } = await getScanRows(date, q);
+  const { rows, dataStatus, marketDate, source, dates, searchSymbol, marketRegime } = await getScanRows(date, q);
   const sessionNews = searchSymbol ? [] : await getSessionNews(marketDate);
   const stamp = searchSymbol
     ? `Lịch sử ${searchSymbol} · ${rows.length} phiên`
@@ -68,9 +42,10 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </header>
 
-      {searchSymbol ? null : <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} />}
-      <ScanSearch query={searchSymbol} />
-      <ManualScanControl defaultDate={marketDate} />
+      {searchSymbol ? null : (
+        <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} marketRegime={marketRegime} />
+      )}
+      <DashboardControls dates={dates} selectedDate={marketDate} query={searchSymbol} />
       {searchSymbol ? (
         <section className="searchResultBanner" aria-live="polite">
           <div>
@@ -79,9 +54,7 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
           <span>{rows.length ? `${rows.length} phiên đã lưu` : 'Không tìm thấy phiên nào trong database'}</span>
         </section>
-      ) : (
-        <HistoryNav dates={dates} selectedDate={marketDate} />
-      )}
+      ) : null}
 
       <ScanTable
         rows={rows}

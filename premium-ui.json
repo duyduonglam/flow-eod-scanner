@@ -3,8 +3,8 @@
   "sourceRoots": ["apps/web/src"],
   "locale": "vi-VN",
   "ownership": {
-    "Date": "native",
+    "Select/Listbox": "native",
     "Scrollbar": "global stylesheet"
   },
-  "requiredCapabilities": ["Date", "Scrollbar"]
+  "requiredCapabilities": ["Select/Listbox", "Scrollbar"]
 }

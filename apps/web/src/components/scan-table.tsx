@@ -82,7 +82,7 @@ export function ScanTable({
               <th>Tín hiệu chính</th>
               <th>Tin tức nổi bật</th>
               <th>Entry Zone</th>
-              <th>Stop &amp; Distance %</th>
+              <th>Stop</th>
               <th>1R</th>
               <th>2R</th>
               <th>3R</th>
@@ -97,7 +97,12 @@ export function ScanTable({
                     <Link className="symbol" href={`/stocks/${row.symbol}?date=${row.market_date}`}>
                       {row.symbol}
                     </Link>
-                    {row.close != null ? <div className="symbolPrice">{priceFormatter.format(row.close)}</div> : null}
+                    {row.close != null ? (
+                      <div className="symbolPrice">
+                        <span>Giá hiện tại</span>
+                        {priceFormatter.format(row.close)}
+                      </div>
+                    ) : null}
                     {showMarketDate ? <div className="symbolDate">{row.market_date}</div> : null}
                   </td>
                   <td>

@@ -11,6 +11,19 @@ export type NewsItem = {
   sentiment?: 'POSITIVE' | 'NEUTRAL' | 'RISK' | null;
 };
 
+export type MarketRegime = {
+  market_date: string;
+  market_mode: string;
+  index_symbol: string;
+  index_close: number | null;
+  index_change_pct: number | null;
+  breadth_advancers: number | null;
+  breadth_decliners: number | null;
+  liquidity_value: number | null;
+  distribution_flag: boolean;
+  summary: string | null;
+};
+
 export type ScanRow = {
   symbol: string;
   symbol_id?: number | null;

@@ -4,7 +4,7 @@ export type ManualScanConfig = {
   workflow: string;
   ref: string;
   token: string;
-  manualSecret: string;
+  manualSecret?: string;
 };
 
 type Env = Record<string, string | undefined>;
@@ -28,6 +28,17 @@ function isRealIsoDate(value: string): boolean {
   return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
 }
 
+export function todayInVietnam(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
 export function normalizeManualScanInput(payload: unknown): ManualScanInputResult {
   const record = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
   const marketDate = clean(record.market_date ?? record.marketDate);
@@ -41,10 +52,7 @@ export function normalizeManualScanInput(payload: unknown): ManualScanInputResul
 export function readManualScanConfig(env: Env): ManualScanConfigResult {
   const token = clean(env.GITHUB_ACTIONS_DISPATCH_TOKEN);
   const manualSecret = clean(env.MANUAL_SCAN_SECRET);
-  const missing = [
-    token ? null : 'GITHUB_ACTIONS_DISPATCH_TOKEN',
-    manualSecret ? null : 'MANUAL_SCAN_SECRET',
-  ].filter((item): item is string => Boolean(item));
+  const missing = [token ? null : 'GITHUB_ACTIONS_DISPATCH_TOKEN'].filter((item): item is string => Boolean(item));
 
   if (missing.length) return { ok: false, missing };
 
@@ -56,7 +64,7 @@ export function readManualScanConfig(env: Env): ManualScanConfigResult {
       workflow: clean(env.GITHUB_SCAN_WORKFLOW) || 'eod_scan.yml',
       ref: clean(env.GITHUB_SCAN_REF) || 'main',
       token,
-      manualSecret,
+      manualSecret: manualSecret || undefined,
     },
   };
 }

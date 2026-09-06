@@ -1,7 +1,7 @@
 import { demoRows } from '@/lib/demo-data';
 import { dedupeNews, normalizeTickerQuery, pickHeadlineNews } from '@/lib/scan-view-model';
 import { getSupabase } from '@/lib/supabase';
-import type { Decision, NewsItem, ScanRow } from '@/lib/types';
+import type { Decision, MarketRegime, NewsItem, ScanRow } from '@/lib/types';
 
 type RawScanRow = Record<string, unknown>;
 type JoinedScanRow = RawScanRow & {
@@ -82,6 +82,37 @@ function normalizeNews(row: JoinedNewsRow): NewsItem {
     category: typeof row.category === 'string' ? row.category : null,
     sentiment: sentiment === 'POSITIVE' || sentiment === 'NEUTRAL' || sentiment === 'RISK' ? sentiment : null,
   };
+}
+
+function normalizeMarketRegime(row: RawScanRow): MarketRegime {
+  return {
+    market_date: toText(row.market_date),
+    market_mode: toText(row.market_mode, 'Đang chờ'),
+    index_symbol: toText(row.index_symbol, 'VNINDEX'),
+    index_close: toNumber(row.index_close),
+    index_change_pct: toNumber(row.index_change_pct),
+    breadth_advancers: toNumber(row.breadth_advancers),
+    breadth_decliners: toNumber(row.breadth_decliners),
+    liquidity_value: toNumber(row.liquidity_value),
+    distribution_flag: Boolean(row.distribution_flag),
+    summary: typeof row.summary === 'string' && row.summary.trim() ? row.summary.trim() : null,
+  };
+}
+
+export async function getMarketRegime(marketDate?: string | null): Promise<MarketRegime | null> {
+  const db = getSupabase();
+  if (!db || !marketDate) return null;
+
+  const { data, error } = await db
+    .from('market_regimes')
+    .select(
+      'market_date, market_mode, index_symbol, index_close, index_change_pct, breadth_advancers, breadth_decliners, liquidity_value, distribution_flag, summary',
+    )
+    .eq('market_date', marketDate)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return normalizeMarketRegime(data as RawScanRow);
 }
 
 async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
@@ -220,6 +251,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'demo' as const,
       dates,
       searchSymbol: normalizedQuery || null,
+      marketRegime: null,
     };
   }
 
@@ -232,6 +264,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'live' as const,
       dates,
       searchSymbol: normalizedQuery,
+      marketRegime: null,
     };
   }
 
@@ -245,6 +278,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
         source: 'live' as const,
         dates,
         searchSymbol: null,
+        marketRegime: await getMarketRegime(marketDate),
       };
     }
   }
@@ -258,17 +292,20 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'demo' as const,
       dates,
       searchSymbol: null,
+      marketRegime: null,
     };
   }
 
   const rows = await attachHeadlineNews(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)));
+  const latestMarketDate = rows[0]?.market_date ?? null;
   return {
     rows,
     dataStatus: 'LIVE',
-    marketDate: rows[0]?.market_date ?? null,
+    marketDate: latestMarketDate,
     source: 'live' as const,
     dates,
     searchSymbol: null,
+    marketRegime: await getMarketRegime(latestMarketDate),
   };
 }
 
