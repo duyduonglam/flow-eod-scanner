@@ -334,6 +334,11 @@ select:focus-visible {
   background: rgba(191, 47, 36, 0.08);
 }
 
+.marketIcon.session {
+  color: var(--blue);
+  background: rgba(24, 94, 168, 0.08);
+}
+
 .marketIcon.breadth {
   color: var(--green);
   background: rgba(15, 143, 95, 0.09);

@@ -18,9 +18,18 @@ function changeClass(value: number | null | undefined): string {
   return value < 0 ? 'down' : 'up';
 }
 
-function MarketIcon({ type }: { type: 'index' | 'breadth' | 'liquidity' | 'leader' }) {
+function MarketIcon({ type }: { type: 'session' | 'index' | 'breadth' | 'liquidity' | 'leader' }) {
   const icon =
-    type === 'index' ? (
+    type === 'session' ? (
+      <>
+        <path d="M7 3v3" />
+        <path d="M17 3v3" />
+        <path d="M4.5 8h15" />
+        <path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" />
+        <path d="M8 12h3" />
+        <path d="M8 16h5" />
+      </>
+    ) : type === 'index' ? (
       <path d="M5 15h3l2.4-7 4.2 13 3-8H21" />
     ) : type === 'breadth' ? (
       <>
@@ -77,7 +86,10 @@ export function MarketHeader({
     <div className="marketGrid">
       <div className="marketCard marketMain">
         <div>
-          <div className="marketLabel">Phiên dữ liệu</div>
+          <div className="marketLabel withIcon">
+            <MarketIcon type="session" />
+            Phiên dữ liệu
+          </div>
           <div className="marketValue">{marketDate ?? 'Demo'}</div>
         </div>
         <div className="sessionStatusGroup">
