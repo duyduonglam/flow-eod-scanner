@@ -66,9 +66,10 @@ export function MarketHeader({
     : null;
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
-  const breadth = advancers == null || decliners == null ? '-' : `${advancers}/${decliners}`;
   const marketMode = marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa');
   const sessionLabel = dataStatus === 'LIVE' ? 'Scan EOD đã lưu' : 'Dữ liệu minh họa';
+  const indexChangeClass = changeClass(marketRegime?.index_change_pct);
+  const liquidityChangeClass = marketRegime?.distribution_flag ? 'down' : 'up';
 
   return (
     <div className="marketGrid">
@@ -87,10 +88,10 @@ export function MarketHeader({
           <MarketIcon type="index" />
           {marketRegime?.index_symbol || 'VNINDEX'}
         </div>
-        <div className="metricValue">
+        <div className={`metricValue ${indexChangeClass}`}>
           {marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}
         </div>
-        <div className={`metricHint ${changeClass(marketRegime?.index_change_pct)}`}>
+        <div className={`metricHint ${indexChangeClass}`}>
           {pct(marketRegime?.index_change_pct)}
         </div>
       </div>
@@ -99,7 +100,17 @@ export function MarketHeader({
           <MarketIcon type="breadth" />
           Breadth
         </div>
-        <div className="metricValue">{breadth}</div>
+        <div className="metricValue breadthValue">
+          {advancers == null || decliners == null ? (
+            '-'
+          ) : (
+            <>
+              <span className="breadthUp">{advancers}</span>
+              <span className="breadthDivider">/</span>
+              <span className="breadthDown">{decliners}</span>
+            </>
+          )}
+        </div>
         <div className="metricHint">Mã tăng / mã giảm</div>
       </div>
       <div className="marketCard marketLiquidity">
@@ -107,8 +118,10 @@ export function MarketHeader({
           <MarketIcon type="liquidity" />
           Thanh khoản
         </div>
-        <div className="metricValue">{compact(marketRegime?.liquidity_value)}</div>
-        <div className="metricHint">{marketRegime?.distribution_flag ? 'Có dấu hiệu phân phối' : 'Giá trị giao dịch'}</div>
+        <div className={`metricValue ${liquidityChangeClass}`}>{compact(marketRegime?.liquidity_value)}</div>
+        <div className={`metricHint ${liquidityChangeClass}`}>
+          {marketRegime?.distribution_flag ? 'Có dấu hiệu phân phối' : 'Giá trị giao dịch'}
+        </div>
       </div>
       <div className="marketCard marketLeader">
         <div className="marketLabel withIcon">

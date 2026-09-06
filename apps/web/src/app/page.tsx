@@ -69,10 +69,10 @@ export default async function Home({ searchParams }: HomeProps) {
       <section className="notes">
         <h2>Ghi chú EOD</h2>
         <ul>
-          <li>Ưu tiên mã có điểm tổng cao, RS tốt và dòng tiền xác nhận.</li>
-          <li>Không mua đuổi khi giá đã vượt xa Entry Zone hoặc Stop Distance quá rộng.</li>
-          <li>Link tin tức chỉ mở nguồn đã lưu trong database; không tạo link giả khi chưa có nguồn xác minh.</li>
-          <li>Đây là watchlist định lượng, không phải tư vấn đầu tư cá nhân.</li>
+          <li>Hệ thống giúp lọc nhanh nhóm cổ phiếu mạnh theo FLOW score, RS, dòng tiền và vùng quản trị rủi ro sau mỗi phiên.</li>
+          <li>Nên ưu tiên các mã có tín hiệu đồng thuận: điểm cao, xu hướng tốt, thanh khoản xác nhận và giá còn nằm gần Entry Zone.</li>
+          <li>Luôn kiểm tra thêm bối cảnh VNINDEX, Breadth, tin tức và thanh khoản trước khi hành động, đặc biệt khi thị trường phân hóa.</li>
+          <li>Tránh mua đuổi khi giá đã vượt xa vùng mua hoặc Stop quá rộng; dashboard là công cụ tham khảo, không phải khuyến nghị đầu tư cá nhân.</li>
         </ul>
       </section>
     </main>

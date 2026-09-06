@@ -86,7 +86,7 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
       <div className="controlGroup dateControl">
         <div>
           <label className="sectionLabel" htmlFor="scan-date-select">
-            Lịch sử Scan
+            Lịch sử
           </label>
         </div>
         <select

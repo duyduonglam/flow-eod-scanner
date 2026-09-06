@@ -62,7 +62,6 @@ export function ScanSummary({ rows, news, marketDate }: { rows: ScanRow[]; news:
       {news.length ? (
         <article className="summaryPanel newsPanel">
           <div className="sectionLabel">Tin tức nổi bật chung</div>
-          <div className="summaryHint">Tin được khóa theo đúng market_date; bấm tiêu đề để mở nguồn và tự xác minh.</div>
           <div className="generalNewsList">
             {news.map((item) => {
               const meta = [item.symbol, item.source, publishedLabel(item.published_at)].filter(Boolean).join(' · ');

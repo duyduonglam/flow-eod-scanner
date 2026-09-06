@@ -250,7 +250,7 @@ select:focus-visible {
   height: 118px;
   content: "";
   border-radius: 50%;
-  opacity: 0.38;
+  opacity: 0.18;
   pointer-events: none;
 }
 
@@ -260,13 +260,13 @@ select:focus-visible {
   justify-content: space-between;
   gap: 16px;
   background:
-    linear-gradient(135deg, rgba(229, 247, 238, 0.98) 0%, rgba(255, 255, 255, 0.95) 47%, rgba(231, 241, 255, 0.92) 100%);
-  border-color: #c5e6d7;
+    linear-gradient(150deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 255, 0.96) 52%, rgba(236, 248, 243, 0.92) 100%);
+  border-color: #d5e2ee;
 }
 
 .marketIndex {
-  background: linear-gradient(135deg, #fff3f4 0%, #ffffff 46%, #ffe7ea 100%);
-  border-color: #f3c8cf;
+  background: linear-gradient(150deg, #ffffff 0%, #fbfdff 48%, #fff1f3 100%);
+  border-color: #ead4d8;
 }
 
 .marketIndex::after {
@@ -274,8 +274,8 @@ select:focus-visible {
 }
 
 .marketBreadth {
-  background: linear-gradient(135deg, #ebfbf3 0%, #ffffff 46%, #d9f7e8 100%);
-  border-color: #bfe9d3;
+  background: linear-gradient(150deg, #ffffff 0%, #fbfdff 48%, #ecf8f1 100%);
+  border-color: #cfe6d9;
 }
 
 .marketBreadth::after {
@@ -283,8 +283,8 @@ select:focus-visible {
 }
 
 .marketLiquidity {
-  background: linear-gradient(135deg, #edf6ff 0%, #ffffff 46%, #dbeafe 100%);
-  border-color: #c5daf5;
+  background: linear-gradient(150deg, #ffffff 0%, #fbfdff 48%, #eef5ff 100%);
+  border-color: #d2deee;
 }
 
 .marketLiquidity::after {
@@ -292,8 +292,8 @@ select:focus-visible {
 }
 
 .marketLeader {
-  background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 46%, #ece6ff 100%);
-  border-color: #d9cdff;
+  background: linear-gradient(150deg, #ffffff 0%, #fbfdff 48%, #f3f0ff 100%);
+  border-color: #ddd8ee;
 }
 
 .marketLeader::after {
@@ -331,22 +331,22 @@ select:focus-visible {
 
 .marketIcon.index {
   color: var(--red);
-  background: rgba(191, 47, 36, 0.1);
+  background: rgba(191, 47, 36, 0.08);
 }
 
 .marketIcon.breadth {
   color: var(--green);
-  background: rgba(15, 143, 95, 0.12);
+  background: rgba(15, 143, 95, 0.09);
 }
 
 .marketIcon.liquidity {
   color: var(--blue);
-  background: rgba(24, 94, 168, 0.12);
+  background: rgba(24, 94, 168, 0.09);
 }
 
 .marketIcon.leader {
   color: #6331f5;
-  background: rgba(99, 49, 245, 0.11);
+  background: rgba(99, 49, 245, 0.08);
 }
 
 .marketValue {
@@ -367,6 +367,34 @@ select:focus-visible {
 
 .metricValue.accent {
   color: var(--green);
+}
+
+.metricValue.up {
+  color: var(--green);
+}
+
+.metricValue.down {
+  color: var(--red);
+}
+
+.breadthValue {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.breadthUp {
+  color: var(--green);
+}
+
+.breadthDown {
+  color: var(--red);
+}
+
+.breadthDivider {
+  color: #9aa8ba;
+  font-size: 20px;
+  font-weight: 760;
 }
 
 .riskon,
@@ -430,7 +458,8 @@ select:focus-visible {
 }
 
 .searchControl {
-  flex: 1 1 auto;
+  flex: 1 1 500px;
+  max-width: 560px;
 }
 
 .dateControl {
@@ -438,7 +467,7 @@ select:focus-visible {
 }
 
 .scanControl {
-  flex: 0 0 224px;
+  flex: 0 0 230px;
   justify-content: flex-end;
 }
 
@@ -481,6 +510,7 @@ select:focus-visible {
 .searchField {
   flex: 1 1 auto;
   min-width: 260px;
+  max-width: 420px;
 }
 
 .searchInput,
