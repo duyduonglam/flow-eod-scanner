@@ -10,7 +10,7 @@ function pct(value: number | null | undefined): string {
 }
 
 function liquidity(value: number | null | undefined): string {
-  return value == null ? '-' : `${liquidityFormatter.format(value)} Nghìn tỉ`;
+  return value == null ? '-' : `${liquidityFormatter.format(value / 1_000_000_000_000)} Nghìn tỉ`;
 }
 
 function changeClass(value: number | null | undefined): string {
