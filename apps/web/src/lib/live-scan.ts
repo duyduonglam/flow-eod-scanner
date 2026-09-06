@@ -166,6 +166,38 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
   });
 }
 
+async function attachSignalCloses(rows: ScanRow[]): Promise<ScanRow[]> {
+  const db = getSupabase();
+  const symbolIds = Array.from(new Set(rows.map((row) => row.symbol_id).filter((id): id is number => id != null)));
+  const marketDates = Array.from(new Set(rows.map((row) => row.market_date).filter(Boolean)));
+  if (!db || !rows.length || !symbolIds.length || !marketDates.length) return rows;
+
+  const sortedDates = marketDates.toSorted();
+  const { data, error } = await db
+    .from('stock_signals')
+    .select('symbol_id, market_date, close')
+    .in('symbol_id', symbolIds)
+    .gte('market_date', sortedDates[0])
+    .lte('market_date', sortedDates[sortedDates.length - 1])
+    .limit(1000);
+
+  if (error || !data?.length) return rows;
+
+  const closeByKey = new Map<string, number>();
+  for (const raw of data) {
+    const symbolId = toNumber(raw.symbol_id);
+    const marketDate = toText(raw.market_date);
+    const close = toNumber(raw.close);
+    if (symbolId == null || !marketDate || close == null) continue;
+    closeByKey.set(`${marketDate}:${symbolId}`, close);
+  }
+
+  return rows.map((row) => {
+    if (row.symbol_id == null || row.close != null) return row;
+    return { ...row, close: closeByKey.get(`${row.market_date}:${row.symbol_id}`) ?? row.close };
+  });
+}
+
 async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
   const db = getSupabase();
   if (!db) return null;
@@ -177,7 +209,7 @@ async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
     .order('rank', { ascending: true });
 
   if (error || !data?.length) return null;
-  return attachHeadlineNews(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)));
+  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
 export async function getAvailableScanDates(): Promise<string[]> {
@@ -217,7 +249,7 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
     .limit(240);
 
   if (error || !data?.length) return [];
-  return attachHeadlineNews(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)));
+  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
 export async function getSessionNews(marketDate?: string | null): Promise<NewsItem[]> {
@@ -296,7 +328,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     };
   }
 
-  const rows = await attachHeadlineNews(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)));
+  const rows = await attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
   const latestMarketDate = rows[0]?.market_date ?? null;
   return {
     rows,
