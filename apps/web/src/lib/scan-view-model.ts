@@ -43,8 +43,8 @@ function normalizeComparableText(value: string): string {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
+    .replace(/\u0111/g, 'd')
+    .replace(/\u0110/g, 'D')
     .toLocaleLowerCase('vi-VN')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();

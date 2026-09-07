@@ -43,6 +43,13 @@ test('keeps only news urls that match the linked title', () => {
     'https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang',
   );
   assert.equal(
+    verifiedNewsUrl(
+      'https://example.com/gemadept-mo-rong-cang-nam-dinh-vu-giai-doan-2',
+      'Gemadept mở rộng cảng Nam Đình Vũ giai đoạn 2',
+    ),
+    'https://example.com/gemadept-mo-rong-cang-nam-dinh-vu-giai-doan-2',
+  );
+  assert.equal(
     verifiedNewsUrl('https://example.com/stb-loi-nhuan-ngan-hang', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
   );
