@@ -87,7 +87,10 @@ export function verifiedNewsUrl(url: string | null | undefined, _title: string):
   const trimmed = url.trim();
   try {
     const parsed = new URL(trimmed);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? trimmed : null;
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    const meaningfulPath = parsed.pathname.replace(/^\/+|\/+$/g, '');
+    if (!meaningfulPath && !parsed.search) return null;
+    return trimmed;
   } catch {
     return null;
   }

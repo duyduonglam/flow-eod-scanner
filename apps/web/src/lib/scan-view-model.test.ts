@@ -53,6 +53,7 @@ test('keeps safe news urls even when the route is opaque', () => {
     verifiedNewsUrl('https://example.com/news/20260904/123456', 'Gemadept mở rộng cảng Nam Đình Vũ giai đoạn 2'),
     'https://example.com/news/20260904/123456',
   );
+  assert.equal(verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'), null);
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
