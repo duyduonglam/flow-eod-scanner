@@ -82,14 +82,19 @@ function newsPriority<T extends NewsSummaryItem>(a: T, b: T): number {
   return Number(Boolean(b.url)) - Number(Boolean(a.url));
 }
 
-export function verifiedNewsUrl(url: string | null | undefined, _title: string): string | null {
+export function verifiedNewsUrl(url: string | null | undefined, title: string): string | null {
   if (!url?.trim()) return null;
   const trimmed = url.trim();
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
     const meaningfulPath = parsed.pathname.replace(/^\/+|\/+$/g, '');
-    if (!meaningfulPath && !parsed.search) return null;
+    if (!meaningfulPath && !parsed.search) {
+      const cleanTitle = title.trim();
+      if (!cleanTitle) return null;
+      const host = parsed.hostname.replace(/^www\./, '');
+      return `https://www.google.com/search?q=${encodeURIComponent(`site:${host} ${cleanTitle}`)}`;
+    }
     return trimmed;
   } catch {
     return null;

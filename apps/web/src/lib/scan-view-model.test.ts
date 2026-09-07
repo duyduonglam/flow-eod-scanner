@@ -53,7 +53,10 @@ test('keeps safe news urls even when the route is opaque', () => {
     verifiedNewsUrl('https://example.com/news/20260904/123456', 'Gemadept mở rộng cảng Nam Đình Vũ giai đoạn 2'),
     'https://example.com/news/20260904/123456',
   );
-  assert.equal(verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'), null);
+  assert.equal(
+    verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'),
+    'https://www.google.com/search?q=site%3Avietnamfinance.vn%20M%E1%BB%99t%20b%C3%A0i%20vi%E1%BA%BFt%20c%E1%BB%A5%20th%E1%BB%83',
+  );
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
