@@ -39,6 +39,41 @@ function normalizeTitle(value: string): string {
   return value.trim().toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ');
 }
 
+function normalizeComparableText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLocaleLowerCase('vi-VN')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function titleTokens(title: string): string[] {
+  const stopWords = new Set(['cho', 'cua', 'cac', 'voi', 'sau', 'khi', 'trong', 'tren', 'duoc', 'theo', 'vao']);
+  return normalizeComparableText(title)
+    .split(/\s+/)
+    .filter((token) => token.length >= 3 && !stopWords.has(token));
+}
+
+export function verifiedNewsUrl(url: string | null | undefined, title: string): string | null {
+  if (!url?.trim()) return null;
+  let decodedUrl = url;
+  try {
+    decodedUrl = decodeURIComponent(url);
+  } catch {
+    decodedUrl = url;
+  }
+  const normalizedUrl = normalizeComparableText(decodedUrl);
+  const tokens = titleTokens(title);
+  if (!normalizedUrl || !tokens.length) return null;
+
+  const matchedTokens = tokens.filter((token) => normalizedUrl.includes(token));
+  const requiredMatches = Math.min(3, Math.max(2, Math.ceil(tokens.length * 0.35)));
+  return matchedTokens.length >= requiredMatches ? url.trim() : null;
+}
+
 function publishedAtValue(value: string | null): number {
   if (!value) return 0;
   const parsed = Date.parse(value);

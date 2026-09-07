@@ -1,5 +1,5 @@
 import { demoRows } from '@/lib/demo-data';
-import { dedupeNews, normalizeTickerQuery, pickHeadlineNews } from '@/lib/scan-view-model';
+import { dedupeNews, normalizeTickerQuery, pickHeadlineNews, verifiedNewsUrl } from '@/lib/scan-view-model';
 import { getSupabase } from '@/lib/supabase';
 import type { Decision, MarketRegime, NewsItem, ScanRow } from '@/lib/types';
 
@@ -72,9 +72,11 @@ function normalizeRow(row: JoinedScanRow): ScanRow {
 
 function normalizeNews(row: JoinedNewsRow): NewsItem {
   const sentiment = toText(row.sentiment) as NewsItem['sentiment'];
+  const title = toText(row.title);
+  const rawUrl = typeof row.url === 'string' && row.url.trim() ? row.url.trim() : null;
   return {
-    title: toText(row.title),
-    url: typeof row.url === 'string' && row.url.trim() ? row.url.trim() : null,
+    title,
+    url: verifiedNewsUrl(rawUrl, title),
     source: toText(row.source, 'Nguồn tin'),
     published_at: typeof row.published_at === 'string' ? row.published_at : null,
     market_date: toText(row.market_date),
@@ -141,7 +143,7 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
     const key = `${marketDate}:${symbolId}`;
     const item: NewsItem = {
       title: toText(raw.title),
-      url: typeof raw.url === 'string' && raw.url.trim() ? raw.url.trim() : null,
+      url: verifiedNewsUrl(typeof raw.url === 'string' && raw.url.trim() ? raw.url.trim() : null, toText(raw.title)),
       source: toText(raw.source, 'Nguồn tin'),
       published_at: typeof raw.published_at === 'string' ? raw.published_at : null,
       market_date: marketDate,
@@ -159,7 +161,7 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
     return {
       ...row,
       headline_news: row.headline_news ?? selected.title,
-      headline_news_url: selected.url,
+      headline_news_url: verifiedNewsUrl(selected.url, selected.title),
       headline_news_source: selected.source,
       headline_news_published_at: selected.published_at,
     };

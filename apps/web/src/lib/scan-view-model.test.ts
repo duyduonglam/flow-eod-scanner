@@ -6,6 +6,7 @@ import {
   dedupeNews,
   normalizeTickerQuery,
   pickHeadlineNews,
+  verifiedNewsUrl,
 } from './scan-view-model.ts';
 
 const baseRow = {
@@ -34,6 +35,17 @@ test('only links a stored headline when the title matches a real news item', () 
   assert.equal(pickHeadlineNews('KQKD quý 2 tăng mạnh', items)?.url, 'https://example.com/earnings');
   assert.equal(pickHeadlineNews('Không khớp', items), null);
   assert.equal(pickHeadlineNews(null, items)?.url, 'https://example.com/latest');
+});
+
+test('keeps only news urls that match the linked title', () => {
+  assert.equal(
+    verifiedNewsUrl('https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang', 'Cổ phiếu GMD vượt đỉnh, thanh khoản tăng'),
+    'https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang',
+  );
+  assert.equal(
+    verifiedNewsUrl('https://example.com/stb-loi-nhuan-ngan-hang', 'GMD mở rộng cảng Nam Đình Vũ'),
+    null,
+  );
 });
 
 test('quick assessments prioritize the highest FLOW scores', () => {
