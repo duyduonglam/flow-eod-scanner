@@ -39,39 +39,33 @@ function normalizeTitle(value: string): string {
   return value.trim().toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ');
 }
 
-function normalizeComparableText(value: string): string {
-  return value
+const trustedNewsSources = [
+  'fireant',
+  'cafef',
+  'vietstock',
+  'ssi',
+  'fiintrade',
+  'vndirect',
+  'hsc',
+  'bsc',
+  'ndh',
+  'vneconomy',
+  'vietnamfinance',
+  'vietnambiz',
+  'tinnhanhchungkhoan',
+  'dtck',
+  'bao dau tu',
+  'baodautu',
+];
+
+function trustedSourceRank(source: string): number {
+  const normalized = normalizeTitle(source)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\u0111/g, 'd')
-    .replace(/\u0110/g, 'D')
-    .toLocaleLowerCase('vi-VN')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-function titleTokens(title: string): string[] {
-  const stopWords = new Set(['cho', 'cua', 'cac', 'voi', 'sau', 'khi', 'trong', 'tren', 'duoc', 'theo', 'vao']);
-  return normalizeComparableText(title)
-    .split(/\s+/)
-    .filter((token) => token.length >= 3 && !stopWords.has(token));
-}
-
-export function verifiedNewsUrl(url: string | null | undefined, title: string): string | null {
-  if (!url?.trim()) return null;
-  let decodedUrl = url;
-  try {
-    decodedUrl = decodeURIComponent(url);
-  } catch {
-    decodedUrl = url;
-  }
-  const normalizedUrl = normalizeComparableText(decodedUrl);
-  const tokens = titleTokens(title);
-  if (!normalizedUrl || !tokens.length) return null;
-
-  const matchedTokens = tokens.filter((token) => normalizedUrl.includes(token));
-  const requiredMatches = Math.min(3, Math.max(2, Math.ceil(tokens.length * 0.35)));
-  return matchedTokens.length >= requiredMatches ? url.trim() : null;
+    .replace(/\u0110/g, 'D');
+  const index = trustedNewsSources.findIndex((trusted) => normalized.includes(trusted));
+  return index === -1 ? trustedNewsSources.length : index;
 }
 
 function publishedAtValue(value: string | null): number {
@@ -80,9 +74,28 @@ function publishedAtValue(value: string | null): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function newsPriority<T extends NewsSummaryItem>(a: T, b: T): number {
+  const sourceRank = trustedSourceRank(a.source) - trustedSourceRank(b.source);
+  if (sourceRank !== 0) return sourceRank;
+  const byDate = publishedAtValue(b.published_at) - publishedAtValue(a.published_at);
+  if (byDate !== 0) return byDate;
+  return Number(Boolean(b.url)) - Number(Boolean(a.url));
+}
+
+export function verifiedNewsUrl(url: string | null | undefined, _title: string): string | null {
+  if (!url?.trim()) return null;
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function pickHeadlineNews<T extends NewsSummaryItem>(headline: string | null | undefined, items: T[]): T | null {
   if (!items.length) return null;
-  const sorted = items.toSorted((a, b) => publishedAtValue(b.published_at) - publishedAtValue(a.published_at));
+  const sorted = items.toSorted(newsPriority);
   const wanted = normalizeTitle(headline ?? '');
   if (!wanted) return sorted[0] ?? null;
   return sorted.find((item) => normalizeTitle(item.title) === wanted) ?? null;
@@ -141,11 +154,7 @@ export function buildExclusions(rows: SummaryRow[], limit = 5): ExclusionNote[] 
 }
 
 export function dedupeNews<T extends NewsSummaryItem>(items: T[], limit = 5): T[] {
-  const sorted = items.toSorted((a, b) => {
-    const byDate = publishedAtValue(b.published_at) - publishedAtValue(a.published_at);
-    if (byDate !== 0) return byDate;
-    return Number(Boolean(b.url)) - Number(Boolean(a.url));
-  });
+  const sorted = items.toSorted(newsPriority);
   const seen = new Set<string>();
   const result: T[] = [];
   for (const item of sorted) {

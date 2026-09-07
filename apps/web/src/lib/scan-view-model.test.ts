@@ -37,7 +37,7 @@ test('only links a stored headline when the title matches a real news item', () 
   assert.equal(pickHeadlineNews(null, items)?.url, 'https://example.com/latest');
 });
 
-test('keeps only news urls that match the linked title', () => {
+test('keeps safe news urls even when the route is opaque', () => {
   assert.equal(
     verifiedNewsUrl('https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang', 'Cổ phiếu GMD vượt đỉnh, thanh khoản tăng'),
     'https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang',
@@ -50,9 +50,24 @@ test('keeps only news urls that match the linked title', () => {
     'https://example.com/gemadept-mo-rong-cang-nam-dinh-vu-giai-doan-2',
   );
   assert.equal(
-    verifiedNewsUrl('https://example.com/stb-loi-nhuan-ngan-hang', 'GMD mở rộng cảng Nam Đình Vũ'),
+    verifiedNewsUrl('https://example.com/news/20260904/123456', 'Gemadept mở rộng cảng Nam Đình Vũ giai đoạn 2'),
+    'https://example.com/news/20260904/123456',
+  );
+  assert.equal(
+    verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
   );
+});
+
+test('prioritizes reputable news sources for related market news', () => {
+  const items = [
+    { title: 'Tin diễn đàn mới hơn', url: 'https://example.com/forum', source: 'Blog cá nhân', published_at: '2026-09-03T10:00:00Z' },
+    { title: 'Tin CafeF cũ hơn', url: 'https://cafef.vn/a', source: 'CafeF', published_at: '2026-09-03T08:00:00Z' },
+    { title: 'Tin Vietstock', url: 'https://vietstock.vn/b', source: 'Vietstock', published_at: '2026-09-03T09:00:00Z' },
+  ];
+
+  assert.equal(pickHeadlineNews(null, items)?.source, 'CafeF');
+  assert.deepEqual(dedupeNews(items, 3).map((item) => item.source), ['CafeF', 'Vietstock', 'Blog cá nhân']);
 });
 
 test('quick assessments prioritize the highest FLOW scores', () => {
