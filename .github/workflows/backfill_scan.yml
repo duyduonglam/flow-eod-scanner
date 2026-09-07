@@ -1,0 +1,78 @@
+name: FLOW EOD Backfill
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: Start date in YYYY-MM-DD
+        required: true
+        default: '2026-08-01'
+      end_date:
+        description: End date in YYYY-MM-DD
+        required: true
+        default: '2026-08-24'
+      limit:
+        description: Maximum ranked rows to publish per session
+        required: false
+        default: '10'
+permissions:
+  contents: read
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scanner
+        run: pip install -e 'apps/scanner[dev,data]'
+      - name: Run deterministic tests
+        run: pytest -q apps/scanner/tests
+      - name: Backfill EOD scans
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FIREANT_API_KEY: ${{ secrets.FIREANT_API_KEY }}
+          OPENSTOCK_API_KEY: ${{ secrets.OPENSTOCK_API_KEY }}
+          VNSTOCK_SOURCE: TCBS
+          START_DATE: ${{ github.event.inputs.start_date }}
+          END_DATE: ${{ github.event.inputs.end_date }}
+          LIMIT: ${{ github.event.inputs.limit }}
+          TZ: Asia/Ho_Chi_Minh
+        run: |
+          set -u
+          dates=""
+          current="$START_DATE"
+          while [[ "$current" < "$END_DATE" || "$current" == "$END_DATE" ]]; do
+            day_of_week=$(date -d "$current" +%u)
+            if [ "$day_of_week" -le 5 ]; then
+              dates="$dates $current"
+            fi
+            current=$(date -I -d "$current + 1 day")
+          done
+
+          echo "Backfill sessions: $dates"
+          echo "Backfill $START_DATE to $END_DATE" >> "$GITHUB_STEP_SUMMARY"
+
+          failed=0
+          for market_date in $dates; do
+            echo "::group::Backfill $market_date"
+            if timeout 8m python -m flow_scanner.cli \
+              --date "$market_date" \
+              --limit "$LIMIT" \
+              --max-lookback-days 0 \
+              --retry-sleep-seconds 0 \
+              --max-rate-limit-retries 0; then
+              echo "- $market_date: OK" >> "$GITHUB_STEP_SUMMARY"
+            else
+              failed=$((failed + 1))
+              echo "::warning::Backfill failed or no market bar for $market_date"
+              echo "- $market_date: skipped/failed" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -gt 0 ]; then
+            echo "::warning::$failed sessions were skipped or failed. Check provider availability/rate limits."
+          fi
