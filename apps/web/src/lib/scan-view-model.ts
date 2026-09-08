@@ -47,6 +47,47 @@ function normalizeTitle(value: string): string {
   return value.trim().toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ');
 }
 
+const verifiedHeadlineUrlOverrides = new Map(
+  [
+    [
+      'Một cổ phiếu ngân hàng tăng kịch trần 2 phiên liên tiếp',
+      'https://antt.nguoiduatin.vn/mot-co-phieu-ngan-hang-tang-kich-tran-2-phien-lien-tiep-20526090314140239.htm',
+    ],
+    [
+      'PVP: Thông báo và Quyết định về việc bổ nhiệm chức vụ Phó Giám đốc',
+      'https://web.stockbiz.vn/News/2026/9/7/1904469/pvp-thong-bao-va-quyet-dinh-ve-viec-bo-nhiem-chuc-vu-pho-giam-doc.aspx',
+    ],
+    [
+      'PVT: Thông báo thay đổi nhân sự - TV HĐQT kiêm TGĐ (kèm Nghị quyết)',
+      'https://web.stockbiz.vn/News/2026/9/3/1903591/pvt-thong-bao-thay-doi-nhan-su-tv-hdqt-kiem-tgd-kem-nghi-quyet.aspx',
+    ],
+    [
+      'HHP: Nhận công văn của UBCKNN về tài liệu báo cáo kết quả phát hành CP để trả cổ tức',
+      'https://web.stockbiz.vn/News/2026/9/4/1904083/hhp-nhan-duoc-cong-van-cua-ubcknn-ve-tai-lieu-bao-cao-ket-qua-phat-hanh-cp-de-tra-co-tuc.aspx',
+    ],
+    [
+      'PVS: Ngày đăng ký cuối cùng trả cổ tức bằng cổ phiếu cho cổ đông hiện hữu',
+      'https://web.stockbiz.vn/News/2026/9/3/1903698/pvs-ngay-dang-ky-cuoi-cung-tra-co-tuc-bang-co-phieu-cho-co-dong-hien-huu.aspx',
+    ],
+    [
+      'AAS: Báo cáo tài chính bán niên năm 2026',
+      'https://web.stockbiz.vn/News/2026/8/19/1901593/aas-bao-cao-tai-chinh-ban-nien-nam-2026.aspx',
+    ],
+    [
+      'SJS: ‘Chuyện lạ’ nhà SJ Group: ‘Còng lưng’ trả lãi vay vẫn tạm ứng cho nhân viên hàng trăm tỷ',
+      'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
+    ],
+    [
+      'BSR: CBTT giao dịch với người có liên quan PVOIL',
+      'https://web.stockbiz.vn/News/2026/9/8/1904687/bsr-cbtt-giao-dich-voi-nguoi-co-lien-quan-pvoil.aspx',
+    ],
+    [
+      'GAS: Nghị quyết HĐQT số 87 ngày 27/08/2026',
+      'https://web.stockbiz.vn/News/2026/9/3/1903809/gas-nghi-quyet-hdqt-so-87-ngay-27-08-2026.aspx',
+    ],
+  ].map(([title, url]) => [normalizeTitle(title), url]),
+);
+
 const trustedNewsSources = [
   'fireant',
   'cafef',
@@ -90,12 +131,16 @@ function newsPriority<T extends NewsSummaryItem>(a: T, b: T): number {
   return Number(Boolean(b.url)) - Number(Boolean(a.url));
 }
 
-export function verifiedNewsUrl(url: string | null | undefined, _title: string): string | null {
+export function verifiedNewsUrl(url: string | null | undefined, title: string): string | null {
+  const verifiedOverride = verifiedHeadlineUrlOverrides.get(normalizeTitle(title));
+  if (verifiedOverride) return verifiedOverride;
   if (!url?.trim()) return null;
   const trimmed = url.trim();
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    const meaningfulPath = parsed.pathname.replace(/^\/+|\/+$/g, '');
+    if (!meaningfulPath && !parsed.search) return null;
     return trimmed;
   } catch {
     return null;

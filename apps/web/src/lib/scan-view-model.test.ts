@@ -62,8 +62,12 @@ test('keeps safe news urls even when the route is opaque', () => {
     'https://example.com/news/20260904/123456',
   );
   assert.equal(
-    verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'),
-    'https://vietnamfinance.vn/',
+    verifiedNewsUrl('https://antt.vn/', 'Một cổ phiếu ngân hàng tăng kịch trần 2 phiên liên tiếp'),
+    'https://antt.nguoiduatin.vn/mot-co-phieu-ngan-hang-tang-kich-tran-2-phien-lien-tiep-20526090314140239.htm',
+  );
+  assert.equal(
+    verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết chưa xác minh'),
+    null,
   );
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
