@@ -63,7 +63,7 @@ test('keeps safe news urls even when the route is opaque', () => {
   );
   assert.equal(
     verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'),
-    null,
+    'https://vietnamfinance.vn/',
   );
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
