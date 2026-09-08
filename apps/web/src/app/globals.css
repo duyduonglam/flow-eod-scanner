@@ -236,8 +236,8 @@ select:focus-visible {
 
 .marketCard {
   position: relative;
-  min-height: 104px;
-  padding: 14px 15px;
+  min-height: 88px;
+  padding: 12px 14px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
 }
@@ -316,12 +316,12 @@ select:focus-visible {
 }
 
 .marketIcon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex: 0 0 auto;
   box-sizing: content-box;
-  padding: 4px;
-  border-radius: 9px;
+  padding: 3px;
+  border-radius: 8px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2.1;
@@ -356,10 +356,11 @@ select:focus-visible {
 
 .marketValue {
   color: var(--ink);
-  font-size: 26px;
+  font-size: 23px;
   font-weight: 850;
   letter-spacing: 0;
-  margin-top: 7px;
+  margin-top: 6px;
+  line-height: 1.18;
 }
 
 .sessionStatusGroup {
@@ -394,23 +395,23 @@ select:focus-visible {
 .compactMetricLine {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 7px;
+  margin-top: 7px;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 850;
   letter-spacing: 0;
-  line-height: 1.35;
+  line-height: 1.18;
   white-space: normal;
 }
 
 .compactMetricLine > span:first-child {
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 880;
 }
 
 .compactMetricLine > span + span {
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 820;
 }
 
@@ -456,7 +457,7 @@ select:focus-visible {
 
 .breadthDivider {
   color: #9aa8ba;
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 760;
 }
 
@@ -521,8 +522,12 @@ select:focus-visible {
 }
 
 .searchControl {
-  flex: 1 1 500px;
-  max-width: 560px;
+  flex: 1 1 420px;
+  max-width: 500px;
+}
+
+.decisionControl {
+  flex: 0 0 190px;
 }
 
 .dateControl {
@@ -618,6 +623,7 @@ select:focus-visible {
 .searchClearIcon,
 .manualScanButton,
 .dateSelect,
+.decisionSelect,
 .secretToggle,
 .dateChip {
   cursor: pointer;
@@ -628,7 +634,8 @@ select:focus-visible {
 .searchClear,
 .manualScanButton,
 .secretToggle,
-.dateSelect {
+.dateSelect,
+.decisionSelect {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -648,7 +655,19 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.decisionSelect {
+  width: 128px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #cbd7e5;
+  padding: 9px 11px;
+}
+
 .dateSelect:hover:not(:disabled) {
+  border-color: #aebbd0;
+}
+
+.decisionSelect:hover {
   border-color: #aebbd0;
 }
 
@@ -1399,6 +1418,7 @@ select:focus-visible {
   .searchButton,
   .searchClear,
   .manualScanButton,
+  .decisionSelect,
   .dateSelect {
     width: 100%;
   }
@@ -1416,7 +1436,11 @@ select:focus-visible {
   }
 
   .marketValue,
-  .metricValue {
-    font-size: 24px;
+  .metricValue,
+  .compactMetricLine,
+  .compactMetricLine > span:first-child,
+  .compactMetricLine > span + span,
+  .breadthDivider {
+    font-size: 22px;
   }
 }

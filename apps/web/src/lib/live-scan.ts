@@ -1,5 +1,13 @@
 import { demoRows } from '@/lib/demo-data';
-import { dedupeNews, normalizeTickerQuery, pickHeadlineNews, verifiedNewsUrl } from '@/lib/scan-view-model';
+import {
+  decisionValues,
+  dedupeNews,
+  normalizeDecisionFilter,
+  normalizeTickerQuery,
+  pickHeadlineNews,
+  verifiedNewsUrl,
+  type DecisionFilter,
+} from '@/lib/scan-view-model';
 import { getSupabase } from '@/lib/supabase';
 import type { Decision, MarketRegime, NewsItem, ScanRow } from '@/lib/types';
 
@@ -11,7 +19,7 @@ type JoinedNewsRow = Record<string, unknown> & {
   symbols?: { symbol?: unknown } | { symbol?: unknown }[];
 };
 
-const decisions: Decision[] = ['BUY', 'TEST BUY', 'BUY RETEST', 'WATCH', 'DO NOT CHASE', 'HOLD', 'TRIM', 'EXIT'];
+const decisions: Decision[] = [...decisionValues];
 
 function toNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
@@ -254,6 +262,22 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
   return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
+export async function getScanHistoryByDecision(decision: DecisionFilter): Promise<ScanRow[]> {
+  const db = getSupabase();
+  if (!db) return demoRows.filter((row) => row.decision === decision);
+
+  const { data, error } = await db
+    .from('scan_results')
+    .select('*, symbols!inner(symbol, exchange)')
+    .eq('decision', decision)
+    .order('market_date', { ascending: false })
+    .order('rank', { ascending: true })
+    .limit(500);
+
+  if (error || !data?.length) return [];
+  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+}
+
 export async function getSessionNews(marketDate?: string | null): Promise<NewsItem[]> {
   const db = getSupabase();
   if (!db || !marketDate) return [];
@@ -269,15 +293,17 @@ export async function getSessionNews(marketDate?: string | null): Promise<NewsIt
   return dedupeNews(data.map((row: RawScanRow) => normalizeNews(row as JoinedNewsRow)), 5);
 }
 
-export async function getScanRows(marketDate?: string | null, symbolQuery?: string | null) {
+export async function getScanRows(marketDate?: string | null, symbolQuery?: string | null, decisionQuery?: string | null) {
   const db = getSupabase();
   const dates = await getAvailableScanDates();
   const normalizedQuery = normalizeTickerQuery(symbolQuery);
+  const decisionFilter = normalizeDecisionFilter(decisionQuery);
 
   if (!db) {
-    const rows = normalizedQuery
+    const rows = (normalizedQuery
       ? demoRows.filter((row) => row.symbol.toUpperCase() === normalizedQuery)
-      : demoRows;
+      : demoRows
+    ).filter((row) => !decisionFilter || row.decision === decisionFilter);
     return {
       rows,
       dataStatus: 'DEMO',
@@ -285,12 +311,15 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'demo' as const,
       dates,
       searchSymbol: normalizedQuery || null,
+      decisionFilter,
       marketRegime: null,
     };
   }
 
   if (normalizedQuery) {
-    const rows = await getScanHistoryBySymbol(normalizedQuery);
+    const rows = (await getScanHistoryBySymbol(normalizedQuery)).filter(
+      (row) => !decisionFilter || row.decision === decisionFilter,
+    );
     return {
       rows,
       dataStatus: 'LIVE',
@@ -298,6 +327,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'live' as const,
       dates,
       searchSymbol: normalizedQuery,
+      decisionFilter,
       marketRegime: null,
     };
   }
@@ -305,16 +335,32 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
   if (marketDate) {
     const selectedRows = await getRowsForDate(marketDate);
     if (selectedRows?.length) {
+      const rows = selectedRows.filter((row) => !decisionFilter || row.decision === decisionFilter);
       return {
-        rows: selectedRows,
+        rows,
         dataStatus: 'LIVE',
         marketDate,
         source: 'live' as const,
         dates,
         searchSymbol: null,
+        decisionFilter,
         marketRegime: await getMarketRegime(marketDate),
       };
     }
+  }
+
+  if (decisionFilter) {
+    const rows = await getScanHistoryByDecision(decisionFilter);
+    return {
+      rows,
+      dataStatus: 'LIVE',
+      marketDate: rows[0]?.market_date ?? null,
+      source: 'live' as const,
+      dates,
+      searchSymbol: null,
+      decisionFilter,
+      marketRegime: null,
+    };
   }
 
   const { data, error } = await db.from('latest_scan_results').select('*').order('rank', { ascending: true });
@@ -326,6 +372,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       source: 'demo' as const,
       dates,
       searchSymbol: null,
+      decisionFilter: null,
       marketRegime: null,
     };
   }
@@ -339,6 +386,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     source: 'live' as const,
     dates,
     searchSymbol: null,
+    decisionFilter: null,
     marketRegime: await getMarketRegime(latestMarketDate),
   };
 }

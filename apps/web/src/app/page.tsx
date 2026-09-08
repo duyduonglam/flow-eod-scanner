@@ -7,15 +7,25 @@ import { getScanRows, getSessionNews } from '@/lib/live-scan';
 export const dynamic = 'force-dynamic';
 
 type HomeProps = {
-  searchParams: Promise<{ date?: string; q?: string }>;
+  searchParams: Promise<{ date?: string; q?: string; decision?: string }>;
 };
 
 export default async function Home({ searchParams }: HomeProps) {
-  const { date, q } = await searchParams;
-  const { rows, dataStatus, marketDate, source, dates, searchSymbol, marketRegime } = await getScanRows(date, q);
-  const sessionNews = searchSymbol ? [] : await getSessionNews(marketDate);
+  const { date, q, decision } = await searchParams;
+  const { rows, dataStatus, marketDate, source, dates, searchSymbol, decisionFilter, marketRegime } = await getScanRows(
+    date,
+    q,
+    decision,
+  );
+  const isDecisionHistory = Boolean(decisionFilter && !date && !searchSymbol);
+  const isHistoryView = Boolean(searchSymbol || decisionFilter);
+  const sessionNews = isHistoryView ? [] : await getSessionNews(marketDate);
   const stamp = searchSymbol
-    ? `Lịch sử ${searchSymbol} · ${rows.length} phiên`
+    ? decisionFilter
+      ? `Lịch sử ${searchSymbol} · Decision ${decisionFilter} · ${rows.length} phiên`
+      : `Lịch sử ${searchSymbol} · ${rows.length} phiên`
+    : decisionFilter
+      ? `Decision ${decisionFilter} · ${rows.length} kết quả lịch sử`
     : marketDate
       ? `Dữ liệu ${marketDate} / ${dataStatus}`
       : `${dataStatus} / dữ liệu mẫu`;
@@ -42,29 +52,35 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </header>
 
-      {searchSymbol ? null : (
+      {searchSymbol || isDecisionHistory ? null : (
         <MarketHeader rows={rows} dataStatus={dataStatus} marketDate={marketDate} marketRegime={marketRegime} />
       )}
-      <DashboardControls dates={dates} selectedDate={marketDate} query={searchSymbol} />
-      {searchSymbol ? (
+      <DashboardControls dates={dates} selectedDate={marketDate} query={searchSymbol} decision={decisionFilter} />
+      {isHistoryView ? (
         <section className="searchResultBanner" aria-live="polite">
           <div>
             <div className="sectionLabel">Kết quả lịch sử</div>
-            <strong>{searchSymbol}</strong>
+            <strong>{searchSymbol ?? `Decision ${decisionFilter}`}</strong>
           </div>
-          <span>{rows.length ? `${rows.length} phiên đã lưu` : 'Không tìm thấy phiên nào trong database'}</span>
+          <span>{rows.length ? `${rows.length} kết quả đã lưu` : 'Không tìm thấy dữ liệu phù hợp trong database'}</span>
         </section>
       ) : null}
 
       <ScanTable
         rows={rows}
         dataStamp={stamp}
-        showMarketDate={Boolean(searchSymbol)}
-        emptyMessage={searchSymbol ? `Không có dữ liệu lịch sử cho mã ${searchSymbol}.` : undefined}
-        sessionSummary={searchSymbol ? null : marketRegime?.summary}
+        showMarketDate={isHistoryView}
+        emptyMessage={
+          searchSymbol
+            ? `Không có dữ liệu lịch sử cho mã ${searchSymbol}.`
+            : decisionFilter
+              ? `Không có dữ liệu lịch sử cho Decision ${decisionFilter}.`
+              : undefined
+        }
+        sessionSummary={isHistoryView ? null : marketRegime?.summary}
       />
 
-      {searchSymbol ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}
+      {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}
 
       <section className="notes">
         <h2>Ghi chú EOD</h2>

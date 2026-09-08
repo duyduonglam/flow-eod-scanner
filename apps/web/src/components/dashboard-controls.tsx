@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { decisionValues, type DecisionFilter } from '@/lib/scan-view-model';
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -8,6 +9,7 @@ type DashboardControlsProps = {
   dates: string[];
   selectedDate?: string | null;
   query?: string | null;
+  decision?: DecisionFilter | null;
 };
 
 function messageFromResponse(payload: unknown, fallback: string): string {
@@ -20,13 +22,29 @@ function messageFromResponse(payload: unknown, fallback: string): string {
   return fallback;
 }
 
-export function DashboardControls({ dates, selectedDate, query }: DashboardControlsProps) {
+export function DashboardControls({ dates, selectedDate, query, decision }: DashboardControlsProps) {
   const [state, setState] = useState<SubmitState>('idle');
   const [message, setMessage] = useState('');
 
   function selectDate(value: string) {
     if (!value) return;
-    window.location.assign(`/?date=${encodeURIComponent(value)}`);
+    const params = new URLSearchParams(window.location.search);
+    params.set('date', value);
+    if (query) params.set('q', query);
+    if (decision) params.set('decision', decision);
+    window.location.assign(`/?${params.toString()}`);
+  }
+
+  function selectDecision(value: string) {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set('decision', value);
+      params.delete('date');
+    } else {
+      params.delete('decision');
+    }
+    if (query) params.set('q', query);
+    window.location.assign(params.toString() ? `/?${params.toString()}` : '/');
   }
 
   async function submitManualScan(event: FormEvent<HTMLFormElement>) {
@@ -80,7 +98,30 @@ export function DashboardControls({ dates, selectedDate, query }: DashboardContr
           <button className="searchButton" type="submit">
             Tìm mã
           </button>
+          {decision ? <input type="hidden" name="decision" value={decision} /> : null}
         </form>
+      </div>
+
+      <div className="controlGroup decisionControl">
+        <div>
+          <label className="sectionLabel" htmlFor="decision-filter-select">
+            Decision
+          </label>
+        </div>
+        <select
+          id="decision-filter-select"
+          className="decisionSelect"
+          aria-label="Lọc Decision toàn lịch sử"
+          value={decision ?? ''}
+          onChange={(event) => selectDecision(event.currentTarget.value)}
+        >
+          <option value="">Tất cả</option>
+          {decisionValues.map((item) => (
+            <option value={item} key={item}>
+              {item}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="controlGroup dateControl">

@@ -10,6 +10,9 @@ export type SummaryRow = {
   banker?: number | null;
 };
 
+export const decisionValues = ['BUY', 'TEST BUY', 'BUY RETEST', 'WATCH', 'DO NOT CHASE', 'HOLD', 'TRIM', 'EXIT'] as const;
+export type DecisionFilter = (typeof decisionValues)[number];
+
 export type NewsSummaryItem = {
   title: string;
   url: string | null;
@@ -33,6 +36,11 @@ export type ExclusionNote = {
 
 export function normalizeTickerQuery(query: string | null | undefined): string {
   return (query ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+}
+
+export function normalizeDecisionFilter(query: string | null | undefined): DecisionFilter | null {
+  const normalized = (query ?? '').trim().toUpperCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
+  return decisionValues.find((decision) => decision === normalized) ?? null;
 }
 
 function normalizeTitle(value: string): string {
@@ -82,19 +90,14 @@ function newsPriority<T extends NewsSummaryItem>(a: T, b: T): number {
   return Number(Boolean(b.url)) - Number(Boolean(a.url));
 }
 
-export function verifiedNewsUrl(url: string | null | undefined, title: string): string | null {
+export function verifiedNewsUrl(url: string | null | undefined, _title: string): string | null {
   if (!url?.trim()) return null;
   const trimmed = url.trim();
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
     const meaningfulPath = parsed.pathname.replace(/^\/+|\/+$/g, '');
-    if (!meaningfulPath && !parsed.search) {
-      const cleanTitle = title.trim();
-      if (!cleanTitle) return null;
-      const host = parsed.hostname.replace(/^www\./, '');
-      return `https://www.google.com/search?q=${encodeURIComponent(`site:${host} ${cleanTitle}`)}`;
-    }
+    if (!meaningfulPath && !parsed.search) return null;
     return trimmed;
   } catch {
     return null;

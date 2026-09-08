@@ -5,6 +5,7 @@ import {
   buildQuickAssessments,
   dedupeNews,
   normalizeTickerQuery,
+  normalizeDecisionFilter,
   pickHeadlineNews,
   verifiedNewsUrl,
 } from './scan-view-model.ts';
@@ -25,6 +26,13 @@ test('normalizes ticker search for all-history lookup', () => {
   assert.equal(normalizeTickerQuery('  vpi '), 'VPI');
   assert.equal(normalizeTickerQuery('gmd.vn'), 'GMDVN');
   assert.equal(normalizeTickerQuery(''), '');
+});
+
+test('normalizes decision filters from URL params', () => {
+  assert.equal(normalizeDecisionFilter(' buy '), 'BUY');
+  assert.equal(normalizeDecisionFilter('buy-retest'), 'BUY RETEST');
+  assert.equal(normalizeDecisionFilter('do_not_chase'), 'DO NOT CHASE');
+  assert.equal(normalizeDecisionFilter('random'), null);
 });
 
 test('only links a stored headline when the title matches a real news item', () => {
@@ -55,7 +63,7 @@ test('keeps safe news urls even when the route is opaque', () => {
   );
   assert.equal(
     verifiedNewsUrl('https://vietnamfinance.vn/', 'Một bài viết cụ thể'),
-    'https://www.google.com/search?q=site%3Avietnamfinance.vn%20M%E1%BB%99t%20b%C3%A0i%20vi%E1%BA%BFt%20c%E1%BB%A5%20th%E1%BB%83',
+    null,
   );
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
