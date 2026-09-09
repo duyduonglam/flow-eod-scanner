@@ -2,6 +2,7 @@ import { demoRows } from '@/lib/demo-data';
 import {
   decisionValues,
   dedupeNews,
+  findNewsUrlInHtml,
   normalizeDecisionFilter,
   normalizeTickerQuery,
   pickHeadlineNews,
@@ -20,6 +21,7 @@ type JoinedNewsRow = Record<string, unknown> & {
 };
 
 const decisions: Decision[] = [...decisionValues];
+const cafefArticleCache = new Map<string, Promise<string | null>>();
 
 function toNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
@@ -94,6 +96,41 @@ function normalizeNews(row: JoinedNewsRow): NewsItem {
   };
 }
 
+async function resolveCafeFArticleUrl(symbol: string | null | undefined, title: string): Promise<string | null> {
+  if (!symbol || !title.trim()) return null;
+  const ticker = normalizeTickerQuery(symbol);
+  if (!ticker) return null;
+  const key = `${ticker}:${title}`;
+  const cached = cafefArticleCache.get(key);
+  if (cached) return cached;
+
+  const task = (async () => {
+    const sourceUrl = `https://cafef.vn/du-lieu/tin-doanh-nghiep/${ticker.toLowerCase()}/event.chn`;
+    try {
+      const response = await fetch(sourceUrl, {
+        headers: { 'User-Agent': 'VNStock Market Intelligence link resolver' },
+        next: { revalidate: 1800 },
+        signal: AbortSignal.timeout(3500),
+      });
+      if (!response.ok) return null;
+      return findNewsUrlInHtml(await response.text(), title, sourceUrl);
+    } catch {
+      return null;
+    }
+  })();
+
+  cafefArticleCache.set(key, task);
+  return task;
+}
+
+async function resolveStoredNewsUrl(
+  url: string | null | undefined,
+  title: string,
+  symbol: string | null | undefined,
+): Promise<string | null> {
+  return verifiedNewsUrl(url, title) ?? (await resolveCafeFArticleUrl(symbol, title));
+}
+
 function normalizeMarketRegime(row: RawScanRow): MarketRegime {
   return {
     market_date: toText(row.market_date),
@@ -161,19 +198,20 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
     newsByKey.set(key, current);
   }
 
-  return rows.map((row) => {
+  return Promise.all(rows.map(async (row) => {
     if (row.symbol_id == null) return row;
     const candidates = newsByKey.get(`${row.market_date}:${row.symbol_id}`) ?? [];
     const selected = pickHeadlineNews(row.headline_news, candidates);
     if (!selected) return row;
+    const url = await resolveStoredNewsUrl(selected.url, selected.title, row.symbol);
     return {
       ...row,
       headline_news: row.headline_news ?? selected.title,
-      headline_news_url: verifiedNewsUrl(selected.url, selected.title),
+      headline_news_url: url,
       headline_news_source: selected.source,
       headline_news_published_at: selected.published_at,
     };
-  });
+  }));
 }
 
 async function attachSignalCloses(rows: ScanRow[]): Promise<ScanRow[]> {
@@ -290,7 +328,13 @@ export async function getSessionNews(marketDate?: string | null): Promise<NewsIt
     .limit(40);
 
   if (error || !data?.length) return [];
-  return dedupeNews(data.map((row: RawScanRow) => normalizeNews(row as JoinedNewsRow)), 5);
+  const news = dedupeNews(data.map((row: RawScanRow) => normalizeNews(row as JoinedNewsRow)), 5);
+  return Promise.all(
+    news.map(async (item) => ({
+      ...item,
+      url: await resolveStoredNewsUrl(item.url, item.title, item.symbol),
+    })),
+  );
 }
 
 export async function getScanRows(marketDate?: string | null, symbolQuery?: string | null, decisionQuery?: string | null) {

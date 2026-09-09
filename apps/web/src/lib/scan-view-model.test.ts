@@ -4,6 +4,7 @@ import {
   buildExclusions,
   buildQuickAssessments,
   dedupeNews,
+  findNewsUrlInHtml,
   normalizeTickerQuery,
   normalizeDecisionFilter,
   pickHeadlineNews,
@@ -72,6 +73,25 @@ test('keeps safe news urls even when the route is opaque', () => {
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
+  );
+});
+
+test('finds a matching article url from source html', () => {
+  const html = `
+    <a class='docnhanhTitle'
+      href="/du-lieu/HDB-2972867/hdb-nghi-quyet-hdqt-ve-viec-phat-hanh-va-chao-ban-trai-phieu-hdbank-ra-thi-truong-quoc-te-nam-2026.chn?utm_source=du-lieu"
+      title="HDB: Nghị quyết HĐQT về việc ph&#225;t h&#224;nh v&#224; ch&#224;o b&#225;n tr&#225;i phiếu HDBank ra thị trường quốc tế năm 2026">
+      HDB: Nghị quyết HĐQT về việc phát hành và chào bán trái phiếu HDBank ra thị trường quốc tế năm 2026
+    </a>
+  `;
+
+  assert.equal(
+    findNewsUrlInHtml(
+      html,
+      'HDB: Nghị quyết HĐQT về phát hành và chào bán trái phiếu quốc tế năm 2026',
+      'https://cafef.vn/du-lieu/tin-doanh-nghiep/hdb/event.chn',
+    ),
+    'https://cafef.vn/du-lieu/HDB-2972867/hdb-nghi-quyet-hdqt-ve-viec-phat-hanh-va-chao-ban-trai-phieu-hdbank-ra-thi-truong-quoc-te-nam-2026.chn',
   );
 });
 

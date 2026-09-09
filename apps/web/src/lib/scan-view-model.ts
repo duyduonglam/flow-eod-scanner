@@ -47,6 +47,61 @@ function normalizeTitle(value: string): string {
   return value.trim().toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ');
 }
 
+function stripVietnameseMarks(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\u0111/g, 'd')
+    .replace(/\u0110/g, 'D');
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function articleMatchTokens(value: string): Set<string> {
+  const normalized = stripVietnameseMarks(value)
+    .toLocaleLowerCase('vi-VN')
+    .replace(/^[a-z0-9]{2,5}\s*:\s*/, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  const stopWords = new Set(['ve', 'viec', 'va', 'cua', 'cho', 'co', 'phieu', 'nam', 'ngay']);
+  return new Set(normalized.split(/\s+/).filter((token) => token.length > 1 && !stopWords.has(token)));
+}
+
+function isCloseTitleMatch(sourceTitle: string, wantedTitle: string): boolean {
+  const source = articleMatchTokens(sourceTitle);
+  const wanted = articleMatchTokens(wantedTitle);
+  if (!source.size || !wanted.size) return false;
+  const hits = [...wanted].filter((token) => source.has(token)).length;
+  return hits / wanted.size >= 0.62;
+}
+
+export function findNewsUrlInHtml(html: string, title: string, baseUrl: string): string | null {
+  const anchorPattern = /<a\b[^>]*href=(['"])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+  for (const match of html.matchAll(anchorPattern)) {
+    const href = decodeHtmlEntities(match[2] ?? '').trim();
+    const rawAnchor = match[0] ?? '';
+    const titleAttr = rawAnchor.match(/\btitle=(['"])(.*?)\1/i)?.[2] ?? '';
+    const text = decodeHtmlEntities(`${titleAttr} ${match[3] ?? ''}`.replace(/<[^>]+>/g, ' '));
+    if (!href || !isCloseTitleMatch(text, title)) continue;
+    try {
+      const parsed = new URL(href, baseUrl);
+      parsed.search = '';
+      return parsed.href;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 const verifiedHeadlineUrlOverrides = new Map(
   [
     [
@@ -62,6 +117,10 @@ const verifiedHeadlineUrlOverrides = new Map(
       'https://web.stockbiz.vn/News/2026/9/3/1903591/pvt-thong-bao-thay-doi-nhan-su-tv-hdqt-kiem-tgd-kem-nghi-quyet.aspx',
     ],
     [
+      'Công ty chứng khoán khuyến nghị theo dõi PVT, NLG và ACB',
+      'https://bnews.vn/cong-ty-chung-khoan-khuyen-nghi-mua-pvt-nlg-va-acb/436030.html',
+    ],
+    [
       'HHP: Nhận công văn của UBCKNN về tài liệu báo cáo kết quả phát hành CP để trả cổ tức',
       'https://web.stockbiz.vn/News/2026/9/4/1904083/hhp-nhan-duoc-cong-van-cua-ubcknn-ve-tai-lieu-bao-cao-ket-qua-phat-hanh-cp-de-tra-co-tuc.aspx',
     ],
@@ -75,6 +134,10 @@ const verifiedHeadlineUrlOverrides = new Map(
     ],
     [
       'SJS: ‘Chuyện lạ’ nhà SJ Group: ‘Còng lưng’ trả lãi vay vẫn tạm ứng cho nhân viên hàng trăm tỷ',
+      'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
+    ],
+    [
+      'SJS: Bài viết về áp lực lãi vay và tạm ứng nội bộ; cần xác minh thêm',
       'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
     ],
     [
