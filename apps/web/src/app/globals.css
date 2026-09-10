@@ -213,7 +213,7 @@ select:focus-visible {
 
 .marketGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -319,7 +319,7 @@ select:focus-visible {
 .marketLabel,
 .sectionLabel {
   color: #43536a;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -813,7 +813,7 @@ select:focus-visible {
 
 .dataStamp {
   color: #536176;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 740;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -969,7 +969,7 @@ select:focus-visible {
 
 .symbolDate {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
@@ -1130,7 +1130,7 @@ select:focus-visible {
 .newsSource,
 .detailNews > span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1172,7 +1172,7 @@ select:focus-visible {
 
 .summaryDate {
   color: #536176;
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   font-weight: 760;
   white-space: nowrap;
@@ -1205,8 +1205,9 @@ select:focus-visible {
 
 .assessmentPanel .assessmentItem {
   align-items: start;
-  min-height: 43px;
-  padding: 11px 0;
+  min-height: 0;
+  padding: 5px 0;
+  border-top: 0;
 }
 
 .assessmentPanel .assessmentSymbol {
@@ -1234,6 +1235,11 @@ select:focus-visible {
   font-size: 12px;
   font-weight: 880;
   line-height: 1.55;
+}
+
+.assessmentSymbol::after {
+  content: ":";
+  margin-left: 2px;
 }
 
 .exclusionSymbol {
