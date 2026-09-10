@@ -73,7 +73,7 @@ export function MarketHeader({
   return (
     <div className="marketGrid">
       <div className="marketCard marketMain">
-        <div>
+        <div className="marketSessionHeader">
           <div className="marketLabel withIcon">
             <MarketIcon type="session" />
             Phiên dữ liệu

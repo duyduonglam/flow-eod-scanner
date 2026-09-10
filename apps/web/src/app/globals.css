@@ -260,12 +260,24 @@ select:focus-visible {
 
 .marketMain {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 255, 0.96) 52%, rgba(236, 248, 243, 0.92) 100%);
   border-color: #d5e2ee;
+}
+
+.marketSessionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.marketSessionHeader .marketValue {
+  margin-top: 0;
 }
 
 .marketIndex {
@@ -373,6 +385,7 @@ select:focus-visible {
   align-items: center;
   flex-direction: row;
   gap: 8px;
+  align-self: flex-start;
   text-align: right;
 }
 
