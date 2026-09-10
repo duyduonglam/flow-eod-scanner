@@ -257,6 +257,39 @@ export function pickHeadlineNews<T extends NewsSummaryItem>(headline: string | n
 }
 
 export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAssessment[] {
+  if (rows.length >= 4) {
+    const ranked = rows.toSorted((a, b) => (b.flow_score ?? -1) - (a.flow_score ?? -1));
+    const strongest = ranked.filter((row) => /breakout/i.test(row.main_signal)).slice(0, 3);
+    const pullback = [
+      ...strongest,
+      ...ranked.filter(
+        (row) =>
+          !strongest.some((item) => item.symbol === row.symbol) &&
+          row.rs_rating != null &&
+          row.rs_rating >= 16 &&
+          (row.volume_buzz ?? 0) >= 0,
+      ),
+    ].slice(0, 4);
+    const noChase = ranked.filter((row) => row.decision === 'DO NOT CHASE');
+    const moneyWatch = ranked.filter(
+      (row) => row.flow_score != null && row.flow_score < 75 && row.banker != null && row.banker_ma != null && row.banker > row.banker_ma,
+    );
+    const label = (name: string, symbols: SummaryRow[], detail: string): QuickAssessment => ({
+      symbol: name,
+      market_date: rows[0]?.market_date ?? '',
+      score: null,
+      decision: '',
+      text: `${symbols.map((row) => row.symbol).join(', ')}${detail}`,
+    });
+
+    return [
+      label('Mạnh nhất', strongest, '; đều có breakout và volume xác nhận tốt hơn nhóm còn lại.'),
+      label('Chờ pullback', pullback, '.'),
+      label('Không mua đuổi', noChase, ' do giá đã cao hoặc Hot Money quá nóng.'),
+      label('Theo dõi dòng tiền', moneyWatch, '.'),
+    ].filter((item) => item.text.trim().length > 1);
+  }
+
   return rows
     .toSorted((a, b) => (b.flow_score ?? -1) - (a.flow_score ?? -1))
     .slice(0, Math.max(0, limit))
@@ -290,34 +323,43 @@ export function buildExclusions(rows: SummaryRow[], limit = 5): ExclusionNote[] 
     notes.push({ symbol: row.symbol, market_date: row.market_date, reason });
   };
 
+  const ranked = rows.toSorted((a, b) => (b.flow_score ?? -1) - (a.flow_score ?? -1));
+  const strongest = new Set(
+    ranked
+      .filter((row) => /breakout/i.test(row.main_signal))
+      .slice(0, 3)
+      .map((row) => row.symbol),
+  );
+
   for (const row of rows) {
     if (row.volume_buzz != null && row.volume_buzz < -50) {
       add(row, `Volume chỉ ${(Math.max(0, 1 + row.volume_buzz / 100)).toFixed(2)}x bình quân; thanh khoản chưa xác nhận.`);
-      continue;
+      if (notes.length >= limit) return notes;
     }
-    if (row.banker != null && row.banker_ma != null && row.banker < row.banker_ma) {
+  }
+
+  for (const row of rows) {
+    if (row.banker != null && row.banker_ma != null && row.banker < row.banker_ma && !strongest.has(row.symbol)) {
       add(row, `Banker ${row.banker.toFixed(1)}% nằm dưới MA10 ${row.banker_ma.toFixed(1)}%; dòng tiền lớn chưa xác nhận đầy đủ.`);
-      continue;
     }
-    if (row.hot_money != null && row.hot_money >= 95) {
+  }
+
+  for (const row of ranked) {
+    if (row.hot_money != null && row.hot_money >= 95 && !strongest.has(row.symbol) && row.volume_buzz != null && row.volume_buzz > -50) {
       add(row, `Hot Money ở mức ${row.hot_money.toFixed(0)}; cần thận trọng với trạng thái quá nóng.`);
-      continue;
     }
-    if (row.decision === 'DO NOT CHASE') {
-      add(row, 'Đã vào trạng thái DO NOT CHASE; không mở vị thế mới khi giá/điểm vào không còn thuận lợi.');
-      continue;
-    }
-    if (row.decision === 'EXIT') {
-      add(row, 'Tín hiệu đã suy yếu đến mức EXIT; ưu tiên bảo toàn vốn thay vì bắt đáy.');
-      continue;
-    }
-    if (row.stop_distance_pct != null && row.stop_distance_pct > 8) {
-      add(row, `Stop Distance ${row.stop_distance_pct.toFixed(1)}% quá rộng so với vùng quản trị rủi ro ưu tiên.`);
-      continue;
-    }
-    if (row.flow_score != null && row.flow_score < 55) {
-      add(row, `FLOW score ${row.flow_score.toFixed(1)} dưới vùng ưu tiên của watchlist.`);
-    }
+  }
+
+  if (notes.length && rows.length >= 4) return notes.slice(0, limit);
+
+  for (const row of rows) {
+    if (row.volume_buzz != null && row.volume_buzz < -50) add(row, `Volume chỉ ${(Math.max(0, 1 + row.volume_buzz / 100)).toFixed(2)}x bình quân; thanh khoản chưa xác nhận.`);
+    else if (row.banker != null && row.banker_ma != null && row.banker < row.banker_ma) add(row, `Banker ${row.banker.toFixed(1)}% nằm dưới MA10 ${row.banker_ma.toFixed(1)}%; dòng tiền lớn chưa xác nhận đầy đủ.`);
+    else if (row.hot_money != null && row.hot_money >= 95) add(row, `Hot Money ở mức ${row.hot_money.toFixed(0)}; cần thận trọng với trạng thái quá nóng.`);
+    else if (row.decision === 'DO NOT CHASE') add(row, 'Đã vào trạng thái DO NOT CHASE; không mở vị thế mới khi giá/điểm vào không còn thuận lợi.');
+    else if (row.decision === 'EXIT') add(row, 'Tín hiệu đã suy yếu đến mức EXIT; ưu tiên bảo toàn vốn thay vì bắt đáy.');
+    else if (row.stop_distance_pct != null && row.stop_distance_pct > 8) add(row, `Stop Distance ${row.stop_distance_pct.toFixed(1)}% quá rộng so với vùng quản trị rủi ro ưu tiên.`);
+    else if (row.flow_score != null && row.flow_score < 55) add(row, `FLOW score ${row.flow_score.toFixed(1)} dưới vùng ưu tiên của watchlist.`);
   }
 
   return notes;
