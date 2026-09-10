@@ -78,6 +78,8 @@ export default async function Home({ searchParams }: HomeProps) {
               : undefined
         }
         sessionSummary={isHistoryView ? null : marketRegime?.summary}
+        sessionStatus={isHistoryView ? null : dataStatus === 'LIVE' ? 'Scan đã lưu' : 'Dữ liệu minh họa'}
+        sessionMode={isHistoryView ? null : marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa')}
       />
 
       {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}

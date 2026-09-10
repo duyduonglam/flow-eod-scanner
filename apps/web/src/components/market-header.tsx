@@ -63,26 +63,19 @@ export function MarketHeader({
 }) {
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
-  const marketMode = marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa');
-  const sessionLabel = dataStatus === 'LIVE' ? 'Scan EOD đã lưu' : 'Dữ liệu minh họa';
   const indexChangeClass = changeClass(marketRegime?.index_change_pct);
   const liquidityChangeClass =
     marketRegime?.liquidity_value == null ? '' : marketRegime?.distribution_flag ? 'down' : 'up';
-  const scanStateLabel = dataStatus === 'LIVE' ? 'Scan đã lưu' : sessionLabel;
 
   return (
     <div className="marketGrid">
       <div className="marketCard marketMain">
-        <div className="marketSessionHeader">
+        <div>
           <div className="marketLabel withIcon">
             <MarketIcon type="session" />
             Phiên dữ liệu
           </div>
           <div className="marketValue">{marketDate ?? 'Demo'}</div>
-        </div>
-        <div className="sessionStatusGroup">
-          <div className="compactLine">{scanStateLabel}</div>
-          <span className={`status ${dataStatus === 'LIVE' ? 'buyretest' : 'watch'}`}>{marketMode}</span>
         </div>
       </div>
       <div className="marketCard marketIndex">

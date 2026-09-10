@@ -379,16 +379,6 @@ select:focus-visible {
   line-height: 1.18;
 }
 
-.sessionStatusGroup {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  flex-direction: row;
-  gap: 8px;
-  align-self: flex-start;
-  text-align: right;
-}
-
 .compactLine {
   display: flex;
   align-items: center;
@@ -848,6 +838,16 @@ select:focus-visible {
   font-size: 12px;
   font-weight: 680;
   line-height: 1.55;
+}
+
+.sessionSummaryMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #536176;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .scanTable {
