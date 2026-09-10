@@ -25,7 +25,7 @@ export function ScanSummary({ rows, news, marketDate }: { rows: ScanRow[]; news:
   return (
     <section className="summarySection" aria-label="Tổng kết phiên FLOW">
       {assessments.length ? (
-        <article className="summaryPanel">
+        <article className="summaryPanel assessmentPanel">
           <div className="summaryHeading">
             <div>
               <div className="sectionLabel">Đánh giá nhanh các mã nổi bật</div>
