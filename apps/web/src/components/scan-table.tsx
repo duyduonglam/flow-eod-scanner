@@ -127,6 +127,7 @@ export function ScanTable({
                       {row.symbol}
                     </Link>
                     {row.close != null ? <div className="symbolPrice">{priceFormatter.format(row.close)}</div> : null}
+                    {inEntryZone ? <span className="entryBadge">ENTRY</span> : null}
                     {showMarketDate ? <div className="symbolDate">{row.market_date}</div> : null}
                   </td>
                   <td>
