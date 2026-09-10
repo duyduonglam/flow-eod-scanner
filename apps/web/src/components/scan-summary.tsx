@@ -46,7 +46,10 @@ export function ScanSummary({ rows, news, marketDate }: { rows: ScanRow[]; news:
 
       {exclusions.length ? (
         <article className="summaryPanel exclusionPanel">
-          <div className="sectionLabel">Loại trừ đáng chú ý</div>
+          <div className="summaryHeading">
+            <div className="sectionLabel">Loại trừ đáng chú ý</div>
+            {marketDate ? <span className="summaryDate">{marketDate}</span> : null}
+          </div>
           <div className="summaryHint">Chỉ hiển thị khi có lý do rủi ro rõ ràng từ chính kết quả scan.</div>
           <div className="assessmentList">
             {exclusions.map((item) => (
