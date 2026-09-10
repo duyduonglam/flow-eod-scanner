@@ -141,6 +141,14 @@ const verifiedHeadlineUrlOverrides = new Map(
       'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
     ],
     [
+      'Hạt nhựa biến động, biên lợi nhuận doanh nghiệp ống nhựa gia tăng',
+      'https://nhadautu.vn/hat-nhua-bien-dong-bien-loi-nhuan-doanh-nghiep-ong-nhua-gia-tang-d107355.html',
+    ],
+    [
+      'STB: Sacombank tiếp tục vượt đỉnh lịch sử',
+      'https://stockbiz.vn/tin-tuc/stb-sacombank-tiep-tuc-vuot-dinh-lich-su/41733338',
+    ],
+    [
       'BSR: CBTT giao dịch với người có liên quan PVOIL',
       'https://web.stockbiz.vn/News/2026/9/8/1904687/bsr-cbtt-giao-dich-voi-nguoi-co-lien-quan-pvoil.aspx',
     ],
@@ -215,7 +223,24 @@ export function pickHeadlineNews<T extends NewsSummaryItem>(headline: string | n
   const sorted = items.toSorted(newsPriority);
   const wanted = normalizeTitle(headline ?? '');
   if (!wanted) return sorted[0] ?? null;
-  return sorted.find((item) => normalizeTitle(item.title) === wanted) ?? null;
+  const exact = sorted.find((item) => normalizeTitle(item.title) === wanted);
+  if (exact) return exact;
+
+  const wantedTokens = articleMatchTokens(headline ?? '');
+  if (!wantedTokens.size) return sorted.length === 1 ? sorted[0] : null;
+
+  const scored = sorted
+    .map((item, index) => {
+      const candidateTokens = articleMatchTokens(item.title);
+      const hits = [...wantedTokens].filter((token) => candidateTokens.has(token)).length;
+      const coverage = hits / wantedTokens.size;
+      const precision = candidateTokens.size ? hits / candidateTokens.size : 0;
+      return { item, index, score: coverage * 0.75 + precision * 0.25 };
+    })
+    .filter((entry) => entry.score >= 0.58)
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+
+  return scored[0]?.item ?? (sorted.length === 1 ? sorted[0] : null);
 }
 
 export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAssessment[] {

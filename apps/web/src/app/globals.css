@@ -897,6 +897,21 @@ select:focus-visible {
   background: #f2f8ff;
 }
 
+.scanTable tbody tr.entryZoneActive td {
+  background: #ecfdf5;
+  border-bottom-color: #b7e4cf;
+}
+
+.scanTable tbody tr.entryZoneActive td:first-child {
+  background: #dcfce7;
+  box-shadow: inset 4px 0 0 #16a34a, 1px 0 0 #b7e4cf;
+}
+
+.scanTable tbody tr.entryZoneActive:hover td,
+.scanTable tbody tr.entryZoneActive:hover td:first-child {
+  background: #d9f8e7;
+}
+
 .symbol {
   display: inline-flex;
   color: var(--blue);
@@ -990,10 +1005,24 @@ select:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.entryCell {
+  font-size: 13px;
+  font-weight: 760;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.riskHead,
+.riskMetric,
+.rewardCell {
+  text-align: center !important;
+}
+
 .stopCell {
   display: grid;
   gap: 4px;
-  justify-items: end;
+  justify-items: center;
+  text-align: center;
 }
 
 .stopCell strong {

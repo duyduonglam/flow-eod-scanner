@@ -127,8 +127,13 @@ async function resolveStoredNewsUrl(
   url: string | null | undefined,
   title: string,
   symbol: string | null | undefined,
+  alternateTitle?: string | null,
 ): Promise<string | null> {
-  return verifiedNewsUrl(url, title) ?? (await resolveCafeFArticleUrl(symbol, title));
+  return (
+    verifiedNewsUrl(url, title)
+    ?? (alternateTitle ? verifiedNewsUrl(url, alternateTitle) : null)
+    ?? (await resolveCafeFArticleUrl(symbol, title))
+  );
 }
 
 function normalizeMarketRegime(row: RawScanRow): MarketRegime {
@@ -203,7 +208,8 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
     const candidates = newsByKey.get(`${row.market_date}:${row.symbol_id}`) ?? [];
     const selected = pickHeadlineNews(row.headline_news, candidates);
     if (!selected) return row;
-    const url = await resolveStoredNewsUrl(selected.url, selected.title, row.symbol);
+    const headlineTitle = row.headline_news ?? selected.title;
+    const url = await resolveStoredNewsUrl(selected.url, headlineTitle, row.symbol, selected.title);
     return {
       ...row,
       headline_news: row.headline_news ?? selected.title,

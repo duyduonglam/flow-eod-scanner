@@ -46,6 +46,21 @@ test('only links a stored headline when the title matches a real news item', () 
   assert.equal(pickHeadlineNews(null, items)?.url, 'https://example.com/latest');
 });
 
+test('matches a stored news item when the scan headline is a shortened variant', () => {
+  const items = [
+    {
+      title: 'NTP: Hạt nhựa biến động, biên lợi nhuận doanh nghiệp ống nhựa gia tăng',
+      url: 'https://nhadautu.vn/hat-nhua-bien-dong-bien-loi-nhuan-doanh-nghiep-ong-nhua-gia-tang-d107355.html',
+      source: 'Nhà đầu tư',
+      published_at: '2026-09-04T07:00:00Z',
+    },
+  ];
+  assert.equal(
+    pickHeadlineNews('Hạt nhựa biến động, biên lợi nhuận doanh nghiệp ống nhựa gia tăng', items)?.url,
+    items[0].url,
+  );
+});
+
 test('keeps safe news urls even when the route is opaque', () => {
   assert.equal(
     verifiedNewsUrl('https://example.com/co-phieu-gmd-vuot-dinh-thanh-khoan-tang', 'Cổ phiếu GMD vượt đỉnh, thanh khoản tăng'),
@@ -73,6 +88,10 @@ test('keeps safe news urls even when the route is opaque', () => {
   assert.equal(
     verifiedNewsUrl('javascript:alert(1)', 'GMD mở rộng cảng Nam Đình Vũ'),
     null,
+  );
+  assert.equal(
+    verifiedNewsUrl(null, 'STB: Sacombank tiếp tục vượt đỉnh lịch sử'),
+    'https://stockbiz.vn/tin-tuc/stb-sacombank-tiep-tuc-vuot-dinh-lich-su/41733338',
   );
 });
 

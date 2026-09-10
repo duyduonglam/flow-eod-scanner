@@ -35,7 +35,7 @@ function targetPercent(target: number | null, close: number | null): string | nu
 function RewardCell({ value, close }: { value: number | null; close: number | null }) {
   const percent = targetPercent(value, close);
   return (
-    <td className="num rewardCell">
+    <td className="num rewardCell riskMetric">
       <strong>{fmt(value)}</strong>
       {percent ? <span>{percent}</span> : null}
     </td>
@@ -101,17 +101,27 @@ export function ScanTable({
               <th>Tín hiệu chính</th>
               <th>Tin tức nổi bật</th>
               <th>Entry Zone</th>
-              <th>Stop</th>
-              <th>1R</th>
-              <th>2R</th>
-              <th>3R</th>
+              <th className="riskHead">Stop</th>
+              <th className="riskHead">1R</th>
+              <th className="riskHead">2R</th>
+              <th className="riskHead">3R</th>
               <th>Decision</th>
             </tr>
           </thead>
           <tbody>
             {rows.length ? (
-              rows.map((row) => (
-                <tr key={`${row.symbol}-${row.market_date}`}>
+              rows.map((row) => {
+                const entryLow = row.entry_low == null || row.entry_high == null
+                  ? null
+                  : Math.min(row.entry_low, row.entry_high);
+                const entryHigh = row.entry_low == null || row.entry_high == null
+                  ? null
+                  : Math.max(row.entry_low, row.entry_high);
+                const inEntryZone = row.close != null && entryLow != null && entryHigh != null
+                  && row.close >= entryLow && row.close <= entryHigh;
+
+                return (
+                <tr className={inEntryZone ? 'entryZoneActive' : undefined} key={`${row.symbol}-${row.market_date}`}>
                   <td>
                     <Link className="symbol" href={`/stocks/${row.symbol}?date=${row.market_date}`}>
                       {row.symbol}
@@ -137,8 +147,8 @@ export function ScanTable({
                   <td className="signal">
                     <HeadlineNews row={row} />
                   </td>
-                  <td>{row.entry_low == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
-                  <td className="num">
+                  <td className="entryCell">{row.entry_low == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
+                  <td className="num riskMetric">
                     <div className="stopCell">
                       <strong>{fmt(row.stop_price)}</strong>
                       <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
@@ -151,7 +161,8 @@ export function ScanTable({
                     <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>
                   </td>
                 </tr>
-              ))
+                );
+              })
             ) : (
               <tr>
                 <td className="emptyTable" colSpan={10}>
