@@ -213,7 +213,7 @@ select:focus-visible {
 
 .marketGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -240,8 +240,8 @@ select:focus-visible {
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
-  min-height: 96px;
-  padding: 13px 15px;
+  min-height: 88px;
+  padding: 12px 14px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
 }
@@ -1129,12 +1129,15 @@ select:focus-visible {
 
 .summarySection {
   display: grid;
-  grid-template-columns: 1.2fr 0.9fr 1fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: stretch;
   gap: 12px;
   margin-top: 14px;
 }
 
 .summaryPanel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 16px;
   box-shadow: var(--shadow-soft);
@@ -1178,7 +1181,13 @@ select:focus-visible {
 }
 
 .assessmentPanel .assessmentList {
+  flex: 1;
   gap: 0;
+}
+
+.assessmentPanel,
+.exclusionPanel {
+  min-height: 224px;
 }
 
 .assessmentPanel .assessmentItem {
