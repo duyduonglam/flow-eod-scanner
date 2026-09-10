@@ -47,6 +47,11 @@ export type ScanRow = {
   invalidation: string;
   rs_rating?: number | null;
   banker?: number | null;
+  banker_ma?: number | null;
+  hot_money?: number | null;
+  hot_money_ma?: number | null;
+  volume_buzz?: number | null;
+  ud_volume_ratio?: number | null;
   retailer?: number | null;
   swing_direction?: string | null;
 };

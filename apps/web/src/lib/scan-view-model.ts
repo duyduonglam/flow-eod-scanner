@@ -8,6 +8,11 @@ export type SummaryRow = {
   stop_distance_pct: number | null;
   rs_rating?: number | null;
   banker?: number | null;
+  banker_ma?: number | null;
+  hot_money?: number | null;
+  hot_money_ma?: number | null;
+  volume_buzz?: number | null;
+  ud_volume_ratio?: number | null;
 };
 
 export const decisionValues = ['BUY', 'TEST BUY', 'BUY RETEST', 'WATCH', 'DO NOT CHASE', 'HOLD', 'TRIM', 'EXIT'] as const;
@@ -260,6 +265,9 @@ export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAsses
         row.flow_score == null ? null : `FLOW ${row.flow_score.toFixed(1)}`,
         row.rs_rating == null ? null : `RS ${row.rs_rating.toFixed(1)}`,
         row.banker == null ? null : `Banker ${row.banker.toFixed(1)}%`,
+        row.banker != null && row.banker_ma != null ? `Banker ${row.banker.toFixed(1)} vs MA10 ${row.banker_ma.toFixed(1)}` : null,
+        row.volume_buzz == null ? null : `volume ${((100 + row.volume_buzz) / 100).toFixed(2)}x`,
+        row.hot_money == null ? null : `Hot Money ${row.hot_money.toFixed(0)}`,
         row.main_signal.trim() || null,
       ].filter((item): item is string => Boolean(item));
       return {
@@ -283,6 +291,18 @@ export function buildExclusions(rows: SummaryRow[], limit = 5): ExclusionNote[] 
   };
 
   for (const row of rows) {
+    if (row.volume_buzz != null && row.volume_buzz < -50) {
+      add(row, `Volume chỉ ${(Math.max(0, 1 + row.volume_buzz / 100)).toFixed(2)}x bình quân; thanh khoản chưa xác nhận.`);
+      continue;
+    }
+    if (row.banker != null && row.banker_ma != null && row.banker < row.banker_ma) {
+      add(row, `Banker ${row.banker.toFixed(1)}% nằm dưới MA10 ${row.banker_ma.toFixed(1)}%; dòng tiền lớn chưa xác nhận đầy đủ.`);
+      continue;
+    }
+    if (row.hot_money != null && row.hot_money >= 95) {
+      add(row, `Hot Money ở mức ${row.hot_money.toFixed(0)}; cần thận trọng với trạng thái quá nóng.`);
+      continue;
+    }
     if (row.decision === 'DO NOT CHASE') {
       add(row, 'Đã vào trạng thái DO NOT CHASE; không mở vị thế mới khi giá/điểm vào không còn thuận lợi.');
       continue;

@@ -75,6 +75,11 @@ function normalizeRow(row: JoinedScanRow): ScanRow {
     invalidation: toText(row.invalidation),
     rs_rating: toNumber(row.rs_rating),
     banker: toNumber(row.banker),
+    banker_ma: toNumber(row.banker_ma),
+    hot_money: toNumber(row.hot_money),
+    hot_money_ma: toNumber(row.hot_money_ma),
+    volume_buzz: toNumber(row.volume_buzz),
+    ud_volume_ratio: toNumber(row.ud_volume_ratio),
     retailer: toNumber(row.retailer),
     swing_direction: typeof row.swing_direction === 'string' ? row.swing_direction : null,
   };
@@ -220,7 +225,7 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
   }));
 }
 
-async function attachSignalCloses(rows: ScanRow[]): Promise<ScanRow[]> {
+async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
   const db = getSupabase();
   const symbolIds = Array.from(new Set(rows.map((row) => row.symbol_id).filter((id): id is number => id != null)));
   const marketDates = Array.from(new Set(rows.map((row) => row.market_date).filter(Boolean)));
@@ -229,7 +234,7 @@ async function attachSignalCloses(rows: ScanRow[]): Promise<ScanRow[]> {
   const sortedDates = marketDates.toSorted();
   const { data, error } = await db
     .from('stock_signals')
-    .select('symbol_id, market_date, close')
+    .select('symbol_id, market_date, close, rs_rating, banker, banker_ma, hot_money, hot_money_ma, volume_buzz, ud_volume_ratio')
     .in('symbol_id', symbolIds)
     .gte('market_date', sortedDates[0])
     .lte('market_date', sortedDates[sortedDates.length - 1])
@@ -237,18 +242,47 @@ async function attachSignalCloses(rows: ScanRow[]): Promise<ScanRow[]> {
 
   if (error || !data?.length) return rows;
 
-  const closeByKey = new Map<string, number>();
+  const metricsByKey = new Map<string, {
+    close: number | null;
+    rs_rating: number | null;
+    banker: number | null;
+    banker_ma: number | null;
+    hot_money: number | null;
+    hot_money_ma: number | null;
+    volume_buzz: number | null;
+    ud_volume_ratio: number | null;
+  }>();
   for (const raw of data) {
     const symbolId = toNumber(raw.symbol_id);
     const marketDate = toText(raw.market_date);
-    const close = toNumber(raw.close);
-    if (symbolId == null || !marketDate || close == null) continue;
-    closeByKey.set(`${marketDate}:${symbolId}`, close);
+    if (symbolId == null || !marketDate) continue;
+    metricsByKey.set(`${marketDate}:${symbolId}`, {
+      close: toNumber(raw.close),
+      rs_rating: toNumber(raw.rs_rating),
+      banker: toNumber(raw.banker),
+      banker_ma: toNumber(raw.banker_ma),
+      hot_money: toNumber(raw.hot_money),
+      hot_money_ma: toNumber(raw.hot_money_ma),
+      volume_buzz: toNumber(raw.volume_buzz),
+      ud_volume_ratio: toNumber(raw.ud_volume_ratio),
+    });
   }
 
   return rows.map((row) => {
-    if (row.symbol_id == null || row.close != null) return row;
-    return { ...row, close: closeByKey.get(`${row.market_date}:${row.symbol_id}`) ?? row.close };
+    if (row.symbol_id == null) return row;
+    const metrics = metricsByKey.get(`${row.market_date}:${row.symbol_id}`);
+    if (!metrics) return row;
+    return {
+      ...row,
+      close: row.close ?? metrics.close,
+      rs_rating: row.rs_rating ?? metrics.rs_rating,
+      banker: row.banker ?? metrics.banker,
+      banker_ma: row.banker_ma ?? metrics.banker_ma,
+      hot_money: row.hot_money ?? metrics.hot_money,
+      hot_money_ma: row.hot_money_ma ?? metrics.hot_money_ma,
+      volume_buzz: row.volume_buzz ?? metrics.volume_buzz,
+      ud_volume_ratio: row.ud_volume_ratio ?? metrics.ud_volume_ratio,
+    };
   });
 }
 
@@ -263,7 +297,7 @@ async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
     .order('rank', { ascending: true });
 
   if (error || !data?.length) return null;
-  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
 export async function getAvailableScanDates(): Promise<string[]> {
@@ -303,7 +337,7 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
     .limit(240);
 
   if (error || !data?.length) return [];
-  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
 export async function getScanHistoryByDecision(decision: DecisionFilter): Promise<ScanRow[]> {
@@ -319,7 +353,7 @@ export async function getScanHistoryByDecision(decision: DecisionFilter): Promis
     .limit(500);
 
   if (error || !data?.length) return [];
-  return attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
 }
 
 export async function getSessionNews(marketDate?: string | null): Promise<NewsItem[]> {
@@ -427,7 +461,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     };
   }
 
-  const rows = await attachHeadlineNews(await attachSignalCloses(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  const rows = await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
   const latestMarketDate = rows[0]?.market_date ?? null;
   return {
     rows,

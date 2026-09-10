@@ -158,6 +158,18 @@ test('exclusions surface no-chase, exit and overly wide stops without duplicatin
   assert.match(exclusions[2].reason, /10\.0%/);
 });
 
+test('exclusions use live volume, banker and hot money metrics', () => {
+  const rows = [
+    { ...baseRow, symbol: 'LOWVOL', volume_buzz: -96 },
+    { ...baseRow, symbol: 'BANKER', banker: 12, banker_ma: 30 },
+    { ...baseRow, symbol: 'HOT', hot_money: 100 },
+  ];
+  const exclusions = buildExclusions(rows);
+  assert.match(exclusions[0].reason, /0\.04x/);
+  assert.match(exclusions[1].reason, /MA10/);
+  assert.match(exclusions[2].reason, /Hot Money/);
+});
+
 test('general news is de-duplicated and keeps linked, newest items first', () => {
   const items = [
     { title: 'Tin A', url: 'https://example.com/a', source: 'A', published_at: '2026-09-03T08:00:00Z' },
