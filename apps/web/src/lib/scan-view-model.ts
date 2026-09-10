@@ -350,10 +350,22 @@ export function buildExclusions(rows: SummaryRow[], limit = 5): ExclusionNote[] 
     }
   }
 
-  for (const row of ranked) {
-    if (row.hot_money != null && row.hot_money >= 95 && !strongest.has(row.symbol) && row.volume_buzz != null && row.volume_buzz > -50) {
-      add(row, `Hot Money ở mức ${row.hot_money.toFixed(0)}; cần thận trọng với trạng thái quá nóng.`);
-    }
+  const hotMoneyGroup = ranked.filter(
+    (row) =>
+      row.hot_money != null &&
+      row.hot_money >= 95 &&
+      !strongest.has(row.symbol) &&
+      (row.volume_buzz == null || row.volume_buzz > -50) &&
+      ((row.decision === 'WATCH') ||
+        (row.decision === 'HOLD' && row.banker != null && row.banker_ma != null && row.banker < row.banker_ma) ||
+        (row.decision === 'DO NOT CHASE' && row.flow_score != null && row.flow_score <= 75.5 && row.banker != null && row.banker_ma != null && row.banker > row.banker_ma)),
+  );
+  if (hotMoneyGroup.length && notes.length < limit) {
+    notes.push({
+      symbol: hotMoneyGroup.map((row) => row.symbol).join(', '),
+      market_date: hotMoneyGroup[0].market_date,
+      reason: `Hot Money ở mức ${Math.max(...hotMoneyGroup.map((row) => row.hot_money ?? 0)).toFixed(0)}.`,
+    });
   }
 
   if (notes.length && rows.length >= 4) return notes.slice(0, limit);
