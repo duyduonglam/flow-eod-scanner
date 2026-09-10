@@ -93,6 +93,14 @@ test('keeps safe news urls even when the route is opaque', () => {
     verifiedNewsUrl(null, 'STB: Sacombank tiếp tục vượt đỉnh lịch sử'),
     'https://stockbiz.vn/tin-tuc/stb-sacombank-tiep-tuc-vuot-dinh-lich-su/41733338',
   );
+  assert.equal(
+    verifiedNewsUrl(null, 'Sacombank tiếp tục vượt đỉnh lịch sử'),
+    'https://stockbiz.vn/tin-tuc/stb-sacombank-tiep-tuc-vuot-dinh-lich-su/41733338',
+  );
+  assert.equal(
+    verifiedNewsUrl(null, 'Bài viết về áp lực lãi vay và tạm ứng nội bộ; cần xác minh thêm'),
+    'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
+  );
 });
 
 test('finds a matching article url from source html', () => {
