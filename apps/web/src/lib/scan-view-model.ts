@@ -272,7 +272,13 @@ export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAsses
     ].slice(0, 4);
     const noChase = ranked.filter((row) => row.decision === 'DO NOT CHASE');
     const moneyWatch = ranked.filter(
-      (row) => row.flow_score != null && row.flow_score < 75 && row.banker != null && row.banker_ma != null && row.banker > row.banker_ma,
+      (row) =>
+        row.flow_score != null &&
+        row.flow_score < 75 &&
+        row.banker != null &&
+        row.banker_ma != null &&
+        row.banker > row.banker_ma &&
+        (row.volume_buzz == null || row.volume_buzz > -50),
     );
     const label = (name: string, symbols: SummaryRow[], detail: string): QuickAssessment => ({
       symbol: name,
