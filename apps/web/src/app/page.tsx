@@ -55,7 +55,7 @@ export default async function Home({ searchParams }: HomeProps) {
       </header>
 
       {searchSymbol || isDecisionHistory ? null : (
-        <MarketHeader dataStatus={dataStatus} marketDate={marketDate} marketRegime={marketRegime} />
+        <MarketHeader dataStatus={dataStatus} marketDate={marketDate} marketRegime={marketRegime} rows={rows} />
       )}
       <DashboardControls dates={dates} selectedDate={marketDate} query={searchSymbol} decision={decisionFilter} />
       {isHistoryView ? (

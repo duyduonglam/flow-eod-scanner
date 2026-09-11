@@ -1,4 +1,4 @@
-import type { MarketRegime } from '@/lib/types';
+import type { MarketRegime, ScanRow } from '@/lib/types';
 
 const indexFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 const liquidityFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
@@ -18,7 +18,7 @@ function changeClass(value: number | null | undefined): string {
   return value < 0 ? 'down' : 'up';
 }
 
-function MarketIcon({ type }: { type: 'session' | 'index' | 'breadth' | 'liquidity' }) {
+function MarketIcon({ type }: { type: 'session' | 'index' | 'breadth' | 'liquidity' | 'leader' }) {
   const icon =
     type === 'session' ? (
       <>
@@ -38,10 +38,18 @@ function MarketIcon({ type }: { type: 'session' | 'index' | 'breadth' | 'liquidi
         <path d="M17 17v-6" />
         <path d="M5 19h14" />
       </>
-    ) : (
+    ) : type === 'liquidity' ? (
       <>
         <path d="M12 3v18" />
         <path d="M7 7.5c0-2 2-3.5 5-3.5s5 1.3 5 3.2c0 2.3-2.4 2.8-5 3.3s-5 1-5 3.3S9 17.5 12 17.5s5-1.4 5-3.5" />
+      </>
+    ) : (
+      <>
+        <path d="M8 21h8" />
+        <path d="M12 17v4" />
+        <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" />
+        <path d="M5 6H3v2a4 4 0 0 0 4 4" />
+        <path d="M19 6h2v2a4 4 0 0 1-4 4" />
       </>
     );
 
@@ -56,19 +64,38 @@ export function MarketHeader({
   dataStatus,
   marketDate,
   marketRegime,
+  rows = [],
 }: {
   dataStatus: string;
   marketDate: string | null;
   marketRegime?: MarketRegime | null;
+  rows?: ScanRow[];
 }) {
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
+  const unchanged = advancers == null || decliners == null ? null : Math.max(0, 1522 - advancers - decliners);
+  const qualifiedRows = rows.filter(
+    (row) => (row.flow_score ?? 0) >= 80 && row.decision !== 'DO NOT CHASE' && row.decision !== 'EXIT',
+  );
   const indexChangeClass = changeClass(marketRegime?.index_change_pct);
   const liquidityChangeClass =
     marketRegime?.liquidity_value == null ? '' : marketRegime?.distribution_flag ? 'down' : 'up';
 
   return (
-    <div className="marketGrid">
+    <section className="marketSnapshot" aria-label="Snapshot thị trường cuối ngày">
+      <div className="snapshotHeader">
+        <div>
+          <div className="snapshotTitle">
+            <span className="snapshotDot" aria-hidden="true" />
+            Snapshot thị trường cuối ngày
+          </div>
+          <div className="snapshotSource">FireAnt · Công thức FLOW · VNStock</div>
+        </div>
+        <span className={`snapshotBadge ${dataStatus === 'LIVE' ? 'online' : 'demo'}`}>
+          {dataStatus === 'LIVE' ? 'Published EOD' : 'Demo fallback'}
+        </span>
+      </div>
+      <div className="marketGrid">
       <div className="marketCard marketMain">
         <div>
           <div className="marketLabel withIcon">
@@ -76,6 +103,7 @@ export function MarketHeader({
             Phiên dữ liệu
           </div>
           <div className="marketValue">{marketDate ?? 'Demo'}</div>
+          <div className="metricHint">Scan {dataStatus === 'LIVE' ? 'đã lưu' : 'minh họa'}</div>
         </div>
       </div>
       <div className="marketCard marketIndex">
@@ -87,6 +115,7 @@ export function MarketHeader({
           <span>{marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}</span>
           <span>{pct(marketRegime?.index_change_pct)}</span>
         </div>
+        <div className="metricHint">so với phiên trước</div>
       </div>
       <div className="marketCard marketBreadth">
         <div className="marketLabel withIcon">
@@ -104,6 +133,7 @@ export function MarketHeader({
             </>
           )}
         </div>
+        <div className="metricHint">{unchanged == null ? '-' : `${unchanged} đứng giá · 1522 mã`}</div>
       </div>
       <div className="marketCard marketLiquidity">
         <div className="marketLabel withIcon">
@@ -111,7 +141,17 @@ export function MarketHeader({
           Thanh khoản
         </div>
         <div className={`compactMetricLine ${liquidityChangeClass}`}>{liquidity(marketRegime?.liquidity_value)}</div>
+        <div className="metricHint">Tổng GTGD toàn universe</div>
       </div>
-    </div>
+      <div className="marketCard marketLeader">
+        <div className="marketLabel withIcon">
+          <MarketIcon type="leader" />
+          Mã đạt chuẩn
+        </div>
+        <div className="compactMetricLine accent">{qualifiedRows.length}</div>
+        <div className="metricHint">FLOW ≥80 · không DO NOT CHASE/EXIT</div>
+      </div>
+      </div>
+    </section>
   );
 }
