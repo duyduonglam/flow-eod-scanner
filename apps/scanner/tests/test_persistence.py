@@ -20,7 +20,6 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
             "invalidation": "Close below stop",
         }
     ]
-
     payload = build_scan_result_payload(rows, {"AAA": 42}, "2026-08-25")
 
     assert payload == [
@@ -46,6 +45,18 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
             "is_deteriorating": False,
         }
     ]
+
+
+def test_build_scan_result_payload_publishes_only_scores_at_least_80():
+    rows = [
+        {"symbol": "LOW", "flow_score": 79.9, "decision": "WATCH"},
+        {"symbol": "EDGE", "flow_score": 80.0, "decision": "WATCH"},
+    ]
+
+    payload = build_scan_result_payload(rows, {"LOW": 1, "EDGE": 2}, "2026-09-11")
+
+    assert [item["symbol_id"] for item in payload] == [2]
+    assert payload[0]["rank"] == 1
 
 
 def test_build_stock_signal_payload_keeps_indicator_fields():

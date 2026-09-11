@@ -4,6 +4,7 @@ from typing import Any
 
 BUY_DECISIONS = {"BUY", "BUY RETEST", "TEST BUY"}
 DETERIORATING_DECISIONS = {"TRIM", "EXIT"}
+MIN_PUBLISHED_SCORE = 80.0
 
 
 def _value(row: dict[str, Any], key: str) -> Any:
@@ -23,6 +24,9 @@ def build_scan_result_payload(
 ) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     for row in rows:
+        score = row.get("flow_score")
+        if score is None or float(score) < MIN_PUBLISHED_SCORE:
+            continue
         symbol_id = _symbol_id(row, symbol_ids)
         if symbol_id is None:
             continue
