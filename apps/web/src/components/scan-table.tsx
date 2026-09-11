@@ -74,6 +74,8 @@ export function ScanTable({
   sessionSummary,
   sessionStatus,
   sessionMode,
+  sectionTitle = 'Bảng kết quả',
+  sectionSubtitle,
 }: {
   rows: ScanRow[];
   dataStamp?: string;
@@ -82,17 +84,19 @@ export function ScanTable({
   sessionSummary?: string | null;
   sessionStatus?: string | null;
   sessionMode?: string | null;
+  sectionTitle?: string;
+  sectionSubtitle?: string;
 }) {
   const hasSessionFooter = Boolean(sessionSummary || sessionStatus || sessionMode);
   return (
     <section className={`scanSection ${hasSessionFooter ? 'hasSessionSummary' : ''}`}>
       <div className="toolbar">
         <div>
-          <div className="sectionLabel">Bảng kết quả</div>
+          <div className="sectionLabel">{sectionTitle}</div>
           <div className="tableSub">
-            {showMarketDate
+            {sectionSubtitle ?? (showMarketDate
               ? 'Lịch sử ticker được sắp xếp từ phiên mới nhất đến cũ hơn'
-              : 'Sắp xếp theo điểm tổng, tín hiệu và vùng quản trị rủi ro'}
+              : 'Sắp xếp theo điểm tổng, tín hiệu và vùng quản trị rủi ro')}
           </div>
         </div>
         <div className="dataStamp">{dataStamp ?? 'EOD validated - 15:45 ICT'}</div>

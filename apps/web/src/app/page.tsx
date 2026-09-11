@@ -19,6 +19,8 @@ export default async function Home({ searchParams }: HomeProps) {
   );
   const isDecisionHistory = Boolean(decisionFilter && !date && !searchSymbol);
   const isHistoryView = Boolean(searchSymbol || decisionFilter);
+  const qualityRows = rows.filter((row) => row.flow_score != null && row.flow_score >= 80);
+  const watchRows = rows.filter((row) => row.flow_score != null && row.flow_score >= 75 && row.flow_score < 80);
   const sessionNews = isHistoryView ? [] : await getSessionNews(marketDate);
   const stamp = searchSymbol
     ? decisionFilter
@@ -66,21 +68,37 @@ export default async function Home({ searchParams }: HomeProps) {
         </section>
       ) : null}
 
-      <ScanTable
-        rows={rows}
-        dataStamp={stamp}
-        showMarketDate={isHistoryView}
-        emptyMessage={
-          searchSymbol
+      {isHistoryView ? (
+        <ScanTable
+          rows={rows}
+          dataStamp={stamp}
+          showMarketDate
+          emptyMessage={searchSymbol
             ? `Không có dữ liệu lịch sử cho mã ${searchSymbol}.`
-            : decisionFilter
-              ? `Không có dữ liệu lịch sử cho Decision ${decisionFilter}.`
-              : undefined
-        }
-        sessionSummary={isHistoryView ? null : marketRegime?.summary}
-        sessionStatus={isHistoryView ? null : dataStatus === 'LIVE' ? 'Scan đã lưu' : 'Dữ liệu minh họa'}
-        sessionMode={isHistoryView ? null : marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa')}
-      />
+            : `Không có dữ liệu lịch sử cho Decision ${decisionFilter}.`}
+        />
+      ) : (
+        <>
+          <ScanTable
+            rows={qualityRows}
+            dataStamp={stamp}
+            sectionTitle="Bảng CHẤT LƯỢNG · Tổng điểm từ 80"
+            sectionSubtitle="Nhóm tín hiệu đạt chuẩn công bố chính của hệ thống."
+            emptyMessage="Chưa có mã đạt Tổng điểm từ 80 trong phiên này."
+            sessionSummary={marketRegime?.summary}
+            sessionStatus={dataStatus === 'LIVE' ? 'Scan đã lưu' : 'Dữ liệu minh họa'}
+            sessionMode={marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa')}
+          />
+          {watchRows.length ? (
+            <ScanTable
+              rows={watchRows}
+              dataStamp={stamp}
+              sectionTitle="Bảng THEO DÕI · Tổng điểm 75–79,9"
+              sectionSubtitle="Mã đáng theo dõi nhưng cần thêm xác nhận về dòng tiền, thanh khoản hoặc xu hướng."
+            />
+          ) : null}
+        </>
+      )}
 
       {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}
 

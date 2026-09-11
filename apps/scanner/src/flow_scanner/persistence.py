@@ -4,7 +4,7 @@ from typing import Any
 
 BUY_DECISIONS = {"BUY", "BUY RETEST", "TEST BUY"}
 DETERIORATING_DECISIONS = {"TRIM", "EXIT"}
-MIN_PUBLISHED_SCORE = 80.0
+MIN_PUBLISHED_SCORE = 75.0
 
 
 def _value(row: dict[str, Any], key: str) -> Any:

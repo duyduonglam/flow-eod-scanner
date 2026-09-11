@@ -47,10 +47,10 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
     ]
 
 
-def test_build_scan_result_payload_publishes_only_scores_at_least_80():
+def test_build_scan_result_payload_publishes_only_scores_at_least_75():
     rows = [
-        {"symbol": "LOW", "flow_score": 79.9, "decision": "WATCH"},
-        {"symbol": "EDGE", "flow_score": 80.0, "decision": "WATCH"},
+        {"symbol": "LOW", "flow_score": 74.9, "decision": "WATCH"},
+        {"symbol": "EDGE", "flow_score": 75.0, "decision": "WATCH"},
     ]
 
     payload = build_scan_result_payload(rows, {"LOW": 1, "EDGE": 2}, "2026-09-11")
