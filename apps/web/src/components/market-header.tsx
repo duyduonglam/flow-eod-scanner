@@ -80,7 +80,6 @@ export function MarketHeader({
 }) {
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
-  const unchanged = advancers == null || decliners == null ? null : Math.max(0, 1522 - advancers - decliners);
   const qualifiedRows = rows.filter(
     (row) => (row.flow_score ?? 0) >= 80 && row.decision !== 'DO NOT CHASE' && row.decision !== 'EXIT',
   );
@@ -110,7 +109,6 @@ export function MarketHeader({
           Phiên dữ liệu
         </div>
         <div className="marketValue">{marketDate ?? 'Demo'}</div>
-        <div className="metricHint metricHintPlaceholder" aria-hidden="true">&nbsp;</div>
       </div>
       <div className="marketCard marketIndex">
         <div className="marketLabel withIcon">
@@ -121,7 +119,6 @@ export function MarketHeader({
           <span>{marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}</span>
           <span>{pct(marketRegime?.index_change_pct)}</span>
         </div>
-        <div className="metricHint">so với phiên trước</div>
       </div>
       <div className="marketCard marketBreadth">
         <div className="marketLabel withIcon">
@@ -139,7 +136,6 @@ export function MarketHeader({
             </>
           )}
         </div>
-        <div className="metricHint">{unchanged == null ? '-' : `${unchanged} đứng giá · 1522 mã`}</div>
       </div>
       <div className="marketCard marketLiquidity">
         <div className="marketLabel withIcon">
@@ -147,7 +143,6 @@ export function MarketHeader({
           Thanh khoản
         </div>
         <div className={`compactMetricLine ${liquidityChangeClass}`}>{liquidity(marketRegime?.liquidity_value)}</div>
-        <div className="metricHint">Tổng GTGD toàn universe</div>
       </div>
       <div className="marketCard marketLeader">
         <div className="marketLabel withIcon">
@@ -155,7 +150,6 @@ export function MarketHeader({
           Mã đạt chuẩn
         </div>
         <div className="compactMetricLine accent">{qualifiedRows.length}</div>
-        <div className="metricHint">FLOW ≥80</div>
       </div>
       </div>
     </section>
