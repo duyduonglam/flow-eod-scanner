@@ -18,6 +18,13 @@ function changeClass(value: number | null | undefined): string {
   return value < 0 ? 'down' : 'up';
 }
 
+function modeClass(value: string | null | undefined): string {
+  const normalized = (value ?? '').toUpperCase().replace(/\s+/g, '');
+  if (normalized.includes('RISKOFF')) return 'riskoff';
+  if (normalized.includes('RISKON')) return 'riskon';
+  return 'buyretest';
+}
+
 function MarketIcon({ type }: { type: 'session' | 'index' | 'breadth' | 'liquidity' | 'leader' }) {
   const icon =
     type === 'session' ? (
@@ -77,6 +84,7 @@ export function MarketHeader({
   const qualifiedRows = rows.filter(
     (row) => (row.flow_score ?? 0) >= 80 && row.decision !== 'DO NOT CHASE' && row.decision !== 'EXIT',
   );
+  const marketMode = marketRegime?.market_mode?.trim() || null;
   const indexChangeClass = changeClass(marketRegime?.index_change_pct);
   const liquidityChangeClass =
     marketRegime?.liquidity_value == null ? '' : marketRegime?.distribution_flag ? 'down' : 'up';
@@ -88,8 +96,8 @@ export function MarketHeader({
           <div className="snapshotTitle">
             <span className="snapshotDot" aria-hidden="true" />
             Snapshot thị trường cuối ngày
+            {marketMode ? <span className={`status snapshotMode ${modeClass(marketMode)}`}>{marketMode}</span> : null}
           </div>
-          <div className="snapshotSource">FireAnt · Công thức FLOW · VNStock</div>
         </div>
         <span className={`snapshotBadge ${dataStatus === 'LIVE' ? 'online' : 'demo'}`}>
           {dataStatus === 'LIVE' ? 'Published EOD' : 'Demo fallback'}
@@ -97,14 +105,12 @@ export function MarketHeader({
       </div>
       <div className="marketGrid">
       <div className="marketCard marketMain">
-        <div>
-          <div className="marketLabel withIcon">
-            <MarketIcon type="session" />
-            Phiên dữ liệu
-          </div>
-          <div className="marketValue">{marketDate ?? 'Demo'}</div>
-          <div className="metricHint">Scan {dataStatus === 'LIVE' ? 'đã lưu' : 'minh họa'}</div>
+        <div className="marketLabel withIcon">
+          <MarketIcon type="session" />
+          Phiên dữ liệu
         </div>
+        <div className="marketValue">{marketDate ?? 'Demo'}</div>
+        <div className="metricHint metricHintPlaceholder" aria-hidden="true">&nbsp;</div>
       </div>
       <div className="marketCard marketIndex">
         <div className="marketLabel withIcon">
@@ -149,7 +155,7 @@ export function MarketHeader({
           Mã đạt chuẩn
         </div>
         <div className="compactMetricLine accent">{qualifiedRows.length}</div>
-        <div className="metricHint">FLOW ≥80 · không DO NOT CHASE/EXIT</div>
+        <div className="metricHint">FLOW ≥80</div>
       </div>
       </div>
     </section>

@@ -48,9 +48,6 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
             {source === 'live' ? 'Supabase LIVE' : 'Demo fallback'}
           </div>
-          <div className="headerDate">
-            {searchSymbol ? `Tìm ${searchSymbol} · mọi phiên` : marketDate ?? 'Chưa có ngày dữ liệu'}
-          </div>
         </div>
       </header>
 
@@ -86,8 +83,6 @@ export default async function Home({ searchParams }: HomeProps) {
             sectionSubtitle="Nhóm tín hiệu đạt chuẩn công bố chính của hệ thống."
             emptyMessage="Chưa có mã đạt Tổng điểm từ 80 trong phiên này."
             sessionSummary={marketRegime?.summary}
-            sessionStatus={dataStatus === 'LIVE' ? 'Scan đã lưu' : 'Dữ liệu minh họa'}
-            sessionMode={marketRegime?.market_mode || (dataStatus === 'LIVE' ? 'Đã lưu' : 'Minh họa')}
           />
           {watchRows.length ? (
             <ScanTable
