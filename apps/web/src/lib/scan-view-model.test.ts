@@ -101,6 +101,14 @@ test('keeps safe news urls even when the route is opaque', () => {
     verifiedNewsUrl(null, 'Bài viết về áp lực lãi vay và tạm ứng nội bộ; cần xác minh thêm'),
     'https://vietnamfinance.vn/chuyen-la-nha-sj-group-cong-lung-tra-lai-vay-van-tam-ung-cho-nhan-vien-hang-tram-ty-d150096.html',
   );
+  assert.equal(
+    verifiedNewsUrl(null, 'Công ty chứng khoán khuyến nghị mua PVT, NLG và ACB'),
+    'https://stockbiz.vn/tin-tuc/cong-ty-chung-khoan-khuyen-nghi-mua-pvt-nlg-va-acb/41712265',
+  );
+  assert.equal(
+    verifiedNewsUrl(null, 'Tái phân bổ vốn Nhà nước, thêm dư địa cho thị trường chứng khoán'),
+    'https://stockbiz.vn/tin-tuc/tai-phan-bo-von-nha-nuoc-them-du-dia-cho-thi-truong-chung-khoan/41724528',
+  );
 });
 
 test('finds a matching article url from source html', () => {

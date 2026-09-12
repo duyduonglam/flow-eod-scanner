@@ -126,6 +126,10 @@ const verifiedHeadlineUrlOverrides = new Map(
       'https://bnews.vn/cong-ty-chung-khoan-khuyen-nghi-mua-pvt-nlg-va-acb/436030.html',
     ],
     [
+      'Công ty chứng khoán khuyến nghị mua PVT, NLG và ACB',
+      'https://stockbiz.vn/tin-tuc/cong-ty-chung-khoan-khuyen-nghi-mua-pvt-nlg-va-acb/41712265',
+    ],
+    [
       'HHP: Nhận công văn của UBCKNN về tài liệu báo cáo kết quả phát hành CP để trả cổ tức',
       'https://web.stockbiz.vn/News/2026/9/4/1904083/hhp-nhan-duoc-cong-van-cua-ubcknn-ve-tai-lieu-bao-cao-ket-qua-phat-hanh-cp-de-tra-co-tuc.aspx',
     ],
@@ -164,6 +168,10 @@ const verifiedHeadlineUrlOverrides = new Map(
     [
       'BSR: CBTT giao dịch với người có liên quan PVOIL',
       'https://web.stockbiz.vn/News/2026/9/8/1904687/bsr-cbtt-giao-dich-voi-nguoi-co-lien-quan-pvoil.aspx',
+    ],
+    [
+      'Tái phân bổ vốn Nhà nước, thêm dư địa cho thị trường chứng khoán',
+      'https://stockbiz.vn/tin-tuc/tai-phan-bo-von-nha-nuoc-them-du-dia-cho-thi-truong-chung-khoan/41724528',
     ],
     [
       'GAS: Nghị quyết HĐQT số 87 ngày 27/08/2026',
