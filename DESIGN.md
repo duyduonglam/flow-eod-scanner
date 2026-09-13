@@ -3,7 +3,7 @@ version: alpha
 colors:
   primary: "#185ea8"
   ink: "#071527"
-  paper: "#f3f6fa"
+  paper: "#f1f8ff"
   panel: "#ffffff"
   signal: "#0f8f5f"
   caution: "#b96a13"
@@ -11,9 +11,9 @@ colors:
   danger: "#bf2f24"
 typography:
   display:
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Aptos Display, Aptos, Segoe UI Variable, Segoe UI, sans-serif"
   body:
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Aptos, Segoe UI Variable, Segoe UI, ui-sans-serif, sans-serif"
   data:
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 rounded:
@@ -48,7 +48,7 @@ Use `ink` for the command header and primary text, `paper` for the application b
 
 ## Typography
 
-Use Inter/system sans for UI text and tabular numeric settings for market values. Data cells should feel precise, not decorative. Avoid oversized hero type inside cards; reserve larger type for the product name and top-level metrics.
+Use Aptos/Segoe UI system typography for Vietnamese readability, with Aptos Display reserved for the product name. Keep tabular numeric settings for market values. Data cells should feel precise, not decorative; reserve the strongest display weight for the product name and top-level metrics.
 
 ## Layout
 

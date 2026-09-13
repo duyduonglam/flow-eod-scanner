@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #f3f6fa;
+  --bg: #f1f8ff;
   --surface: #ffffff;
-  --surface2: #f8fafc;
-  --surface3: #eef4fb;
+  --surface2: #f8fcff;
+  --surface3: #eaf5ff;
   --ink: #071527;
   --ink2: #0f243d;
   --text: #142033;
   --muted: #66758a;
-  --border: #d7e0eb;
+  --border: #d3e3f1;
   --line: #edf1f6;
   --green: #0f8f5f;
   --green2: #19b77a;
@@ -19,8 +19,8 @@
   --redbg: #fff0ee;
   --blue: #185ea8;
   --bluebg: #edf5ff;
-  --shadow: 0 18px 42px rgba(13, 31, 55, 0.09);
-  --shadow-soft: 0 8px 24px rgba(15, 35, 62, 0.055);
+  --shadow: 0 18px 42px rgba(19, 74, 119, 0.12);
+  --shadow-soft: 0 8px 24px rgba(19, 74, 119, 0.07);
   --radius: 8px;
   scrollbar-color: #9dafc4 #e6edf5;
   scrollbar-width: thin;
@@ -38,10 +38,12 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, rgba(7, 21, 39, 0.06), transparent 250px),
+    radial-gradient(circle at 8% -10%, rgba(79, 185, 255, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 300px),
     var(--bg);
   color: var(--text);
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, sans-serif;
+  letter-spacing: -0.005em;
 }
 
 *::-webkit-scrollbar {
@@ -94,16 +96,16 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  min-height: 74px;
+  min-height: 86px;
   margin-bottom: 16px;
   padding: 16px 18px;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(25, 183, 122, 0.16), transparent 34%),
-    var(--ink);
+    radial-gradient(circle at 88% 10%, rgba(118, 221, 255, 0.28), transparent 30%),
+    linear-gradient(120deg, #082949 0%, #0c5c92 58%, #087b75 100%);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius);
+  border: 1px solid rgba(154, 225, 255, 0.34);
+  border-radius: 14px;
   box-shadow: var(--shadow);
 }
 
@@ -114,7 +116,7 @@ select:focus-visible {
   left: 18px;
   height: 3px;
   content: "";
-  background: linear-gradient(90deg, var(--green2), #79d0ff, transparent);
+  background: linear-gradient(90deg, #6ee7c4, #8bd7ff, transparent);
   opacity: 0.9;
 }
 
@@ -134,8 +136,8 @@ select:focus-visible {
   height: 42px;
   color: #ffffff;
   place-items: center;
-  background: linear-gradient(145deg, #18b578, #0c6f50);
-  border-radius: var(--radius);
+  background: linear-gradient(145deg, #64e8c3, #1598b8);
+  border-radius: 12px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
   font-weight: 900;
 }
@@ -145,10 +147,11 @@ select:focus-visible {
 }
 
 .title {
+  font-family: "Aptos Display", "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif;
   color: #ffffff;
-  font-size: 23px;
-  font-weight: 850;
-  letter-spacing: 0;
+  font-size: clamp(24px, 2.3vw, 30px);
+  font-weight: 780;
+  letter-spacing: -0.035em;
   line-height: 1.08;
 }
 
@@ -163,7 +166,9 @@ select:focus-visible {
 }
 
 .topbar .subtitle {
-  color: #c6d2df;
+  color: #d9f1fb;
+  font-size: 13px;
+  letter-spacing: 0.005em;
 }
 
 .headerMeta {
