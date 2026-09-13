@@ -43,6 +43,7 @@ body {
     var(--bg);
   color: var(--text);
   font-family: "Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, sans-serif;
+  font-size: 15px;
   letter-spacing: -0.005em;
 }
 
@@ -173,14 +174,14 @@ select:focus-visible {
 .tableSub,
 .metricHint {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   margin-top: 4px;
 }
 
 .topbar .subtitle {
   color: #d9f1fb;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.005em;
 }
 
@@ -197,7 +198,7 @@ select:focus-visible {
 .headerQuote {
   max-width: 470px;
   color: #e8f7ff;
-  font-size: 12px;
+  font-size: 15px;
   font-style: italic;
   line-height: 1.45;
   text-align: right;
@@ -207,7 +208,7 @@ select:focus-visible {
   display: block;
   margin-top: 3px;
   color: #a9f1df;
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 760;
   letter-spacing: 0.04em;
@@ -215,7 +216,7 @@ select:focus-visible {
 
 .headerDate {
   color: #d7e1ed;
-  font-size: 13px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   padding-left: 12px;
   border-left: 1px solid rgba(255, 255, 255, 0.18);
@@ -915,7 +916,7 @@ select:focus-visible {
   border-top: 1px solid var(--line);
   border-radius: 0 0 var(--radius) var(--radius);
   padding: 12px 15px 14px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 680;
   line-height: 1.55;
 }
@@ -926,7 +927,7 @@ select:focus-visible {
   gap: 8px;
   margin-top: 8px;
   color: #536176;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -946,7 +947,7 @@ select:focus-visible {
   border-bottom: 1px solid var(--border);
   padding: 12px 10px;
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -956,7 +957,7 @@ select:focus-visible {
 .scanTable td {
   padding: 13px 10px;
   border-bottom: 1px solid var(--line);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   vertical-align: middle;
 }
@@ -1025,7 +1026,7 @@ select:focus-visible {
 
 .symbolPrice {
   color: var(--ink2);
-  font-size: 13px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   font-weight: 780;
   margin-top: 3px;
@@ -1049,7 +1050,7 @@ select:focus-visible {
 
 .symbolDate {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
@@ -1110,7 +1111,8 @@ select:focus-visible {
 .signal {
   max-width: 285px;
   white-space: normal;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .num {
@@ -1119,7 +1121,7 @@ select:focus-visible {
 }
 
 .entryCell {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 760;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -1245,7 +1247,7 @@ select:focus-visible {
 
 .summaryHint {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   margin-top: 5px;
 }
@@ -1253,7 +1255,7 @@ select:focus-visible {
 .summaryNarrative {
   margin: 14px 0 0;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.7;
 }
 
@@ -1263,7 +1265,7 @@ select:focus-visible {
   margin: 14px 0 0;
   padding-left: 20px;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -1273,7 +1275,7 @@ select:focus-visible {
 
 .summaryDate {
   color: #536176;
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   font-weight: 760;
   white-space: nowrap;
@@ -1319,8 +1321,8 @@ select:focus-visible {
 
 .assessmentPanel .assessmentItem p {
   max-width: none;
-  font-size: 11.5px;
-  line-height: 1.42;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .assessmentItem p {
@@ -1336,7 +1338,7 @@ select:focus-visible {
 
 .assessmentSymbol {
   color: var(--green);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 880;
   line-height: 1.55;
 }
@@ -1352,7 +1354,7 @@ select:focus-visible {
 
 .assessmentItem p {
   color: #334155;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
   margin: 0;
 }
@@ -1374,13 +1376,13 @@ select:focus-visible {
 
 .generalNewsItem a,
 .generalNewsItem strong {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
 .generalNewsItem > span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .notes {
@@ -1395,7 +1397,7 @@ select:focus-visible {
 
 .notes h2 {
   color: #88f0c3;
-  font-size: 15px;
+  font-size: 17px;
   margin: 0 0 10px;
 }
 
@@ -1406,7 +1408,7 @@ select:focus-visible {
   line-height: 1.6;
   margin: 0;
   padding-left: 18px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .detailGrid {
