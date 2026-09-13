@@ -1220,6 +1220,20 @@ select:focus-visible {
   line-height: 1.7;
 }
 
+.summaryBullets {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.summaryBullets li::marker {
+  color: var(--accent);
+}
+
 .summaryDate {
   color: #536176;
   font-size: 12px;

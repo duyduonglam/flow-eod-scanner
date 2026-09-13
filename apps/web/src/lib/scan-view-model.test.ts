@@ -8,6 +8,7 @@ import {
   normalizeTickerQuery,
   normalizeDecisionFilter,
   normalizeDailyNarrative,
+  splitDailyNarrative,
   pickHeadlineNews,
   verifiedNewsUrl,
 } from './scan-view-model.ts';
@@ -18,6 +19,13 @@ test('preserves daily narrative text for the selected market session', () => {
     'PVT là mã nổi bật nhất trong nhóm 75+.',
   );
   assert.equal(normalizeDailyNarrative('   '), null);
+});
+
+test('splits daily narrative into readable bullet points', () => {
+  assert.deepEqual(
+    splitDailyNarrative('PVT nổi bật. BSR cần thận trọng. MSR có RS mạnh.'),
+    ['PVT nổi bật.', 'BSR cần thận trọng.', 'MSR có RS mạnh.'],
+  );
 });
 
 const baseRow = {

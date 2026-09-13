@@ -1,4 +1,4 @@
-import { buildExclusions, buildQuickAssessments } from '@/lib/scan-view-model';
+import { buildExclusions, buildQuickAssessments, splitDailyNarrative } from '@/lib/scan-view-model';
 import type { MarketRegime, NewsItem, ScanRow } from '@/lib/types';
 
 const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
@@ -41,7 +41,9 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
             {marketDate ? <span className="summaryDate">{marketDate}</span> : null}
           </div>
           {marketRegime?.quick_assessment ? (
-            <p className="summaryNarrative">{marketRegime.quick_assessment}</p>
+            <ul className="summaryBullets">
+              {splitDailyNarrative(marketRegime.quick_assessment).map((item) => <li key={item}>{item}</li>)}
+            </ul>
           ) : (
             <div className="assessmentList">
               {assessments.map((item) => (
@@ -62,7 +64,9 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
             {marketDate ? <span className="summaryDate">{marketDate}</span> : null}
           </div>
           {marketRegime?.exclusion_notes ? (
-            <p className="summaryNarrative">{marketRegime.exclusion_notes}</p>
+            <ul className="summaryBullets">
+              {splitDailyNarrative(marketRegime.exclusion_notes).map((item) => <li key={item}>{item}</li>)}
+            </ul>
           ) : (
             <div className="assessmentList">
               {exclusions.map((item) => (

@@ -45,6 +45,13 @@ export function normalizeDailyNarrative(value: unknown): string | null {
   return normalized || null;
 }
 
+export function splitDailyNarrative(value: string | null | undefined): string[] {
+  const normalized = normalizeDailyNarrative(value);
+  if (!normalized) return [];
+  const sentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [];
+  return sentences.map((sentence) => sentence.trim()).filter(Boolean);
+}
+
 export function normalizeTickerQuery(query: string | null | undefined): string {
   return (query ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
 }
