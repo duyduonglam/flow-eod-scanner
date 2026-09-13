@@ -12,7 +12,7 @@ type HomeProps = {
 
 export default async function Home({ searchParams }: HomeProps) {
   const { date, q, decision } = await searchParams;
-  const { rows, dataStatus, marketDate, source, dates, searchSymbol, decisionFilter, marketRegime } = await getScanRows(
+  const { rows, dataStatus, marketDate, dates, searchSymbol, decisionFilter, marketRegime } = await getScanRows(
     date,
     q,
     decision,
@@ -35,18 +35,19 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <main className="shell">
       <header className="topbar">
-        <div className="brand">
-          <div className="logo">
+        <a className="brand" href="/" aria-label="VNStock Market Intelligence - Trang chủ">
+          <div className="logo" aria-hidden="true">
             <span>F</span>
           </div>
           <div>
             <div className="title">VNStock Market Intelligence</div>
             <div className="subtitle">Bản đồ các mã cổ phiếu mạnh nhất thị trường Việt Nam</div>
           </div>
-        </div>
+        </a>
         <div className="headerMeta">
-          <div className={`connection ${source === 'live' ? 'online' : 'demo'}`}>
-            {source === 'live' ? 'Supabase LIVE' : 'Demo fallback'}
+          <div className="headerQuote" aria-label="Trích dẫn của Warren Buffett">
+            <span>“Một nhà đầu tư chỉ cần làm đúng rất ít việc, miễn là tránh được những sai lầm lớn.”</span>
+            <cite>— Warren Buffett</cite>
           </div>
         </div>
       </header>

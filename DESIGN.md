@@ -38,7 +38,7 @@ components:
 
 FLOW EOD Scanner is a product dashboard for end-of-day Vietnam equity review. It should feel like a calm trading desk after market close: dense, numerical, trustworthy, and quick to scan. The interface is product-first, not marketing-first.
 
-The memorable signature is the dark command header with a small live-market strip, contrasted with bright paper-like data surfaces. Visual drama belongs in the framing; the table, search, news, and manual scan controls stay restrained.
+The memorable signature is the dark command header with a restrained investment quote, contrasted with bright paper-like data surfaces. The logo and product name act as the quiet home affordance; visual drama belongs in the framing while the table, search, news, and manual scan controls stay restrained.
 
 ## Colors
 
