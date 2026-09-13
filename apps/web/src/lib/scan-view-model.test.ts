@@ -7,9 +7,18 @@ import {
   findNewsUrlInHtml,
   normalizeTickerQuery,
   normalizeDecisionFilter,
+  normalizeDailyNarrative,
   pickHeadlineNews,
   verifiedNewsUrl,
 } from './scan-view-model.ts';
+
+test('preserves daily narrative text for the selected market session', () => {
+  assert.equal(
+    normalizeDailyNarrative('  PVT là mã nổi bật nhất trong nhóm 75+.  '),
+    'PVT là mã nổi bật nhất trong nhóm 75+.',
+  );
+  assert.equal(normalizeDailyNarrative('   '), null);
+});
 
 const baseRow = {
   symbol: 'AAA',

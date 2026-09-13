@@ -95,7 +95,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </>
       )}
 
-      {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} />}
+      {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} marketRegime={marketRegime} />}
 
       <section className="notes">
         <h2>Ghi chú EOD</h2>

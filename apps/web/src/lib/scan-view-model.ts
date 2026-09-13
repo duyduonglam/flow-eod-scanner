@@ -39,6 +39,12 @@ export type ExclusionNote = {
   reason: string;
 };
 
+export function normalizeDailyNarrative(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
 export function normalizeTickerQuery(query: string | null | undefined): string {
   return (query ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
 }

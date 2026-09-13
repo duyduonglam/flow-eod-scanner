@@ -4,6 +4,7 @@ import {
   dedupeNews,
   findNewsUrlInHtml,
   normalizeDecisionFilter,
+  normalizeDailyNarrative,
   normalizeTickerQuery,
   pickHeadlineNews,
   verifiedNewsUrl,
@@ -141,7 +142,7 @@ async function resolveStoredNewsUrl(
   );
 }
 
-function normalizeMarketRegime(row: RawScanRow): MarketRegime {
+export function normalizeMarketRegime(row: RawScanRow): MarketRegime {
   return {
     market_date: toText(row.market_date),
     market_mode: toText(row.market_mode, 'Đang chờ'),
@@ -153,6 +154,8 @@ function normalizeMarketRegime(row: RawScanRow): MarketRegime {
     liquidity_value: toNumber(row.liquidity_value),
     distribution_flag: Boolean(row.distribution_flag),
     summary: typeof row.summary === 'string' && row.summary.trim() ? row.summary.trim() : null,
+    quick_assessment: normalizeDailyNarrative(row.quick_assessment),
+    exclusion_notes: normalizeDailyNarrative(row.exclusion_notes),
   };
 }
 
@@ -163,7 +166,7 @@ export async function getMarketRegime(marketDate?: string | null): Promise<Marke
   const { data, error } = await db
     .from('market_regimes')
     .select(
-      'market_date, market_mode, index_symbol, index_close, index_change_pct, breadth_advancers, breadth_decliners, liquidity_value, distribution_flag, summary',
+      'market_date, market_mode, index_symbol, index_close, index_change_pct, breadth_advancers, breadth_decliners, liquidity_value, distribution_flag, summary, quick_assessment, exclusion_notes',
     )
     .eq('market_date', marketDate)
     .maybeSingle();

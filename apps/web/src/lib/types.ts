@@ -22,6 +22,8 @@ export type MarketRegime = {
   liquidity_value: number | null;
   distribution_flag: boolean;
   summary: string | null;
+  quick_assessment: string | null;
+  exclusion_notes: string | null;
 };
 
 export type ScanRow = {
