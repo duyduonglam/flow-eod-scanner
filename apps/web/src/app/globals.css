@@ -405,8 +405,8 @@ select:focus-visible {
 }
 
 .sectionLabel {
-  font-size: 14px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   min-height: 18px;
 }
 
@@ -962,6 +962,7 @@ select:focus-visible {
   font-size: 12px;
   font-weight: 850;
   letter-spacing: 0.04em;
+  line-height: 18px;
   text-transform: uppercase;
   white-space: nowrap;
 }
