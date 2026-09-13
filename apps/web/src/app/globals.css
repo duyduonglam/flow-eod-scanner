@@ -393,7 +393,7 @@ select:focus-visible {
 
 .marketLabel,
 .sectionLabel {
-  color: #43536a;
+  color: #445169;
   font-weight: 850;
   line-height: 18px;
   text-transform: uppercase;
@@ -401,7 +401,7 @@ select:focus-visible {
 
 .marketLabel {
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
 }
 
 .sectionLabel {
