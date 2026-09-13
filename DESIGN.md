@@ -11,11 +11,11 @@ colors:
   danger: "#bf2f24"
 typography:
   display:
-    fontFamily: "Aptos Display, Aptos, Segoe UI Variable, Segoe UI, sans-serif"
+    fontFamily: "Segoe UI, sans-serif"
   body:
-    fontFamily: "Aptos, Segoe UI Variable, Segoe UI, ui-sans-serif, sans-serif"
+    fontFamily: "Segoe UI, sans-serif"
   data:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    fontFamily: "Segoe UI, sans-serif"
 rounded:
   sm: "6px"
   md: "8px"
@@ -48,7 +48,7 @@ Use `ink` for the command header and primary text, `paper` for the application b
 
 ## Typography
 
-Use Aptos/Segoe UI system typography for Vietnamese readability, with Aptos Display reserved for the product name. Keep tabular numeric settings for market values. Data cells should feel precise, not decorative; reserve the strongest display weight for the product name and top-level metrics.
+Use Segoe UI consistently across the product for Vietnamese readability and a unified visual rhythm. Keep tabular numeric settings for market values. Data cells should feel precise, not decorative; reserve the strongest display weight for the product name and top-level metrics.
 
 ## Layout
 

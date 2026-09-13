@@ -42,7 +42,7 @@ body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 300px),
     var(--bg);
   color: var(--text);
-  font-family: "Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, sans-serif;
+  font-family: "Segoe UI", sans-serif;
   font-size: 15px;
   letter-spacing: -0.005em;
 }
@@ -161,7 +161,7 @@ select:focus-visible {
 }
 
 .title {
-  font-family: "Aptos Display", "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif;
+  font-family: "Segoe UI", sans-serif;
   color: #ffffff;
   font-size: clamp(24px, 2.3vw, 30px);
   font-weight: 780;

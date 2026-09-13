@@ -87,7 +87,8 @@ export function ScanTable({
   sectionTitle?: string;
   sectionSubtitle?: string;
 }) {
-  const hasSessionFooter = Boolean(sessionSummary || sessionStatus || sessionMode);
+  const visibleSessionSummary = sessionSummary?.replace(/^FireAnt EOD\s*/i, '').trim() || null;
+  const hasSessionFooter = Boolean(visibleSessionSummary || sessionStatus || sessionMode);
   return (
     <section className={`scanSection ${hasSessionFooter ? 'hasSessionSummary' : ''}`}>
       <div className="toolbar">
@@ -185,7 +186,7 @@ export function ScanTable({
       </div>
       {hasSessionFooter ? (
         <div className="sessionSummary">
-          {sessionSummary ? <div>{sessionSummary}</div> : null}
+          {visibleSessionSummary ? <div>{visibleSessionSummary}</div> : null}
           {sessionStatus || sessionMode ? (
             <div className="sessionSummaryMeta">
               {sessionStatus ? <span>{sessionStatus}</span> : null}
