@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any
 
 BUY_DECISIONS = {"BUY", "BUY RETEST", "TEST BUY"}
@@ -8,7 +9,10 @@ MIN_PUBLISHED_SCORE = 75.0
 
 
 def _value(row: dict[str, Any], key: str) -> Any:
-    return row.get(key)
+    value = row.get(key)
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
 
 
 def _symbol_id(row: dict[str, Any], symbol_ids: dict[str, int]) -> int | None:
@@ -91,6 +95,6 @@ def build_stock_signal_payload(
         if symbol_id is None:
             continue
         mapped = {"market_date": market_date, "symbol_id": symbol_id}
-        mapped.update({field: row.get(field) for field in signal_fields})
+        mapped.update({field: _value(row, field) for field in signal_fields})
         payload.append(mapped)
     return payload
