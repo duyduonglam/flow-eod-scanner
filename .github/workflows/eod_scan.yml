@@ -13,7 +13,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -38,4 +38,4 @@ jobs:
             SCAN_ARGS=(--date "$REQUESTED_MARKET_DATE" "${SCAN_ARGS[@]}")
           fi
 
-          timeout 4m python -m flow_scanner.cli "${SCAN_ARGS[@]}"
+          timeout 25m python -m flow_scanner.cli "${SCAN_ARGS[@]}"
