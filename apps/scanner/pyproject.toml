@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = ["requests>=2.31"]
 
 [project.optional-dependencies]
-data = ["vnstock>=3.3"]
+data = []
 dev = ["pytest>=8.0"]
 
 [project.scripts]

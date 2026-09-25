@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install scanner
-        run: pip install -e 'apps/scanner[dev,data]'
+        run: pip install -e 'apps/scanner[dev]'
       - name: Run deterministic tests
         run: pytest -q apps/scanner/tests
       - name: Backfill EOD scans
