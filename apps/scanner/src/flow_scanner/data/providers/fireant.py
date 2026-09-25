@@ -5,23 +5,63 @@ import requests
 from flow_scanner.domain.models import OHLCVRecord
 
 class FireAntProvider:
-    def __init__(self, base_url: str = 'https://api.fireant.vn', api_key: str | None = None, session: requests.Session | None = None):
+    def __init__(
+        self,
+        base_url: str = 'https://api.fireant.vn',
+        api_key: str | None = None,
+        session: requests.Session | None = None,
+        page_size: int = 200,
+    ):
         self.base_url = base_url.rstrip('/')
         self.api_key = api_key
         self.session = session or requests.Session()
+        self.page_size = page_size
+        self._authenticated = False
 
-    def _headers(self) -> dict[str, str]:
-        return {'Authorization': f'Bearer {self.api_key}'} if self.api_key else {}
+    def _authenticate(self) -> None:
+        if self._authenticated:
+            return
+        self.session.headers.update({
+            'Accept': 'application/json',
+            'User-Agent': 'FLOW-Vietnam/1.1',
+        })
+        if self.api_key:
+            self.session.headers['Authorization'] = f'Bearer {self.api_key}'
+            self._authenticated = True
+            return
+
+        response = self.session.post(f'{self.base_url}/authentication/anonymous-login', timeout=30)
+        response.raise_for_status()
+        payload = response.json() if response.content else {}
+        if isinstance(payload, dict):
+            for key in ('access_token', 'accessToken', 'token'):
+                token = payload.get(key)
+                if isinstance(token, str) and token:
+                    self.session.headers['Authorization'] = f'Bearer {token}'
+                    break
+        self._authenticated = True
 
     def fetch_daily_prices(self, symbol: str, start_date: date, end_date: date) -> list[OHLCVRecord]:
+        self._authenticate()
         url = f'{self.base_url}/symbols/{symbol}/historical-quotes'
-        response = self.session.get(url, headers=self._headers(), params={
-            'startDate': start_date.isoformat(),
-            'endDate': end_date.isoformat(),
-        }, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
-        rows = payload if isinstance(payload, list) else payload.get('data', [])
+        rows: list[dict[str, Any]] = []
+        offset = 0
+        while True:
+            response = self.session.get(url, params={
+                'startDate': f'{start_date.isoformat()}T00:00:00',
+                'endDate': f'{end_date.isoformat()}T23:59:59',
+                'offset': offset,
+                'limit': self.page_size,
+            }, timeout=30)
+            response.raise_for_status()
+            payload = response.json()
+            page = payload if isinstance(payload, list) else payload.get('data', [])
+            if not isinstance(page, list):
+                raise RuntimeError(f'Unexpected FireAnt response for {symbol}: {type(payload).__name__}')
+            rows.extend(page)
+            if len(page) < self.page_size:
+                break
+            offset += len(page)
         return [self._map_row(symbol, row) for row in rows]
 
     @staticmethod

@@ -6,8 +6,7 @@ from flow_scanner.data.providers.vnstock import VnStockProvider
 
 def build_provider_chain() -> list[object]:
     providers: list[object] = []
-    if os.getenv('FIREANT_API_KEY'):
-        providers.append(FireAntProvider(api_key=os.environ['FIREANT_API_KEY']))
+    providers.append(FireAntProvider(api_key=os.getenv('FIREANT_API_KEY')))
     # OpenStockAPI currently requires its own API key; leave adapter optional.
     if os.getenv('OPENSTOCK_API_KEY'):
         providers.append(OpenStockAPIProvider())
