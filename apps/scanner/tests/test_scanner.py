@@ -29,7 +29,7 @@ def test_scan_universe_calculates_average_trade_value_20():
 
     result = scan_universe({'AAA': rows}, idx)
 
-    expected = sum(item.close * item.volume for item in rows[-20:]) / 20
+    expected = sum(item.close * 1000 * item.volume for item in rows[-20:]) / 20
     assert result[0]['avg_trade_value_20'] == expected
 
 

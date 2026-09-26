@@ -26,7 +26,7 @@ def _avg_trade_value(rows: list[OHLCVRecord], period: int = 20) -> float | None:
     if len(rows) < period:
         return None
     recent = rows[-period:]
-    return sum(item.close * item.volume for item in recent) / period
+    return sum(item.close * 1000 * item.volume for item in recent) / period
 
 
 def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[OHLCVRecord]) -> list[dict]:
