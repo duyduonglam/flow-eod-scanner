@@ -88,6 +88,15 @@ class SupabaseRepository:
         if last_error:
             raise last_error
 
+    def delete_scan_rows_for_date(self, market_date: str) -> None:
+        response = self.session.delete(
+            f'{self.url}/rest/v1/scan_results',
+            params={'market_date': f'eq.{market_date}'},
+            headers=self._headers(),
+            timeout=60,
+        )
+        response.raise_for_status()
+
     def upsert_scan_rows(self, rows: list[dict]) -> None:
         self._upsert('scan_results', rows, 'market_date,symbol_id')
 

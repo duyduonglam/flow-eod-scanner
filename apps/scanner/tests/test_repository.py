@@ -17,12 +17,22 @@ class FakeResponse:
 class FakeSession:
     def __init__(self):
         self.posts = []
+        self.deletes = []
 
     def post(self, url, headers=None, json=None, params=None, timeout=None):
         self.posts.append({
             "url": url,
             "headers": headers,
             "json": json,
+            "params": params,
+            "timeout": timeout,
+        })
+        return FakeResponse()
+
+    def delete(self, url, headers=None, params=None, timeout=None):
+        self.deletes.append({
+            "url": url,
+            "headers": headers,
             "params": params,
             "timeout": timeout,
         })
@@ -124,3 +134,19 @@ def test_upsert_stock_signal_rows_retries_transient_timeouts():
     assert len(session.posts) == 2
     assert session.posts[0]["failed"] is True
     assert session.posts[1]["json"] == [{"market_date": "2026-09-14", "symbol_id": 1}]
+
+
+def test_delete_scan_rows_for_date_removes_stale_published_results():
+    session = FakeSession()
+    repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
+
+    repo.delete_scan_rows_for_date("2026-09-25")
+
+    assert session.deletes == [
+        {
+            "url": "https://example.supabase.co/rest/v1/scan_results",
+            "headers": repo._headers(),
+            "params": {"market_date": "eq.2026-09-25"},
+            "timeout": 60,
+        }
+    ]
