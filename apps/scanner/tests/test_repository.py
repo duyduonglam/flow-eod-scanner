@@ -1,3 +1,5 @@
+import requests
+
 from flow_scanner.data.repository import SupabaseRepository
 
 def test_repository_headers_use_service_key():
@@ -61,3 +63,64 @@ def test_upsert_symbols_uses_symbol_conflict_key():
     assert session.posts[0]["json"] == [
         {"symbol": "VHM", "exchange": "HOSE", "asset_type": "stock", "is_active": True}
     ]
+
+
+def test_upsert_stock_signal_rows_splits_large_payloads_into_chunks():
+    session = FakeSession()
+    repo = SupabaseRepository(
+        "https://example.supabase.co",
+        "secret",
+        session=session,
+        upsert_chunk_size=2,
+    )
+
+    repo.upsert_stock_signal_rows([
+        {"market_date": "2026-09-14", "symbol_id": 1},
+        {"market_date": "2026-09-14", "symbol_id": 2},
+        {"market_date": "2026-09-14", "symbol_id": 3},
+    ])
+
+    assert [post["json"] for post in session.posts] == [
+        [
+            {"market_date": "2026-09-14", "symbol_id": 1},
+            {"market_date": "2026-09-14", "symbol_id": 2},
+        ],
+        [{"market_date": "2026-09-14", "symbol_id": 3}],
+    ]
+
+
+class TimeoutOnceSession(FakeSession):
+    def __init__(self):
+        super().__init__()
+        self.failures_remaining = 1
+
+    def post(self, url, headers=None, json=None, params=None, timeout=None):
+        if self.failures_remaining:
+            self.failures_remaining -= 1
+            self.posts.append({
+                "url": url,
+                "headers": headers,
+                "json": json,
+                "params": params,
+                "timeout": timeout,
+                "failed": True,
+            })
+            raise requests.Timeout("write operation timed out")
+        return super().post(url, headers=headers, json=json, params=params, timeout=timeout)
+
+
+def test_upsert_stock_signal_rows_retries_transient_timeouts():
+    session = TimeoutOnceSession()
+    repo = SupabaseRepository(
+        "https://example.supabase.co",
+        "secret",
+        session=session,
+        upsert_retries=2,
+        retry_sleep_seconds=0,
+    )
+
+    repo.upsert_stock_signal_rows([{"market_date": "2026-09-14", "symbol_id": 1}])
+
+    assert len(session.posts) == 2
+    assert session.posts[0]["failed"] is True
+    assert session.posts[1]["json"] == [{"market_date": "2026-09-14", "symbol_id": 1}]
