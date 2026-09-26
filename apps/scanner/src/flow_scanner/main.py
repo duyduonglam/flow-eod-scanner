@@ -22,6 +22,12 @@ def _signal_summary(flow_label: str, rs_rating: int | None, banker: float | None
         parts.append(f'VolBuzz {buzz:+.0f}%')
     return ' · '.join(parts)
 
+def _avg_trade_value(rows: list[OHLCVRecord], period: int = 20) -> float | None:
+    if len(rows) < period:
+        return None
+    recent = rows[-period:]
+    return sum(item.close * item.volume for item in recent) / period
+
 
 def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[OHLCVRecord]) -> list[dict]:
     index_closes = [r.close for r in index_history]
@@ -78,6 +84,7 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'retailer_ma': mcdx.retailer_ma,
             'swing_direction': swing,
             'volume_buzz': buzz,
+            'avg_trade_value_20': _avg_trade_value(rows),
             'ud_volume_ratio': ud,
             'main_signal': _signal_summary(flow.label, rs, mcdx.banker, swing, buzz),
             'entry_low': plan.entry_low,

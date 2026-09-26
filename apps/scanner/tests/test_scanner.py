@@ -18,9 +18,19 @@ def test_scan_universe_emits_required_table_fields():
     result = scan_universe({'AAA': history('AAA',0.001), 'BBB': history('BBB',0.0002)}, idx)
     assert len(result) == 2
     top = result[0]
-    for key in ['symbol','flow_score','main_signal','entry_low','entry_high','stop_price','stop_distance_pct','one_r','two_r','three_r','decision','invalidation']:
+    for key in ['symbol','flow_score','main_signal','entry_low','entry_high','stop_price','stop_distance_pct','one_r','two_r','three_r','decision','invalidation','avg_trade_value_20']:
         assert key in top
     assert top['rs_rating'] >= result[1]['rs_rating']
+
+
+def test_scan_universe_calculates_average_trade_value_20():
+    idx = history('VNINDEX', 0.0005)
+    rows = history('AAA', 0.001)
+
+    result = scan_universe({'AAA': rows}, idx)
+
+    expected = sum(item.close * item.volume for item in rows[-20:]) / 20
+    assert result[0]['avg_trade_value_20'] == expected
 
 
 def test_stock_signal_payload_converts_non_json_floats_to_null():

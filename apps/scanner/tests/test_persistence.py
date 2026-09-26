@@ -18,6 +18,7 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
             "three_r": 13.0,
             "decision": "BUY RETEST",
             "invalidation": "Close below stop",
+            "avg_trade_value_20": 12_000_000_000,
         }
     ]
     payload = build_scan_result_payload(rows, {"AAA": 42}, "2026-08-25")
@@ -49,13 +50,26 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
 
 def test_build_scan_result_payload_publishes_only_scores_at_least_75():
     rows = [
-        {"symbol": "LOW", "flow_score": 74.9, "decision": "WATCH"},
-        {"symbol": "EDGE", "flow_score": 75.0, "decision": "WATCH"},
+        {"symbol": "LOW", "flow_score": 74.9, "decision": "WATCH", "avg_trade_value_20": 12_000_000_000},
+        {"symbol": "EDGE", "flow_score": 75.0, "decision": "WATCH", "avg_trade_value_20": 12_000_000_000},
     ]
 
     payload = build_scan_result_payload(rows, {"LOW": 1, "EDGE": 2}, "2026-09-11")
 
     assert [item["symbol_id"] for item in payload] == [2]
+    assert payload[0]["rank"] == 1
+
+
+def test_build_scan_result_payload_requires_avg_trade_value_above_10_billion():
+    rows = [
+        {"symbol": "MISSING", "flow_score": 88.0, "decision": "BUY"},
+        {"symbol": "THIN", "flow_score": 88.0, "decision": "BUY", "avg_trade_value_20": 10_000_000_000},
+        {"symbol": "LIQUID", "flow_score": 88.0, "decision": "BUY", "avg_trade_value_20": 10_000_000_001},
+    ]
+
+    payload = build_scan_result_payload(rows, {"MISSING": 1, "THIN": 2, "LIQUID": 3}, "2026-09-25")
+
+    assert [item["symbol_id"] for item in payload] == [3]
     assert payload[0]["rank"] == 1
 
 
