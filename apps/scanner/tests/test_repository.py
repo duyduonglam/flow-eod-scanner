@@ -15,12 +15,22 @@ class FakeResponse:
 class FakeSession:
     def __init__(self):
         self.posts = []
+        self.deletes = []
 
     def post(self, url, headers=None, json=None, params=None, timeout=None):
         self.posts.append({
             "url": url,
             "headers": headers,
             "json": json,
+            "params": params,
+            "timeout": timeout,
+        })
+        return FakeResponse()
+
+    def delete(self, url, headers=None, params=None, timeout=None):
+        self.deletes.append({
+            "url": url,
+            "headers": headers,
             "params": params,
             "timeout": timeout,
         })
@@ -36,6 +46,17 @@ def test_upsert_scan_rows_uses_market_date_symbol_conflict_key():
     assert session.posts[0]["url"] == "https://example.supabase.co/rest/v1/scan_results"
     assert session.posts[0]["params"] == {"on_conflict": "market_date,symbol_id"}
     assert session.posts[0]["headers"]["Prefer"] == "resolution=merge-duplicates,return=minimal"
+
+
+def test_delete_scan_rows_for_date_removes_stale_published_rows():
+    session = FakeSession()
+    repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
+
+    repo.delete_scan_rows_for_date("2026-09-28")
+
+    assert session.deletes[0]["url"] == "https://example.supabase.co/rest/v1/scan_results"
+    assert session.deletes[0]["params"] == {"market_date": "eq.2026-09-28"}
+    assert session.deletes[0]["headers"]["Prefer"] == "return=minimal"
 
 
 def test_upsert_stock_signal_rows_uses_market_date_symbol_conflict_key():

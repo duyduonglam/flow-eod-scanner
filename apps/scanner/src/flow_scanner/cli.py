@@ -107,6 +107,7 @@ def main() -> None:
     scan_rows = build_scan_result_payload(rows, symbol_ids, market_date, limit=args.limit)
     signal_rows = build_stock_signal_payload(rows, symbol_ids, market_date)
     repo.upsert_stock_signal_rows(signal_rows)
+    repo.delete_scan_rows_for_date(market_date)
     repo.upsert_scan_rows(scan_rows)
 
     print(json.dumps({
