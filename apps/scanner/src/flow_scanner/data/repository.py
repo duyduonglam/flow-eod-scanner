@@ -1,5 +1,9 @@
 from __future__ import annotations
+import time
 import requests
+
+UPSERT_BATCH_SIZE = 200
+MAX_WRITE_ATTEMPTS = 3
 
 class SupabaseRepository:
     def __init__(self, url: str, service_role_key: str, session: requests.Session | None = None):
@@ -47,17 +51,34 @@ class SupabaseRepository:
         )
         response.raise_for_status()
 
+    def _post_json_with_retry(self, url: str, *, params: dict[str, str], payload: list[dict]) -> None:
+        last_error: requests.RequestException | None = None
+        for attempt in range(MAX_WRITE_ATTEMPTS):
+            try:
+                response = self.session.post(
+                    url,
+                    params=params,
+                    headers=self._headers({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+                    json=payload,
+                    timeout=60,
+                )
+                response.raise_for_status()
+                return
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                last_error = exc
+                if attempt == MAX_WRITE_ATTEMPTS - 1:
+                    raise
+                time.sleep(2 * (attempt + 1))
+        if last_error:
+            raise last_error
+
     def _upsert(self, table: str, rows: list[dict], on_conflict: str) -> None:
         if not rows:
             return
-        response = self.session.post(
-            f'{self.url}/rest/v1/{table}',
-            params={'on_conflict': on_conflict},
-            headers=self._headers({'Prefer':'resolution=merge-duplicates,return=minimal'}),
-            json=rows,
-            timeout=30,
-        )
-        response.raise_for_status()
+        url = f'{self.url}/rest/v1/{table}'
+        params = {'on_conflict': on_conflict}
+        for index in range(0, len(rows), UPSERT_BATCH_SIZE):
+            self._post_json_with_retry(url, params=params, payload=rows[index:index + UPSERT_BATCH_SIZE])
 
     def upsert_scan_rows(self, rows: list[dict]) -> None:
         self._upsert('scan_results', rows, 'market_date,symbol_id')

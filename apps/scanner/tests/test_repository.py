@@ -70,6 +70,17 @@ def test_upsert_stock_signal_rows_uses_market_date_symbol_conflict_key():
     assert session.posts[0]["headers"]["Prefer"] == "resolution=merge-duplicates,return=minimal"
 
 
+def test_upsert_stock_signal_rows_batches_large_payloads():
+    session = FakeSession()
+    repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
+    rows = [{"market_date": "2026-08-25", "symbol_id": index} for index in range(401)]
+
+    repo.upsert_stock_signal_rows(rows)
+
+    assert [len(post["json"]) for post in session.posts] == [200, 200, 1]
+    assert all(post["timeout"] == 60 for post in session.posts)
+
+
 def test_upsert_symbols_uses_symbol_conflict_key():
     session = FakeSession()
     repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
