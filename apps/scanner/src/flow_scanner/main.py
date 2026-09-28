@@ -5,13 +5,21 @@ from flow_scanner.indicators.relative_strength import relative_performance, perc
 from flow_scanner.indicators.mcdx import latest_mcdx
 from flow_scanner.indicators.volume import volume_buzz, ud_volume_ratio
 from flow_scanner.indicators.swing import swing_direction
+from flow_scanner.flow.composite_score import compute_composite_score
 from flow_scanner.flow.trend_template import compute_trend_template
 from flow_scanner.flow.entry_engine import build_trade_plan
 from flow_scanner.flow.ranking import rank_candidates
 
 
-def _signal_summary(flow_label: str, rs_rating: int | None, banker: float | None, swing: str | None, buzz: float | None) -> str:
+def _signal_summary(flow_label: str, rs_rating: int | None, banker: float | None, swing: str | None, buzz: float | None, components: dict[str, float] | None = None) -> str:
     parts = [flow_label]
+    if components:
+        parts.append(
+            f"FLOW {components.get('structure', 0):.0f}"
+            f"/MCDX {components.get('mcdx', 0):.0f}"
+            f"/VOL {components.get('volume', 0):.0f}"
+            f"/ENTRY {components.get('swing_entry', 0):.0f}"
+        )
     if rs_rating is not None:
         parts.append(f'RS {rs_rating}')
     if banker is not None:
@@ -60,15 +68,27 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
         buzz = volume_buzz(volumes)
         ud = ud_volume_ratio(closes, volumes)
         plan = build_trade_plan(highs, lows, closes, flow.score_pct, swing)
+        composite = compute_composite_score(
+            closes=closes,
+            highs=highs,
+            lows=lows,
+            volumes=volumes,
+            trend=flow,
+            mcdx=mcdx,
+            rs_rating=rs,
+            swing=swing,
+            plan=plan,
+        )
+        plan = build_trade_plan(highs, lows, closes, composite.total_score, swing)
         levels = plan.levels
         results.append({
             'symbol': symbol,
             'market_date': rows[-1].market_date.isoformat(),
             'close': rows[-1].close,
-            'flow_score': round(flow.score_pct, 1),
-            'flow_label': flow.label,
-            'pass_count': flow.pass_count,
-            'total_count': flow.total_count,
+            'flow_score': composite.total_score,
+            'flow_label': composite.label,
+            'pass_count': round(composite.total_score, 1),
+            'total_count': 100,
             'rs_rating': rs,
             'banker': mcdx.banker,
             'banker_ma': mcdx.banker_ma,
@@ -79,7 +99,7 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'swing_direction': swing,
             'volume_buzz': buzz,
             'ud_volume_ratio': ud,
-            'main_signal': _signal_summary(flow.label, rs, mcdx.banker, swing, buzz),
+            'main_signal': _signal_summary(composite.label, rs, mcdx.banker, swing, buzz, composite.components),
             'entry_low': plan.entry_low,
             'entry_high': plan.entry_high,
             'stop_price': plan.stop,
