@@ -23,6 +23,15 @@ def test_scan_universe_emits_required_table_fields():
     assert top['rs_rating'] >= result[1]['rs_rating']
 
 
+def test_scan_universe_keeps_trend_template_counts_for_database_schema():
+    idx = history('VNINDEX', 0.0005)
+    result = scan_universe({'AAA': history('AAA', 0.001)}, idx)
+
+    assert isinstance(result[0]['pass_count'], int)
+    assert result[0]['total_count'] == 11
+    assert 0 <= result[0]['pass_count'] <= 11
+
+
 def test_stock_signal_payload_converts_non_json_floats_to_null():
     rows = [{
         "symbol": "AAA",
