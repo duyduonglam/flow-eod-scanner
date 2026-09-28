@@ -6,7 +6,6 @@ from typing import Any
 BUY_DECISIONS = {"BUY", "BUY RETEST", "TEST BUY"}
 DETERIORATING_DECISIONS = {"TRIM", "EXIT"}
 MIN_PUBLISHED_SCORE = 75.0
-MIN_PUBLISHED_AVG_TRADE_VALUE_20 = 10_000_000_000.0
 
 
 def _value(row: dict[str, Any], key: str) -> Any:
@@ -21,13 +20,6 @@ def _symbol_id(row: dict[str, Any], symbol_ids: dict[str, int]) -> int | None:
     return symbol_ids.get(symbol)
 
 
-def _has_publishable_liquidity(row: dict[str, Any]) -> bool:
-    value = _value(row, "avg_trade_value_20")
-    if value is None:
-        return False
-    return float(value) > MIN_PUBLISHED_AVG_TRADE_VALUE_20
-
-
 def build_scan_result_payload(
     rows: list[dict[str, Any]],
     symbol_ids: dict[str, int],
@@ -38,8 +30,6 @@ def build_scan_result_payload(
     for row in rows:
         score = row.get("flow_score")
         if score is None or float(score) < MIN_PUBLISHED_SCORE:
-            continue
-        if not _has_publishable_liquidity(row):
             continue
         symbol_id = _symbol_id(row, symbol_ids)
         if symbol_id is None:
