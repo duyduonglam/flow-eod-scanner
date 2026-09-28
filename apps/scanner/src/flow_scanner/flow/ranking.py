@@ -7,7 +7,7 @@ DECISION_PRIORITY = {
 
 def rank_candidates(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (
-        DECISION_PRIORITY.get(r.get('decision'), -1),
         r.get('flow_score') if r.get('flow_score') is not None else -1,
+        DECISION_PRIORITY.get(r.get('decision'), -1),
         r.get('rs_rating') if r.get('rs_rating') is not None else -1,
     ), reverse=True)

@@ -48,9 +48,10 @@ def test_market_mode():
     assert classify_market_mode(1.2, 350, 200) == 'RISK ON'
     assert classify_market_mode(-1.5, 150, 300) == 'RISK OFF'
 
-def test_ranking_prefers_actionable_decision_then_score():
+def test_ranking_prefers_total_score_then_actionable_decision():
     rows = [
         {'symbol':'A','decision':'WATCH','flow_score':99,'rs_rating':99},
         {'symbol':'B','decision':'BUY RETEST','flow_score':85,'rs_rating':91},
+        {'symbol':'C','decision':'BUY','flow_score':85,'rs_rating':90},
     ]
-    assert rank_candidates(rows)[0]['symbol'] == 'B'
+    assert [row['symbol'] for row in rank_candidates(rows)] == ['A', 'C', 'B']
