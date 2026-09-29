@@ -83,6 +83,9 @@ class SupabaseRepository:
     def upsert_scan_rows(self, rows: list[dict]) -> None:
         self._upsert('scan_results', rows, 'market_date,symbol_id')
 
+    def upsert_market_regime(self, row: dict) -> None:
+        self._upsert('market_regimes', [row], 'market_date')
+
     def delete_scan_rows_for_date(self, market_date: str) -> None:
         response = self.session.delete(
             f'{self.url}/rest/v1/scan_results',

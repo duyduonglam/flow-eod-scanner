@@ -70,6 +70,17 @@ def test_upsert_stock_signal_rows_uses_market_date_symbol_conflict_key():
     assert session.posts[0]["headers"]["Prefer"] == "resolution=merge-duplicates,return=minimal"
 
 
+def test_upsert_market_regime_uses_market_date_conflict_key():
+    session = FakeSession()
+    repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
+
+    repo.upsert_market_regime({"market_date": "2026-09-29", "market_mode": "NORMAL"})
+
+    assert session.posts[0]["url"] == "https://example.supabase.co/rest/v1/market_regimes"
+    assert session.posts[0]["params"] == {"on_conflict": "market_date"}
+    assert session.posts[0]["json"] == [{"market_date": "2026-09-29", "market_mode": "NORMAL"}]
+
+
 def test_upsert_stock_signal_rows_batches_large_payloads():
     session = FakeSession()
     repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)

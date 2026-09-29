@@ -5,6 +5,7 @@ import time
 from typing import Iterable
 from flow_scanner.domain.models import OHLCVRecord
 from flow_scanner.data.validator import resolve_price
+from flow_scanner.flow.market_regime import classify_market_mode
 from flow_scanner.main import scan_universe
 
 class PipelineError(RuntimeError): pass
@@ -62,6 +63,54 @@ def _fetch_first_history(
     return histories
 
 
+def _previous_close(row: OHLCVRecord, history: list[OHLCVRecord]) -> float | None:
+    if row.reference and row.reference > 0:
+        return row.reference
+    if len(history) >= 2 and history[-2].close > 0:
+        return history[-2].close
+    return None
+
+
+def _change_pct(row: OHLCVRecord, history: list[OHLCVRecord]) -> float | None:
+    previous = _previous_close(row, history)
+    if previous is None:
+        return None
+    return (row.close / previous - 1) * 100
+
+
+def _market_regime_payload(
+    market_date: date,
+    index_symbol: str,
+    index_history: list[OHLCVRecord],
+    histories: dict[str, list[OHLCVRecord]],
+) -> dict:
+    index_row = index_history[-1]
+    index_change_pct = _change_pct(index_row, index_history)
+    advancers = 0
+    decliners = 0
+    liquidity_value = 0.0
+    for rows in histories.values():
+        row = rows[-1]
+        change = _change_pct(row, rows)
+        if change is not None and change > 0:
+            advancers += 1
+        elif change is not None and change < 0:
+            decliners += 1
+        liquidity_value += row.close * 1000 * row.volume
+    distribution_flag = index_change_pct is not None and index_change_pct < 0 and decliners > advancers
+    return {
+        "market_date": market_date.isoformat(),
+        "market_mode": classify_market_mode(index_change_pct, advancers, decliners, distribution_flag),
+        "index_symbol": index_symbol,
+        "index_close": index_row.close,
+        "index_change_pct": index_change_pct,
+        "breadth_advancers": advancers,
+        "breadth_decliners": decliners,
+        "liquidity_value": liquidity_value,
+        "distribution_flag": distribution_flag,
+    }
+
+
 def run_eod_pipeline(
     market_date: date,
     symbols: list[str],
@@ -115,5 +164,6 @@ def run_eod_pipeline(
         'market_date':market_date.isoformat(),
         'scanned':len(histories),
         'rows':rows,
+        'market_regime': _market_regime_payload(market_date, index_symbol, index_history, histories),
         'conflicts':conflicts,
     }

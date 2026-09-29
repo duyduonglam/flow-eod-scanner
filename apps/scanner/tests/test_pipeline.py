@@ -9,9 +9,10 @@ class FakeProvider:
     def fetch_daily_prices(self, symbol,start_date,end_date):
         rows=[]; price=100.0; d=end_date-timedelta(days=299)
         for i in range(300):
+            reference=price
             price*=1+self.growth
             close=self.overrides.get((symbol,i),price)
-            rows.append(OHLCVRecord(symbol,d+timedelta(days=i),close,close*1.01,close*0.99,close,close,100000+i,'fake'))
+            rows.append(OHLCVRecord(symbol,d+timedelta(days=i),close,close*1.01,close*0.99,close,reference,100000+i,'fake'))
         return rows
 
 class FlakyProvider(FakeProvider):
@@ -40,6 +41,13 @@ def test_pipeline_scans_and_returns_ranked_rows():
     assert out['status']=='OK'
     assert out['scanned']==2
     assert len(out['rows'])==2
+    assert out['market_regime']['market_date']=='2026-08-25'
+    assert out['market_regime']['index_symbol']=='VNINDEX'
+    assert out['market_regime']['index_close'] > 0
+    assert out['market_regime']['breadth_advancers']==2
+    assert out['market_regime']['breadth_decliners']==0
+    assert out['market_regime']['liquidity_value'] > 0
+    assert out['market_regime']['market_mode'] in {'RISK ON','NORMAL','CAUTION','RISK OFF'}
 
 def test_pipeline_skips_symbol_when_providers_conflict():
     a=FakeProvider()
