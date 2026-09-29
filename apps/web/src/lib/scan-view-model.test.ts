@@ -8,6 +8,8 @@ import {
   normalizeTickerQuery,
   normalizeDecisionFilter,
   normalizeDailyNarrative,
+  filterDisplayRows,
+  sortRowsByScore,
   splitDailyNarrative,
   pickHeadlineNews,
   verifiedNewsUrl,
@@ -51,6 +53,27 @@ test('normalizes decision filters from URL params', () => {
   assert.equal(normalizeDecisionFilter('buy-retest'), 'BUY RETEST');
   assert.equal(normalizeDecisionFilter('do_not_chase'), 'DO NOT CHASE');
   assert.equal(normalizeDecisionFilter('random'), null);
+});
+
+test('sorts scan rows by total score before decision priority', () => {
+  const rows = [
+    { ...baseRow, symbol: 'VE3', flow_score: 76, decision: 'BUY RETEST', rs_rating: 80 },
+    { ...baseRow, symbol: 'VCR', flow_score: 85, decision: 'TEST BUY', rs_rating: 78 },
+    { ...baseRow, symbol: 'PVP', flow_score: 89, decision: 'BUY', rs_rating: 90 },
+    { ...baseRow, symbol: 'QNS', flow_score: 85, decision: 'BUY', rs_rating: 85 },
+  ];
+
+  assert.deepEqual(sortRowsByScore(rows).map((row) => row.symbol), ['PVP', 'QNS', 'VCR', 'VE3']);
+});
+
+test('hides high-score rows when current liquidity is weak', () => {
+  const rows = [
+    { ...baseRow, symbol: 'STRONG', flow_score: 88, volume_buzz: 20 },
+    { ...baseRow, symbol: 'WEAK', flow_score: 92, volume_buzz: -72 },
+    { ...baseRow, symbol: 'UNKNOWN', flow_score: 80, volume_buzz: null },
+  ];
+
+  assert.deepEqual(filterDisplayRows(rows).map((row) => row.symbol), ['STRONG', 'UNKNOWN']);
 });
 
 test('only links a stored headline when the title matches a real news item', () => {

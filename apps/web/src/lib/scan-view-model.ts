@@ -18,6 +18,17 @@ export type SummaryRow = {
 export const decisionValues = ['BUY', 'TEST BUY', 'BUY RETEST', 'WATCH', 'DO NOT CHASE', 'HOLD', 'TRIM', 'EXIT'] as const;
 export type DecisionFilter = (typeof decisionValues)[number];
 
+const decisionPriority: Record<string, number> = {
+  BUY: 7,
+  'BUY RETEST': 6,
+  'TEST BUY': 5,
+  HOLD: 4,
+  WATCH: 3,
+  'DO NOT CHASE': 2,
+  TRIM: 1,
+  EXIT: 0,
+};
+
 export type NewsSummaryItem = {
   title: string;
   url: string | null;
@@ -59,6 +70,22 @@ export function normalizeTickerQuery(query: string | null | undefined): string {
 export function normalizeDecisionFilter(query: string | null | undefined): DecisionFilter | null {
   const normalized = (query ?? '').trim().toUpperCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
   return decisionValues.find((decision) => decision === normalized) ?? null;
+}
+
+export function sortRowsByScore<T extends { flow_score: number | null; decision: string; rs_rating?: number | null; symbol?: string }>(rows: T[]): T[] {
+  return rows.toSorted((a, b) => {
+    const scoreDiff = (b.flow_score ?? -1) - (a.flow_score ?? -1);
+    if (scoreDiff !== 0) return scoreDiff;
+    const decisionDiff = (decisionPriority[b.decision] ?? -1) - (decisionPriority[a.decision] ?? -1);
+    if (decisionDiff !== 0) return decisionDiff;
+    const rsDiff = (b.rs_rating ?? -1) - (a.rs_rating ?? -1);
+    if (rsDiff !== 0) return rsDiff;
+    return (a.symbol ?? '').localeCompare(b.symbol ?? '', 'vi');
+  });
+}
+
+export function filterDisplayRows<T extends { volume_buzz?: number | null }>(rows: T[]): T[] {
+  return rows.filter((row) => row.volume_buzz == null || row.volume_buzz >= -50);
 }
 
 function normalizeTitle(value: string): string {

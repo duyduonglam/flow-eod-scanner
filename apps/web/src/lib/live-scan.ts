@@ -3,10 +3,12 @@ import {
   decisionValues,
   dedupeNews,
   findNewsUrlInHtml,
+  filterDisplayRows,
   normalizeDecisionFilter,
   normalizeDailyNarrative,
   normalizeTickerQuery,
   pickHeadlineNews,
+  sortRowsByScore,
   verifiedNewsUrl,
   type DecisionFilter,
 } from '@/lib/scan-view-model';
@@ -23,6 +25,10 @@ type JoinedNewsRow = Record<string, unknown> & {
 
 const decisions: Decision[] = [...decisionValues];
 const cafefArticleCache = new Map<string, Promise<string | null>>();
+
+function prepareDisplayRows(rows: ScanRow[]): ScanRow[] {
+  return sortRowsByScore(filterDisplayRows(rows));
+}
 
 function toNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
@@ -300,7 +306,7 @@ async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
     .order('rank', { ascending: true });
 
   if (error || !data?.length) return null;
-  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
 }
 
 export async function getAvailableScanDates(): Promise<string[]> {
@@ -340,7 +346,7 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
     .limit(240);
 
   if (error || !data?.length) return [];
-  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
 }
 
 export async function getScanHistoryByDecision(decision: DecisionFilter): Promise<ScanRow[]> {
@@ -356,7 +362,7 @@ export async function getScanHistoryByDecision(decision: DecisionFilter): Promis
     .limit(500);
 
   if (error || !data?.length) return [];
-  return attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
 }
 
 export async function getSessionNews(marketDate?: string | null): Promise<NewsItem[]> {
@@ -387,10 +393,10 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
   const decisionFilter = normalizeDecisionFilter(decisionQuery);
 
   if (!db) {
-    const rows = (normalizedQuery
+    const rows = prepareDisplayRows((normalizedQuery
       ? demoRows.filter((row) => row.symbol.toUpperCase() === normalizedQuery)
       : demoRows
-    ).filter((row) => !decisionFilter || row.decision === decisionFilter);
+    ).filter((row) => !decisionFilter || row.decision === decisionFilter));
     return {
       rows,
       dataStatus: 'DEMO',
@@ -464,7 +470,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     };
   }
 
-  const rows = await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow))));
+  const rows = prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
   const latestMarketDate = rows[0]?.market_date ?? null;
   return {
     rows,
