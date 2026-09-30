@@ -7,6 +7,8 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
             "symbol": "AAA",
             "flow_score": 88.4,
             "flow_label": "YES",
+            "avg_value_20": 25_000_000_000,
+            "current_value": 6_000_000_000,
             "main_signal": "FLOW YES",
             "headline_news": "News",
             "entry_low": 10.0,
@@ -49,8 +51,8 @@ def test_build_scan_result_payload_maps_scanner_rows_for_supabase():
 
 def test_build_scan_result_payload_publishes_only_scores_at_least_75():
     rows = [
-        {"symbol": "LOW", "flow_score": 74.9, "decision": "WATCH"},
-        {"symbol": "EDGE", "flow_score": 75.0, "decision": "WATCH"},
+        {"symbol": "LOW", "flow_score": 74.9, "avg_value_20": 25_000_000_000, "current_value": 6_000_000_000, "decision": "WATCH"},
+        {"symbol": "EDGE", "flow_score": 75.0, "avg_value_20": 25_000_000_000, "current_value": 6_000_000_000, "decision": "WATCH"},
     ]
 
     payload = build_scan_result_payload(rows, {"LOW": 1, "EDGE": 2}, "2026-09-11")
@@ -66,6 +68,8 @@ def test_build_stock_signal_payload_keeps_indicator_fields():
             "close": 10.2,
             "flow_score": 88.4,
             "flow_label": "YES",
+            "avg_value_20": 25_000_000_000,
+            "current_value": 6_000_000_000,
             "pass_count": 9,
             "total_count": 11,
             "rs_rating": 91,
@@ -110,3 +114,36 @@ def test_build_stock_signal_payload_keeps_indicator_fields():
             "data_status": "VALID",
         }
     ]
+
+
+def test_build_scan_result_payload_excludes_illiquid_rows_from_main_list():
+    rows = [
+        {
+            "symbol": "LIQUID",
+            "flow_score": 82,
+            "flow_label": "A",
+            "avg_value_20": 25_000_000_000,
+            "current_value": 6_000_000_000,
+            "decision": "WATCH",
+        },
+        {
+            "symbol": "LOWAVG",
+            "flow_score": 92,
+            "flow_label": "A",
+            "avg_value_20": 9_900_000_000,
+            "current_value": 8_000_000_000,
+            "decision": "WATCH",
+        },
+        {
+            "symbol": "LOWTODAY",
+            "flow_score": 90,
+            "flow_label": "A",
+            "avg_value_20": 30_000_000_000,
+            "current_value": 4_900_000_000,
+            "decision": "WATCH",
+        },
+    ]
+
+    payload = build_scan_result_payload(rows, {"LIQUID": 1, "LOWAVG": 2, "LOWTODAY": 3}, "2026-09-30")
+
+    assert [row["symbol_id"] for row in payload] == [1]

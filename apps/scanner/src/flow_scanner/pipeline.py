@@ -12,6 +12,8 @@ class PipelineError(RuntimeError): pass
 class ProviderRateLimitError(RuntimeError): pass
 
 HISTORY_LOOKBACK_DAYS = 450
+MIN_AVG_VALUE_20 = 20_000_000_000
+MIN_CURRENT_VALUE = 5_000_000_000
 RATE_LIMIT_MARKERS = (
     'rate limit',
     'rate limit exceeded',
@@ -89,6 +91,7 @@ def _market_regime_payload(
     advancers = 0
     decliners = 0
     liquidity_value = 0.0
+    liquidity_excluded = 0
     for rows in histories.values():
         row = rows[-1]
         change = _change_pct(row, rows)
@@ -96,7 +99,11 @@ def _market_regime_payload(
             advancers += 1
         elif change is not None and change < 0:
             decliners += 1
-        liquidity_value += row.close * 1000 * row.volume
+        current_value = row.close * 1000 * row.volume
+        avg_value_20 = sum(item.close * 1000 * item.volume for item in rows[-20:]) / min(len(rows), 20)
+        liquidity_value += current_value
+        if avg_value_20 < MIN_AVG_VALUE_20 or current_value < MIN_CURRENT_VALUE:
+            liquidity_excluded += 1
     distribution_flag = index_change_pct is not None and index_change_pct < 0 and decliners > advancers
     return {
         "market_date": market_date.isoformat(),
@@ -108,6 +115,10 @@ def _market_regime_payload(
         "breadth_decliners": decliners,
         "liquidity_value": liquidity_value,
         "distribution_flag": distribution_flag,
+        "exclusion_notes": (
+            f"Đã loại {liquidity_excluded} mã khỏi bảng chính vì giá trị giao dịch bình quân 20 phiên dưới 20 tỷ "
+            "hoặc phiên hiện tại dưới 5 tỷ."
+        ),
     }
 
 

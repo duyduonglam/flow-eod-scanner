@@ -6,6 +6,8 @@ from typing import Any
 BUY_DECISIONS = {"BUY", "BUY RETEST", "TEST BUY"}
 DETERIORATING_DECISIONS = {"TRIM", "EXIT"}
 MIN_PUBLISHED_SCORE = 75.0
+MIN_AVG_VALUE_20 = 20_000_000_000
+MIN_CURRENT_VALUE = 5_000_000_000
 
 
 def _value(row: dict[str, Any], key: str) -> Any:
@@ -30,6 +32,12 @@ def build_scan_result_payload(
     for row in rows:
         score = row.get("flow_score")
         if score is None or float(score) < MIN_PUBLISHED_SCORE:
+            continue
+        avg_value_20 = row.get("avg_value_20")
+        current_value = row.get("current_value")
+        if avg_value_20 is None or float(avg_value_20) < MIN_AVG_VALUE_20:
+            continue
+        if current_value is None or float(current_value) < MIN_CURRENT_VALUE:
             continue
         symbol_id = _symbol_id(row, symbol_ids)
         if symbol_id is None:

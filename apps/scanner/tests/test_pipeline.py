@@ -48,6 +48,7 @@ def test_pipeline_scans_and_returns_ranked_rows():
     assert out['market_regime']['breadth_decliners']==0
     assert out['market_regime']['liquidity_value'] > 0
     assert out['market_regime']['market_mode'] in {'RISK ON','NORMAL','CAUTION','RISK OFF'}
+    assert '20 tỷ' in out['market_regime']['exclusion_notes']
 
 def test_pipeline_skips_symbol_when_providers_conflict():
     a=FakeProvider()

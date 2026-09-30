@@ -47,6 +47,7 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
         highs = [r.high for r in rows]
         lows = [r.low for r in rows]
         volumes = [r.volume for r in rows]
+        values = [r.close * 1000 * r.volume for r in rows]
         rs = rs_ratings.get(symbol)
         mcdx = latest_mcdx(closes)
         flow = compute_trend_template(closes, highs, lows, rs, mcdx.banker)
@@ -85,6 +86,8 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'symbol': symbol,
             'market_date': rows[-1].market_date.isoformat(),
             'close': rows[-1].close,
+            'current_value': values[-1],
+            'avg_value_20': sum(values[-20:]) / min(len(values), 20),
             'flow_score': composite.total_score,
             'flow_label': composite.label,
             'pass_count': flow.pass_count,
