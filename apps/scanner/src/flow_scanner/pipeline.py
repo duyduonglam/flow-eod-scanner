@@ -11,7 +11,8 @@ from flow_scanner.main import scan_universe
 class PipelineError(RuntimeError): pass
 class ProviderRateLimitError(RuntimeError): pass
 
-HISTORY_LOOKBACK_DAYS = 450
+HISTORY_LOOKBACK_DAYS = 500
+MIN_VALID_HISTORY_BARS = 260
 MIN_AVG_VALUE_20 = 20_000_000_000
 MIN_CURRENT_VALUE = 5_000_000_000
 RATE_LIMIT_MARKERS = (
@@ -24,6 +25,15 @@ RATE_LIMIT_MARKERS = (
 )
 
 
+def _display_source(source: str) -> str:
+    normalized = source.strip().lower()
+    if normalized == 'fireant':
+        return 'FireAnt'
+    if normalized.startswith('vnstock:'):
+        return normalized.split(':', 1)[1].upper()
+    return source.strip().upper()
+
+
 def _is_rate_limit_error(exc: Exception) -> bool:
     message = str(exc).lower()
     return any(marker in message for marker in RATE_LIMIT_MARKERS)
@@ -34,12 +44,16 @@ def _fetch_first_history(
     symbol: str,
     start: date,
     end: date,
-    min_rows: int = 253,
+    min_rows: int = MIN_VALID_HISTORY_BARS,
     max_rate_limit_retries: int = 2,
     retry_sleep_seconds: float = 65.0,
+    primary_only: bool = False,
 ):
     histories: list[tuple[str, list[OHLCVRecord]]] = []
-    for provider in providers:
+    provider_list = list(providers)
+    if primary_only:
+        provider_list = provider_list[:1]
+    for provider in provider_list:
         for attempt in range(max_rate_limit_retries + 1):
             try:
                 rows = provider.fetch_daily_prices(symbol, start, end)
@@ -130,6 +144,9 @@ def run_eod_pipeline(
     retry_sleep_seconds: float = 65.0,
     history_lookback_days: int = HISTORY_LOOKBACK_DAYS,
     max_rate_limit_retries: int = 2,
+    primary_only: bool = False,
+    required_source: str | None = None,
+    min_coverage_ratio: float = 0.0,
 ) -> dict:
     start = market_date - timedelta(days=history_lookback_days)
     index_histories = _fetch_first_history(
@@ -139,10 +156,14 @@ def run_eod_pipeline(
         market_date,
         retry_sleep_seconds=retry_sleep_seconds,
         max_rate_limit_retries=max_rate_limit_retries,
+        primary_only=primary_only,
     )
     if not index_histories:
-        raise PipelineError('No index history with at least 253 validated rows')
+        source_note = f' from {required_source}' if required_source else ''
+        raise PipelineError(f'No index history with at least {MIN_VALID_HISTORY_BARS} validated rows{source_note}')
     index_history = index_histories[0][1]
+    if required_source and any(record.source.lower() != required_source.lower() for record in index_history):
+        raise PipelineError(f'Index history did not come from required source {required_source}')
     if index_history[-1].market_date != market_date:
         return {'status':'SKIPPED', 'reason':'index has no bar for requested market date', 'rows':[], 'conflicts':[]}
 
@@ -156,10 +177,13 @@ def run_eod_pipeline(
             market_date,
             retry_sleep_seconds=retry_sleep_seconds,
             max_rate_limit_retries=max_rate_limit_retries,
+            primary_only=primary_only,
         )
         if not candidates:
             continue
         primary = candidates[0][1]
+        if required_source and any(record.source.lower() != required_source.lower() for record in primary):
+            raise PipelineError(f'{symbol} history did not come from required source {required_source}')
         if primary[-1].market_date != market_date:
             continue
         if len(candidates) > 1 and candidates[1][1][-1].market_date == market_date:
@@ -169,7 +193,23 @@ def run_eod_pipeline(
                 continue
         histories[symbol] = primary
 
+    if min_coverage_ratio > 0 and symbols:
+        coverage = len(histories) / len(symbols)
+        if coverage < min_coverage_ratio:
+            raise PipelineError(
+                f'Primary source coverage too low: {len(histories)}/{len(symbols)} '
+                f'({coverage:.1%}); required at least {min_coverage_ratio:.1%}'
+            )
+
     rows = scan_universe(histories, index_history)
+    used_sources = {
+        _display_source(record.source)
+        for history in [index_history, *histories.values()]
+        for record in history
+    }
+    ordered_sources = sorted(used_sources)
+    primary_source = 'FireAnt' if 'FireAnt' in used_sources else (ordered_sources[0] if ordered_sources else None)
+    fallback_sources = [source for source in ordered_sources if source != 'FireAnt'] if primary_source == 'FireAnt' else []
     return {
         'status':'OK',
         'market_date':market_date.isoformat(),
@@ -177,4 +217,6 @@ def run_eod_pipeline(
         'rows':rows,
         'market_regime': _market_regime_payload(market_date, index_symbol, index_history, histories),
         'conflicts':conflicts,
+        'primary_source': primary_source,
+        'fallback_sources_actually_used': fallback_sources,
     }

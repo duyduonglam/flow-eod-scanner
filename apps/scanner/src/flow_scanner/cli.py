@@ -62,6 +62,9 @@ def _run_with_fallback(
                 providers,
                 retry_sleep_seconds=retry_sleep_seconds,
                 max_rate_limit_retries=max_rate_limit_retries,
+                primary_only=True,
+                required_source='fireant',
+                min_coverage_ratio=0.9,
             )
         except PipelineError as exc:
             last_error = exc
@@ -121,6 +124,10 @@ def main() -> None:
         "refreshed_symbols": refreshed_symbols,
         "published": len(scan_rows),
         "conflicts": result.get("conflicts", []),
+        "primary_source": result.get("primary_source"),
+        "fallback_sources_actually_used": result.get("fallback_sources_actually_used", []),
+        "pipeline_status": "VERIFIED" if not result.get("fallback_sources_actually_used") else "VERIFIED_FALLBACK",
+        "publish_status": "PUBLISHED",
     }, ensure_ascii=False))
 
 

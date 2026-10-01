@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 import pytest
 from flow_scanner.domain.models import OHLCVRecord
-from flow_scanner.pipeline import ProviderRateLimitError, run_eod_pipeline
+from flow_scanner.pipeline import PipelineError, ProviderRateLimitError, run_eod_pipeline
 
 class FakeProvider:
     def __init__(self, growth=0.001, overrides=None):
@@ -36,6 +36,24 @@ class CapturingProvider(FakeProvider):
         self.start_dates.append(start_date)
         return super().fetch_daily_prices(symbol,start_date,end_date)
 
+class EmptyProvider:
+    def fetch_daily_prices(self, symbol, start_date, end_date):
+        return []
+
+class PartialProvider(FakeProvider):
+    def fetch_daily_prices(self, symbol, start_date, end_date):
+        if symbol == 'BBB':
+            return []
+        rows = super().fetch_daily_prices(symbol, start_date, end_date)
+        return [OHLCVRecord(
+            row.symbol, row.market_date, row.open, row.high, row.low, row.close,
+            row.reference, row.volume, 'fireant', row.fetched_at,
+        ) for row in rows]
+
+class ShortProvider(FakeProvider):
+    def fetch_daily_prices(self, symbol, start_date, end_date):
+        return super().fetch_daily_prices(symbol, start_date, end_date)[:259]
+
 def test_pipeline_scans_and_returns_ranked_rows():
     out=run_eod_pipeline(date(2026,8,25),['AAA','BBB'],[FakeProvider()])
     assert out['status']=='OK'
@@ -48,6 +66,8 @@ def test_pipeline_scans_and_returns_ranked_rows():
     assert out['market_regime']['breadth_decliners']==0
     assert out['market_regime']['liquidity_value'] > 0
     assert out['market_regime']['market_mode'] in {'RISK ON','NORMAL','CAUTION','RISK OFF'}
+    assert out['primary_source'] == 'FAKE'
+    assert out['fallback_sources_actually_used'] == []
     assert '20 tỷ' in out['market_regime']['exclusion_notes']
 
 def test_pipeline_skips_symbol_when_providers_conflict():
@@ -103,4 +123,39 @@ def test_pipeline_uses_bounded_history_window_to_limit_provider_requests():
 
     run_eod_pipeline(date(2026,8,25),['AAA'],[provider])
 
-    assert provider.start_dates == [date(2025,6,1), date(2025,6,1)]
+    assert provider.start_dates == [date(2025,4,12), date(2025,4,12)]
+
+def test_pipeline_strict_primary_source_does_not_fallback_to_secondary_provider():
+    with pytest.raises(PipelineError, match='fireant'):
+        run_eod_pipeline(
+            date(2026,8,25),
+            ['AAA'],
+            [EmptyProvider(), FakeProvider()],
+            primary_only=True,
+            required_source='fireant',
+        )
+
+def test_pipeline_strict_primary_source_rejects_non_fireant_records():
+    with pytest.raises(PipelineError, match='fireant'):
+        run_eod_pipeline(
+            date(2026,8,25),
+            ['AAA'],
+            [FakeProvider()],
+            primary_only=True,
+            required_source='fireant',
+        )
+
+def test_pipeline_strict_primary_source_rejects_partial_coverage():
+    with pytest.raises(PipelineError, match='coverage'):
+        run_eod_pipeline(
+            date(2026,8,25),
+            ['AAA', 'BBB'],
+            [PartialProvider()],
+            primary_only=True,
+            required_source='fireant',
+            min_coverage_ratio=0.9,
+        )
+
+def test_pipeline_rejects_history_shorter_than_canonical_minimum():
+    with pytest.raises(PipelineError, match='260'):
+        run_eod_pipeline(date(2026,8,25), ['AAA'], [ShortProvider()])
