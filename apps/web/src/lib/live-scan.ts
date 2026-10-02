@@ -8,12 +8,14 @@ import {
   normalizeDailyNarrative,
   normalizeTickerQuery,
   pickHeadlineNews,
+  sortRowsByHistoryDate,
   sortRowsByScore,
   verifiedNewsUrl,
   type DecisionFilter,
 } from '@/lib/scan-view-model';
 import { getSupabase } from '@/lib/supabase';
 import type { Decision, MarketRegime, NewsItem, ScanRow } from '@/lib/types';
+import { mergeSessionNews } from '@/lib/news-fallback';
 
 type RawScanRow = Record<string, unknown>;
 type JoinedScanRow = RawScanRow & {
@@ -26,8 +28,9 @@ type JoinedNewsRow = Record<string, unknown> & {
 const decisions: Decision[] = [...decisionValues];
 const cafefArticleCache = new Map<string, Promise<string | null>>();
 
-function prepareDisplayRows(rows: ScanRow[]): ScanRow[] {
-  return sortRowsByScore(filterDisplayRows(rows));
+function prepareDisplayRows(rows: ScanRow[], history = false): ScanRow[] {
+  const filtered = filterDisplayRows(rows);
+  return history ? sortRowsByHistoryDate(filtered) : sortRowsByScore(filtered);
 }
 
 function toNumber(value: unknown): number | null {
@@ -346,7 +349,7 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
     .limit(240);
 
   if (error || !data?.length) return [];
-  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
+  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))), true);
 }
 
 export async function getScanHistoryByDecision(decision: DecisionFilter): Promise<ScanRow[]> {
@@ -362,22 +365,40 @@ export async function getScanHistoryByDecision(decision: DecisionFilter): Promis
     .limit(500);
 
   if (error || !data?.length) return [];
-  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
+  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))), true);
 }
 
 export async function getSessionNews(marketDate?: string | null): Promise<NewsItem[]> {
   const db = getSupabase();
   if (!db || !marketDate) return [];
 
-  const { data, error } = await db
+  const newsSelect = 'market_date, title, url, source, published_at, category, sentiment, symbols(symbol)';
+  const { data: currentData, error } = await db
     .from('news_items')
-    .select('market_date, title, url, source, published_at, category, sentiment, symbols(symbol)')
+    .select(newsSelect)
     .eq('market_date', marketDate)
     .order('published_at', { ascending: false })
     .limit(40);
 
-  if (error || !data?.length) return [];
-  const news = dedupeNews(data.map((row: RawScanRow) => normalizeNews(row as JoinedNewsRow)), 5);
+  if (error) return [];
+
+  let fallbackData: RawScanRow[] = [];
+  if (!currentData?.length || currentData.length < 5) {
+    const fallback = await db
+      .from('news_items')
+      .select(newsSelect)
+      .lt('market_date', marketDate)
+      .order('market_date', { ascending: false })
+      .order('published_at', { ascending: false })
+      .limit(40);
+    fallbackData = (fallback.data ?? []) as RawScanRow[];
+  }
+
+  const news = mergeSessionNews(
+    (currentData ?? []).map((row: RawScanRow) => normalizeNews(row as JoinedNewsRow)),
+    fallbackData.map((row) => normalizeNews(row as JoinedNewsRow)),
+    5,
+  );
   return Promise.all(
     news.map(async (item) => ({
       ...item,
@@ -396,7 +417,7 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     const rows = prepareDisplayRows((normalizedQuery
       ? demoRows.filter((row) => row.symbol.toUpperCase() === normalizedQuery)
       : demoRows
-    ).filter((row) => !decisionFilter || row.decision === decisionFilter));
+    ).filter((row) => !decisionFilter || row.decision === decisionFilter), Boolean(normalizedQuery || decisionFilter));
     return {
       rows,
       dataStatus: 'DEMO',

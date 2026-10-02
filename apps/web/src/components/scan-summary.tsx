@@ -27,8 +27,6 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
   const assessments = buildQuickAssessments(rows, 4);
   const exclusions = buildExclusions(rows, 5);
 
-  if (!marketRegime?.quick_assessment && !marketRegime?.exclusion_notes && !assessments.length && !exclusions.length && !news.length) return null;
-
   return (
     <section className="summarySection" aria-label="Tổng kết phiên FLOW">
       {marketRegime?.quick_assessment || assessments.length ? (
@@ -80,11 +78,11 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
         </article>
       ) : null}
 
-      {news.length ? (
+      {
         <article className="summaryPanel newsPanel">
           <div className="sectionLabel">Tin tức nổi bật chung</div>
           <div className="generalNewsList">
-            {news.map((item) => {
+            {news.length ? news.map((item) => {
               const meta = [item.symbol, item.source, publishedLabel(item.published_at)].filter(Boolean).join(' · ');
               return (
                 <div className="generalNewsItem" key={item.url ?? `${item.title}-${item.published_at ?? ''}`}>
@@ -98,10 +96,10 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
                   {meta ? <span>{meta}</span> : null}
                 </div>
               );
-            })}
+            }) : <p className="muted">Chưa có tin mới; đang giữ các tin gần đây.</p>}
           </div>
         </article>
-      ) : null}
+      }
     </section>
   );
 }

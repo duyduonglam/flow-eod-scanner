@@ -84,6 +84,22 @@ export function sortRowsByScore<T extends { flow_score: number | null; decision:
   });
 }
 
+export function sortRowsByHistoryDate<T extends { market_date: string; flow_score: number | null; decision: string; rs_rating?: number | null; symbol?: string }>(rows: T[]): T[] {
+  return rows.toSorted((a, b) => {
+    const leftDate = String(a.market_date);
+    const rightDate = String(b.market_date);
+    if (leftDate !== rightDate) return rightDate > leftDate ? 1 : -1;
+
+    const scoreDiff = (b.flow_score ?? -1) - (a.flow_score ?? -1);
+    if (scoreDiff !== 0) return scoreDiff;
+    const decisionDiff = (decisionPriority[b.decision] ?? -1) - (decisionPriority[a.decision] ?? -1);
+    if (decisionDiff !== 0) return decisionDiff;
+    const rsDiff = (b.rs_rating ?? -1) - (a.rs_rating ?? -1);
+    if (rsDiff !== 0) return rsDiff;
+    return (a.symbol ?? '').localeCompare(b.symbol ?? '', 'vi');
+  });
+}
+
 export function filterDisplayRows<T extends { volume_buzz?: number | null }>(rows: T[]): T[] {
   return rows.filter((row) => row.volume_buzz == null || row.volume_buzz >= -50);
 }

@@ -9,6 +9,7 @@ import {
   normalizeDecisionFilter,
   normalizeDailyNarrative,
   filterDisplayRows,
+  sortRowsByHistoryDate,
   sortRowsByScore,
   splitDailyNarrative,
   pickHeadlineNews,
@@ -64,6 +65,16 @@ test('sorts scan rows by total score before decision priority', () => {
   ];
 
   assert.deepEqual(sortRowsByScore(rows).map((row) => row.symbol), ['PVP', 'QNS', 'VCR', 'VE3']);
+});
+
+test('sorts historical results by newest market date before total score', () => {
+  const rows = [
+    { ...baseRow, symbol: 'OLD-HIGH', market_date: '2026-09-30', flow_score: 99 },
+    { ...baseRow, symbol: 'NEW-LOW', market_date: '2026-10-02', flow_score: 70 },
+    { ...baseRow, symbol: 'NEW-HIGH', market_date: '2026-10-02', flow_score: 88 },
+  ];
+
+  assert.deepEqual(sortRowsByHistoryDate(rows).map((row) => row.symbol), ['NEW-HIGH', 'NEW-LOW', 'OLD-HIGH']);
 });
 
 test('hides high-score rows when current liquidity is weak', () => {
