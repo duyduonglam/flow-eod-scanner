@@ -7,6 +7,7 @@ from datetime import date, timedelta
 
 from flow_scanner.data.providers.factory import build_provider_chain
 from flow_scanner.data.repository import SupabaseRepository
+from flow_scanner.news import attach_headline_news, build_news_payload, fetch_market_news
 from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
 
@@ -107,6 +108,18 @@ def main() -> None:
     market_date = str(result["market_date"])
     rows = list(result["rows"])
 
+    news_items: list[dict] = []
+    news_status = "NO_NEWS"
+    news_error = None
+    try:
+        articles = fetch_market_news(market_date)
+        news_items = build_news_payload(articles, symbol_ids, market_date)
+        rows = attach_headline_news(rows, news_items, symbol_ids)
+        news_status = "PUBLISHED" if news_items else "NO_NEWS"
+    except Exception as exc:
+        news_status = "ERROR"
+        news_error = str(exc)
+
     scan_rows = build_scan_result_payload(rows, symbol_ids, market_date, limit=args.limit)
     signal_rows = build_stock_signal_payload(rows, symbol_ids, market_date)
     repo.upsert_stock_signal_rows(signal_rows)
@@ -114,6 +127,8 @@ def main() -> None:
         repo.upsert_market_regime(dict(result["market_regime"]))
     repo.delete_scan_rows_for_date(market_date)
     repo.upsert_scan_rows(scan_rows)
+    if news_items:
+        repo.replace_news_items_for_date(market_date, news_items)
 
     print(json.dumps({
         "status": "OK",
@@ -128,6 +143,9 @@ def main() -> None:
         "fallback_sources_actually_used": result.get("fallback_sources_actually_used", []),
         "pipeline_status": "VERIFIED" if not result.get("fallback_sources_actually_used") else "VERIFIED_FALLBACK",
         "publish_status": "PUBLISHED",
+        "news_status": news_status,
+        "news_published": len(news_items),
+        "news_error": news_error,
     }, ensure_ascii=False))
 
 

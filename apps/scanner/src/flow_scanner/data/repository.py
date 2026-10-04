@@ -97,3 +97,31 @@ class SupabaseRepository:
 
     def upsert_stock_signal_rows(self, rows: list[dict]) -> None:
         self._upsert('stock_signals', rows, 'market_date,symbol_id')
+
+    def delete_news_items_for_date(self, market_date: str) -> None:
+        response = self.session.delete(
+            f'{self.url}/rest/v1/news_items',
+            params={'market_date': f'eq.{market_date}'},
+            headers=self._headers({'Prefer': 'return=minimal'}),
+            timeout=30,
+        )
+        response.raise_for_status()
+
+    def insert_news_items(self, rows: list[dict]) -> None:
+        if not rows:
+            return
+        url = f'{self.url}/rest/v1/news_items'
+        for index in range(0, len(rows), UPSERT_BATCH_SIZE):
+            response = self.session.post(
+                url,
+                headers=self._headers({'Prefer': 'return=minimal'}),
+                json=rows[index:index + UPSERT_BATCH_SIZE],
+                timeout=60,
+            )
+            response.raise_for_status()
+
+    def replace_news_items_for_date(self, market_date: str, rows: list[dict]) -> None:
+        if not rows:
+            return
+        self.delete_news_items_for_date(market_date)
+        self.insert_news_items(rows)
