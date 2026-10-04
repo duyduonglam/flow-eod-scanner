@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone, timedelta
+import json
 import re
 from typing import Any
 
@@ -8,6 +9,7 @@ import requests
 
 
 NEWS_ENDPOINT = "https://vietstock.info/api/news/today"
+NEWS_PROXY_ENDPOINT = "https://r.jina.ai/http://vietstock.info/api/news/today"
 NEWS_TIMEOUT_SECONDS = 30
 VIETNAM_TZ = timezone(timedelta(hours=7))
 
@@ -30,6 +32,58 @@ def _article_date(published_at: str | None) -> date | None:
     return parsed.astimezone(VIETNAM_TZ).date() if parsed else None
 
 
+def _decode_news_payload(response: requests.Response) -> Any:
+    """Decode direct JSON or JSON wrapped by the read-only transport proxy."""
+    try:
+        return response.json()
+    except (ValueError, requests.exceptions.JSONDecodeError):
+        body = response.text
+        marker = "Markdown Content:"
+        if marker in body:
+            body = body.split(marker, 1)[1].strip()
+        start = body.find("{")
+        end = body.rfind("}")
+        if start < 0 or end <= start:
+            raise ValueError("News response did not contain a JSON object")
+        return json.loads(body[start:end + 1])
+
+
+def _fetch_news_payload(
+    market_date: str,
+    *,
+    session: requests.Session,
+    page_size: int,
+) -> Any:
+    params = {"date": market_date, "page": 1, "pageSize": page_size}
+    try:
+        response = session.get(
+            NEWS_ENDPOINT,
+            params=params,
+            headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.1"},
+            timeout=NEWS_TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        return _decode_news_payload(response)
+    except requests.RequestException as direct_error:
+        # GitHub-hosted runners can receive a 403 from Vietstock while the
+        # same public endpoint remains reachable through this read-only proxy.
+        # The URL and JSON payload are unchanged; this is only a transport
+        # fallback, not a second news source.
+        try:
+            response = session.get(
+                NEWS_PROXY_ENDPOINT,
+                params=params,
+                headers={"Accept": "text/plain", "User-Agent": "FLOW-Vietnam/1.1"},
+                timeout=NEWS_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            return _decode_news_payload(response)
+        except requests.RequestException as proxy_error:
+            raise RuntimeError(
+                f"Vietstock news unavailable directly ({direct_error}); proxy fallback failed ({proxy_error})"
+            ) from proxy_error
+
+
 def fetch_market_news(
     market_date: str,
     *,
@@ -37,14 +91,7 @@ def fetch_market_news(
     page_size: int = 100,
 ) -> list[dict[str, Any]]:
     client = session or requests.Session()
-    response = client.get(
-        NEWS_ENDPOINT,
-        params={"date": market_date, "page": 1, "pageSize": page_size},
-        headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.1"},
-        timeout=NEWS_TIMEOUT_SECONDS,
-    )
-    response.raise_for_status()
-    payload = response.json()
+    payload = _fetch_news_payload(market_date, session=client, page_size=page_size)
     raw_articles = payload.get("articles", []) if isinstance(payload, dict) else payload
     if not isinstance(raw_articles, list):
         return []
