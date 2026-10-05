@@ -104,6 +104,18 @@ export function ScanTable({
       </div>
       <div className="tableWrap">
         <table className="scanTable">
+          <colgroup>
+            <col className="scanColSymbol" />
+            <col className="scanColScore" />
+            <col className="scanColSignal" />
+            <col className="scanColNews" />
+            <col className="scanColEntry" />
+            <col className="scanColStop" />
+            <col className="scanColReward" />
+            <col className="scanColReward" />
+            <col className="scanColReward" />
+            <col className="scanColDecision" />
+          </colgroup>
           <thead>
             <tr>
               <th>Mã</th>

@@ -952,10 +952,20 @@ select:focus-visible {
 
 .scanTable {
   width: 100%;
-  min-width: 1240px;
+  min-width: 1380px;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
 }
+
+.scanTable col.scanColSymbol { width: 96px; }
+.scanTable col.scanColScore { width: 112px; }
+.scanTable col.scanColSignal { width: 250px; }
+.scanTable col.scanColNews { width: 270px; }
+.scanTable col.scanColEntry { width: 125px; }
+.scanTable col.scanColStop { width: 105px; }
+.scanTable col.scanColReward { width: 105px; }
+.scanTable col.scanColDecision { width: 107px; }
 
 .scanTable th {
   position: sticky;
@@ -1130,10 +1140,10 @@ select:focus-visible {
 }
 
 .signal {
-  max-width: 285px;
   white-space: normal;
   font-size: 14px;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .num {
@@ -1204,6 +1214,12 @@ select:focus-visible {
 .detailNews {
   display: grid;
   gap: 5px;
+}
+
+.newsCell,
+.newsLink {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .newsLink,
