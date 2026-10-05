@@ -1,4 +1,4 @@
-from flow_scanner.news import build_news_payload, fetch_market_news, attach_headline_news
+from flow_scanner.news import attach_headline_news, build_news_payload, fetch_fireant_news, fetch_market_news
 
 
 class FakeResponse:
@@ -28,17 +28,32 @@ class FakeSession:
         return FakeResponse(self.payload)
 
 
-class FallbackSession:
+class FireAntSession:
     def __init__(self):
         self.calls = []
+        self.headers = {}
+
+    def post(self, url, *, headers, timeout):
+        self.calls.append(("POST", url, headers, timeout))
+        return FakeResponse({"accessToken": "test-token"})
 
     def get(self, url, *, params, headers, timeout):
-        self.calls.append((url, params, headers, timeout))
-        if len(self.calls) == 1:
-            return FakeResponse({}, error=__import__("requests").HTTPError("403"))
+        self.calls.append(("GET", url, params, headers, timeout))
         return FakeResponse(
-            None,
-            text='Title: x\n\nMarkdown Content:\n{"articles": [{"title": "PVP tin", "url": "https://example.test/pvp", "publishedAt": "2026-10-02T08:30:00Z", "sourceName": "Vietstock"}]}',
+            [
+                {
+                    "title": "PVP nghi quyet HĐQT",
+                    "date": "2026-10-05T17:26:03+07:00",
+                    "postSource": {"name": "HSX", "url": "https://www.hsx.vn/"},
+                    "taggedSymbols": [{"symbol": "PVP"}],
+                    "files": [{"fileContentUrl": "https://mobiv2.fireant.vn/News/NewsAttachedFile/1911529"}],
+                },
+                {
+                    "title": "Tin tuong lai",
+                    "date": "2026-10-06T08:00:00+07:00",
+                    "taggedSymbols": [{"symbol": "PVP"}],
+                },
+            ]
         )
 
 
@@ -64,14 +79,17 @@ def test_fetch_market_news_normalizes_daily_articles():
     assert session.calls[0][1]["date"] == "2026-10-02"
 
 
-def test_fetch_market_news_uses_transport_fallback_after_vietstock_forbidden():
-    session = FallbackSession()
+def test_fetch_fireant_news_uses_documented_posts_and_rejects_future_posts():
+    session = FireAntSession()
 
-    articles = fetch_market_news("2026-10-02", session=session)
+    articles = fetch_fireant_news("2026-10-05", ["PVP"], session=session)
 
-    assert articles[0]["title"] == "PVP tin"
-    assert session.calls[0][0] == "https://vietstock.info/api/news/today"
-    assert session.calls[1][0].startswith("https://r.jina.ai/http://vietstock.info/api/news/today")
+    assert articles[0]["title"] == "PVP nghi quyet HĐQT"
+    assert articles[0]["symbol"] == "PVP"
+    assert articles[0]["url"] == "https://mobiv2.fireant.vn/News/NewsAttachedFile/1911529"
+    assert len(articles) == 1
+    assert session.calls[0][1].endswith("/authentication/anonymous-login")
+    assert session.calls[1][1].endswith("/symbols/PVP/posts")
 
 
 def test_fetch_market_news_excludes_articles_after_the_requested_session():
@@ -105,6 +123,7 @@ def test_build_news_payload_keeps_general_news_and_maps_explicit_ticker():
             "published_at": "2026-10-02T08:30:00Z",
             "source": "Vietstock",
             "snippet": "",
+            "symbol": "PVP",
         },
         {
             "title": "VN-Index giam diem trong phien cuoi tuan",

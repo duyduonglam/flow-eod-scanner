@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from flow_scanner.data.providers.factory import build_provider_chain
 from flow_scanner.data.repository import SupabaseRepository
-from flow_scanner.news import attach_headline_news, build_news_payload, fetch_market_news
+from flow_scanner.news import attach_headline_news, build_news_payload, fetch_fireant_news, fetch_market_news
 from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
 
@@ -111,8 +111,22 @@ def main() -> None:
     news_items: list[dict] = []
     news_status = "NO_NEWS"
     news_error = None
+    news_source = "NONE"
     try:
-        articles = fetch_market_news(market_date)
+        try:
+            articles = fetch_market_news(market_date)
+            news_source = "Vietstock"
+        except Exception as primary_error:
+            # v1.2 permits documented provider fallback, but prohibits proxy
+            # transport workarounds. FireAnt posts are the bounded fallback.
+            candidate_symbols = [
+                str(row.get("symbol") or "").upper()
+                for row in rows
+                if row.get("symbol")
+            ]
+            articles = fetch_fireant_news(market_date, candidate_symbols)
+            news_source = "FireAnt posts"
+            news_error = f"Primary news source unavailable; used FireAnt fallback: {primary_error}"
         news_items = build_news_payload(articles, symbol_ids, market_date)
         rows = attach_headline_news(rows, news_items, symbol_ids)
         news_status = "PUBLISHED" if news_items else "NO_NEWS"
@@ -145,6 +159,7 @@ def main() -> None:
         "publish_status": "PUBLISHED",
         "news_status": news_status,
         "news_published": len(news_items),
+        "news_source": news_source,
         "news_error": news_error,
     }, ensure_ascii=False))
 

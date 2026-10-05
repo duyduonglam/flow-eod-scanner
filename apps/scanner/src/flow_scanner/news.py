@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone, timedelta
-import json
 import re
 from typing import Any
 
@@ -9,7 +8,7 @@ import requests
 
 
 NEWS_ENDPOINT = "https://vietstock.info/api/news/today"
-NEWS_PROXY_ENDPOINT = "https://r.jina.ai/http://vietstock.info/api/news/today"
+FIREANT_ENDPOINT = "https://api.fireant.vn"
 NEWS_TIMEOUT_SECONDS = 30
 VIETNAM_TZ = timezone(timedelta(hours=7))
 
@@ -32,56 +31,21 @@ def _article_date(published_at: str | None) -> date | None:
     return parsed.astimezone(VIETNAM_TZ).date() if parsed else None
 
 
-def _decode_news_payload(response: requests.Response) -> Any:
-    """Decode direct JSON or JSON wrapped by the read-only transport proxy."""
-    try:
-        return response.json()
-    except (ValueError, requests.exceptions.JSONDecodeError):
-        body = response.text
-        marker = "Markdown Content:"
-        if marker in body:
-            body = body.split(marker, 1)[1].strip()
-        start = body.find("{")
-        end = body.rfind("}")
-        if start < 0 or end <= start:
-            raise ValueError("News response did not contain a JSON object")
-        return json.loads(body[start:end + 1])
-
-
-def _fetch_news_payload(
+def _fetch_vietstock_payload(
     market_date: str,
     *,
     session: requests.Session,
     page_size: int,
 ) -> Any:
     params = {"date": market_date, "page": 1, "pageSize": page_size}
-    try:
-        response = session.get(
-            NEWS_ENDPOINT,
-            params=params,
-            headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.1"},
-            timeout=NEWS_TIMEOUT_SECONDS,
-        )
-        response.raise_for_status()
-        return _decode_news_payload(response)
-    except requests.RequestException as direct_error:
-        # GitHub-hosted runners can receive a 403 from Vietstock while the
-        # same public endpoint remains reachable through this read-only proxy.
-        # The URL and JSON payload are unchanged; this is only a transport
-        # fallback, not a second news source.
-        try:
-            response = session.get(
-                NEWS_PROXY_ENDPOINT,
-                params=params,
-                headers={"Accept": "text/plain", "User-Agent": "FLOW-Vietnam/1.1"},
-                timeout=NEWS_TIMEOUT_SECONDS,
-            )
-            response.raise_for_status()
-            return _decode_news_payload(response)
-        except requests.RequestException as proxy_error:
-            raise RuntimeError(
-                f"Vietstock news unavailable directly ({direct_error}); proxy fallback failed ({proxy_error})"
-            ) from proxy_error
+    response = session.get(
+        NEWS_ENDPOINT,
+        params=params,
+        headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.2"},
+        timeout=NEWS_TIMEOUT_SECONDS,
+    )
+    response.raise_for_status()
+    return response.json()
 
 
 def fetch_market_news(
@@ -91,7 +55,7 @@ def fetch_market_news(
     page_size: int = 100,
 ) -> list[dict[str, Any]]:
     client = session or requests.Session()
-    payload = _fetch_news_payload(market_date, session=client, page_size=page_size)
+    payload = _fetch_vietstock_payload(market_date, session=client, page_size=page_size)
     raw_articles = payload.get("articles", []) if isinstance(payload, dict) else payload
     if not isinstance(raw_articles, list):
         return []
@@ -126,6 +90,96 @@ def fetch_market_news(
     return normalized
 
 
+def fetch_fireant_news(
+    market_date: str,
+    symbols: list[str],
+    *,
+    session: requests.Session | None = None,
+    max_symbols: int = 35,
+    page_size: int = 20,
+) -> list[dict[str, Any]]:
+    """Fetch dated FireAnt posts for a bounded set of scanned symbols.
+
+    FireAnt is used through its documented anonymous-login and posts endpoints.
+    We never treat a provider homepage as an article URL; an attached file or
+    explicit content URL is the only accepted link from a post.
+    """
+    client = session or requests.Session()
+    login = client.post(
+        f"{FIREANT_ENDPOINT}/authentication/anonymous-login",
+        headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.2"},
+        timeout=NEWS_TIMEOUT_SECONDS,
+    )
+    login.raise_for_status()
+    login_payload = login.json()
+    token = None
+    if isinstance(login_payload, dict):
+        token = login_payload.get("accessToken") or login_payload.get("access_token") or login_payload.get("token")
+    if not token:
+        raise RuntimeError("FireAnt anonymous login did not return an access token")
+    client.headers.update({"Authorization": f"Bearer {token}"})
+
+    cutoff = datetime.combine(date.fromisoformat(market_date), datetime.max.time(), tzinfo=VIETNAM_TZ)
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for requested_symbol in list(dict.fromkeys(symbols))[:max_symbols]:
+        symbol = str(requested_symbol or "").strip().upper()
+        if not symbol:
+            continue
+        response = client.get(
+            f"{FIREANT_ENDPOINT}/symbols/{symbol}/posts",
+            params={"type": 1, "offset": 0, "limit": page_size},
+            headers={"Accept": "application/json", "User-Agent": "FLOW-Vietnam/1.2"},
+            timeout=NEWS_TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        raw_posts = payload.get("data", []) if isinstance(payload, dict) else payload
+        if not isinstance(raw_posts, list):
+            continue
+        for raw in raw_posts:
+            if not isinstance(raw, dict):
+                continue
+            published_text = str(raw.get("date") or raw.get("publishedAt") or "").strip() or None
+            published = _parse_published_at(published_text)
+            if published is None or published.astimezone(VIETNAM_TZ) > cutoff:
+                continue
+            if published.astimezone(VIETNAM_TZ).date() != date.fromisoformat(market_date):
+                continue
+            title = str(raw.get("title") or raw.get("description") or "").strip()
+            if not title:
+                continue
+            url = str(raw.get("contentURL") or raw.get("contentUrl") or raw.get("link") or "").strip() or None
+            if not url:
+                for attached in raw.get("files") or []:
+                    if isinstance(attached, dict):
+                        url = str(attached.get("fileContentUrl") or attached.get("url") or "").strip() or None
+                        if url:
+                            break
+            source_data = raw.get("postSource")
+            source = str(source_data.get("name") if isinstance(source_data, dict) else source_data or "FireAnt").strip()
+            tagged = raw.get("taggedSymbols") or []
+            explicit_symbol = symbol
+            if tagged and isinstance(tagged[0], dict):
+                explicit_symbol = str(tagged[0].get("symbol") or symbol).strip().upper()
+            identity = url or f"{explicit_symbol}:{title.casefold()}"
+            if identity in seen:
+                continue
+            seen.add(identity)
+            normalized.append(
+                {
+                    "title": title,
+                    "url": url,
+                    "published_at": published_text,
+                    "source": source or "FireAnt",
+                    "snippet": str(raw.get("summary") or raw.get("description") or "").strip(),
+                    "symbol": explicit_symbol,
+                }
+            )
+    normalized.sort(key=lambda item: _parse_published_at(item.get("published_at")) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+    return normalized
+
+
 def _mentions_symbol(text: str, symbol: str) -> bool:
     return re.search(rf"(?<![A-Z0-9]){re.escape(symbol.upper())}(?![A-Z0-9])", text.upper()) is not None
 
@@ -142,7 +196,12 @@ def build_news_payload(
         if not title:
             continue
         context = f"{title} {article.get('snippet') or ''}"
-        matched_ids = [symbol_id for symbol, symbol_id in symbols.items() if _mentions_symbol(context, symbol)]
+        matched_symbols: list[str] = []
+        explicit_symbol = str(article.get("symbol") or "").upper().strip()
+        if explicit_symbol in symbols:
+            matched_symbols.append(explicit_symbol)
+        matched_symbols.extend(symbol for symbol in symbols if symbol not in matched_symbols and _mentions_symbol(context, symbol))
+        matched_ids = [symbols[symbol] for symbol in matched_symbols]
         targets = matched_ids or [None]
         for symbol_id in targets:
             payload.append(
