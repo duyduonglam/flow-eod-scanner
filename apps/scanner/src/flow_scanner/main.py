@@ -28,7 +28,7 @@ def _signal_summary(flow_label: str, rs_rating: int | None, banker: float | None
         parts.append(f'Swing {swing}')
     if buzz is not None:
         parts.append(f'VolBuzz {buzz:+.0f}%')
-    return ' · '.join(parts)
+    return ' Â· '.join(parts)
 
 
 def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[OHLCVRecord]) -> list[dict]:
@@ -89,6 +89,14 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'current_value': values[-1],
             'avg_value_20': sum(values[-20:]) / min(len(values), 20),
             'flow_score': composite.total_score,
+            'score_version': composite.score_version,
+            'score_components': {
+                'flow': composite.components.get('structure', 0),
+                'mcdx': composite.components.get('mcdx', 0),
+                'volume': composite.components.get('volume', 0),
+                'rs': composite.components.get('rs', 0),
+                'swing_entry': composite.components.get('swing_entry', 0),
+            },
             'flow_label': composite.label,
             'pass_count': flow.pass_count,
             'total_count': flow.total_count,
@@ -116,3 +124,4 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'data_status': 'VALID',
         })
     return rank_candidates(results)
+
