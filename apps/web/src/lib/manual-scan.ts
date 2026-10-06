@@ -61,7 +61,7 @@ export function readManualScanConfig(env: Env): ManualScanConfigResult {
     config: {
       owner: clean(env.GITHUB_SCAN_OWNER) || 'duyduonglam',
       repo: clean(env.GITHUB_SCAN_REPO) || 'flow-eod-scanner',
-      workflow: clean(env.GITHUB_SCAN_WORKFLOW) || 'eod_scan.yml',
+      workflow: clean(env.GITHUB_SCAN_WORKFLOW) || 'eod_scan_manual.yml',
       ref: clean(env.GITHUB_SCAN_REF) || 'main',
       token,
       manualSecret: manualSecret || undefined,
