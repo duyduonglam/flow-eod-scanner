@@ -71,6 +71,10 @@ function normalizeRow(row: JoinedScanRow): ScanRow {
     market_date: toText(row.market_date),
     close: toNumber(row.close),
     flow_score: toNumber(row.flow_score ?? row.total_score),
+    score_version: typeof row.score_version === 'string' ? row.score_version : null,
+    score_components: row.score_components && typeof row.score_components === 'object'
+      ? row.score_components as Record<string, number>
+      : null,
     flow_label: toText(row.flow_label ?? row.score_label, 'LIVE'),
     main_signal: toText(row.main_signal),
     headline_news: normalizeHeadline(row.headline_news),
@@ -246,7 +250,7 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
   const sortedDates = marketDates.toSorted();
   const { data, error } = await db
     .from('stock_signals')
-    .select('symbol_id, market_date, close, rs_rating, banker, banker_ma, hot_money, hot_money_ma, volume_buzz, ud_volume_ratio')
+    .select('symbol_id, market_date, close, rs_rating, banker, banker_ma, hot_money, hot_money_ma, volume_buzz, ud_volume_ratio, score_version, score_components')
     .in('symbol_id', symbolIds)
     .gte('market_date', sortedDates[0])
     .lte('market_date', sortedDates[sortedDates.length - 1])
@@ -263,6 +267,8 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
     hot_money_ma: number | null;
     volume_buzz: number | null;
     ud_volume_ratio: number | null;
+    score_version: string | null;
+    score_components: Record<string, number> | null;
   }>();
   for (const raw of data) {
     const symbolId = toNumber(raw.symbol_id);
@@ -277,6 +283,10 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
       hot_money_ma: toNumber(raw.hot_money_ma),
       volume_buzz: toNumber(raw.volume_buzz),
       ud_volume_ratio: toNumber(raw.ud_volume_ratio),
+      score_version: typeof raw.score_version === 'string' ? raw.score_version : null,
+      score_components: raw.score_components && typeof raw.score_components === 'object'
+        ? raw.score_components as Record<string, number>
+        : null,
     });
   }
 
@@ -294,6 +304,8 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
       hot_money_ma: row.hot_money_ma ?? metrics.hot_money_ma,
       volume_buzz: row.volume_buzz ?? metrics.volume_buzz,
       ud_volume_ratio: row.ud_volume_ratio ?? metrics.ud_volume_ratio,
+      score_version: row.score_version ?? metrics.score_version,
+      score_components: row.score_components ?? metrics.score_components,
     };
   });
 }
