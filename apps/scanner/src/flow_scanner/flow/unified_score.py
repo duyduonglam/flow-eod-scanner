@@ -126,3 +126,4 @@ def compute_unified_score(
     }
     total = _round(sum(components.values()))
     return UnifiedScore(total, _label(total), components)
+

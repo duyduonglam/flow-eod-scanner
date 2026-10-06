@@ -80,3 +80,4 @@ export function computeUnifiedScore({
   const totalScore = round(Object.values(components).reduce((sum, value) => sum + value, 0));
   return { totalScore, label: label(totalScore), components, scoreVersion: SCORE_VERSION };
 }
+

@@ -165,3 +165,4 @@ def test_build_scan_result_payload_excludes_illiquid_rows_from_main_list():
     payload = build_scan_result_payload(rows, {"LIQUID": 1, "LOWAVG": 2, "LOWTODAY": 3}, "2026-09-30")
 
     assert [row["symbol_id"] for row in payload] == [1]
+

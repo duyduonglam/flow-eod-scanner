@@ -61,7 +61,7 @@ function embeddedNewsSymbol(row: JoinedNewsRow): string | null {
 function normalizeHeadline(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const headline = value.trim();
-  return headline && headline !== '-' && headline !== '—' ? headline : null;
+  return headline && headline !== '-' && headline !== 'â€”' ? headline : null;
 }
 
 function normalizeRow(row: JoinedScanRow): ScanRow {
@@ -106,7 +106,7 @@ function normalizeNews(row: JoinedNewsRow): NewsItem {
   return {
     title,
     url: verifiedNewsUrl(rawUrl, title),
-    source: toText(row.source, 'Nguồn tin'),
+    source: toText(row.source, 'Nguá»“n tin'),
     published_at: typeof row.published_at === 'string' ? row.published_at : null,
     market_date: toText(row.market_date),
     symbol: embeddedNewsSymbol(row),
@@ -158,7 +158,7 @@ async function resolveStoredNewsUrl(
 export function normalizeMarketRegime(row: RawScanRow): MarketRegime {
   return {
     market_date: toText(row.market_date),
-    market_mode: toText(row.market_mode, 'Đang chờ'),
+    market_mode: toText(row.market_mode, 'Äang chá»'),
     index_symbol: toText(row.index_symbol, 'VNINDEX'),
     index_close: toNumber(row.index_close),
     index_change_pct: toNumber(row.index_change_pct),
@@ -215,7 +215,7 @@ async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {
     const item: NewsItem = {
       title: toText(raw.title),
       url: verifiedNewsUrl(typeof raw.url === 'string' && raw.url.trim() ? raw.url.trim() : null, toText(raw.title)),
-      source: toText(raw.source, 'Nguồn tin'),
+      source: toText(raw.source, 'Nguá»“n tin'),
       published_at: typeof raw.published_at === 'string' ? raw.published_at : null,
       market_date: marketDate,
     };
@@ -531,3 +531,4 @@ export async function getScanRowBySymbol(symbol: string, marketDate?: string | n
   const { rows } = await getScanRows(marketDate);
   return rows.find((row) => row.symbol.toUpperCase() === normalizedSymbol) ?? null;
 }
+

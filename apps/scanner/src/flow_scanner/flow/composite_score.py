@@ -279,3 +279,4 @@ def compute_composite_score(
     if plan.entry_high is not None and close > plan.entry_high * 1.03:
         notes.append("Extended above Entry Zone")
     return CompositeScore(unified.total_score, unified.label, components, notes, unified.score_version)
+

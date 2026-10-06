@@ -58,3 +58,4 @@ def test_unified_score_is_stable_without_news_data():
 
     assert first.total_score == second.total_score == 73.6
     assert first.components["swing_entry"] == 5.0
+

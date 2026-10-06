@@ -51,3 +51,4 @@ test("unified score does not depend on news data", () => {
   assert.equal(result.totalScore, 73.6);
   assert.equal(result.components.swing_entry, 5);
 });
+

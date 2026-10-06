@@ -59,3 +59,4 @@ export type ScanRow = {
   retailer?: number | null;
   swing_direction?: string | null;
 };
+

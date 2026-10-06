@@ -28,7 +28,7 @@ def _signal_summary(flow_label: str, rs_rating: int | None, banker: float | None
         parts.append(f'Swing {swing}')
     if buzz is not None:
         parts.append(f'VolBuzz {buzz:+.0f}%')
-    return ' · '.join(parts)
+    return ' Â· '.join(parts)
 
 
 def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[OHLCVRecord]) -> list[dict]:
@@ -124,3 +124,4 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'data_status': 'VALID',
         })
     return rank_candidates(results)
+

@@ -115,3 +115,4 @@ def build_stock_signal_payload(
             mapped.pop("score_components", None)
         payload.append(mapped)
     return payload
+

@@ -73,3 +73,4 @@ def test_composite_score_penalizes_extended_entries_even_when_trend_is_strong():
     assert plan.decision == "DO NOT CHASE"
     assert result.components["swing_entry"] < 10
     assert "Extended above Entry Zone" in result.notes
+
