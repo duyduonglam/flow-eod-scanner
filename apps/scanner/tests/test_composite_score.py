@@ -36,13 +36,14 @@ def test_composite_score_combines_flow_mcdx_volume_swing_and_rs():
         plan=plan,
     )
 
-    assert result.total_score >= 80
-    assert result.label == "YES"
+    assert result.total_score >= 70
+    assert result.label == "PARTIAL"
+    assert result.score_version == "volume-mcdx-flow-v1"
     assert result.components["structure"] > 0
     assert result.components["mcdx"] > 0
     assert result.components["volume"] > 0
     assert result.components["swing_entry"] > 0
-    assert result.components["rs"] == 10
+    assert result.components["rs"] == 15
 
 
 def test_composite_score_penalizes_extended_entries_even_when_trend_is_strong():

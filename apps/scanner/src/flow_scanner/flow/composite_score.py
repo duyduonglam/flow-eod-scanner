@@ -8,6 +8,7 @@ from flow_scanner.flow.trend_template import TrendTemplateResult
 from flow_scanner.indicators.mcdx import MCDXSnapshot, compute_mcdx
 from flow_scanner.indicators.moving_averages import ema, sma
 from flow_scanner.indicators.volume import ud_volume_ratio, volume_buzz
+from flow_scanner.flow.unified_score import SCORE_VERSION, compute_unified_score
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,7 @@ class CompositeScore:
     label: str
     components: dict[str, float]
     notes: list[str]
+    score_version: str = SCORE_VERSION
 
 
 def _last_number(values: list[float | None]) -> float | None:
@@ -212,17 +214,68 @@ def compute_composite_score(
     swing: str | None,
     plan: TradePlan,
 ) -> CompositeScore:
-    components: dict[str, float] = {}
+    data = compute_mcdx(closes)
+    banker_series = data["banker"]
+    banker_rising = (
+        len(banker_series) >= 2
+        and banker_series[-1] is not None
+        and banker_series[-2] is not None
+        and banker_series[-1] >= banker_series[-2]
+    )
+    buzz = volume_buzz(volumes)
+    ud_ratio = ud_volume_ratio(closes, volumes)
+    avg_volume = sum(volumes[-50:]) / 50 if len(volumes) >= 50 else 0
+    current_is_high = bool(volumes) and (
+        volumes[-1] >= max(volumes[-50:]) if len(volumes) >= 50 else False
+    )
+    if len(volumes) >= 252:
+        current_is_high = current_is_high or volumes[-1] >= max(volumes[-252:])
+
+    close = closes[-1]
+    in_entry = bool(
+        plan.entry_low is not None
+        and plan.entry_high is not None
+        and plan.entry_low <= close <= plan.entry_high
+    )
+    near_entry = bool(
+        not in_entry
+        and plan.entry_high is not None
+        and close <= plan.entry_high * 1.03
+    )
+    stop_distance = plan.levels.stop_distance_pct if plan.levels else None
+    not_extended = trend is None or close <= trend.ma50 * 1.2
+    unified = compute_unified_score(
+        trend_checks=trend.checks if trend else {},
+        banker=mcdx.banker,
+        banker_ma=mcdx.banker_ma,
+        banker_rising=banker_rising,
+        hot_money=mcdx.hot_money,
+        retailer=mcdx.retailer,
+        volume_buzz=buzz,
+        ud_volume_ratio=ud_ratio,
+        current_volume_above_average=bool(volumes) and volumes[-1] > avg_volume,
+        current_volume_is_high=current_is_high,
+        rs_rating=rs_rating,
+        swing_up=swing == "UP",
+        in_entry_zone=in_entry,
+        near_entry_zone=near_entry,
+        stop_distance_pct=stop_distance,
+        not_extended=not_extended,
+    )
+    components = {
+        "structure": unified.components["flow"],
+        "mcdx": unified.components["mcdx"],
+        "volume": unified.components["volume"],
+        "swing_entry": unified.components["swing_entry"],
+        "rs": unified.components["rs"],
+    }
     notes: list[str] = []
-    for name, (score, score_notes) in {
-        "structure": _structure_score(closes, highs, lows, trend),
-        "mcdx": _mcdx_score(closes, mcdx),
-        "volume": _volume_score(closes, volumes),
-        "swing_entry": _swing_entry_score(closes, trend, swing, plan),
-        "rs": _rs_score(rs_rating),
-    }.items():
-        components[name] = round(score, 1)
-        notes.extend(score_notes)
-    total = round(sum(components.values()), 1)
-    label = "YES" if total >= 80 else "PARTIAL" if total >= 65 else "NO"
-    return CompositeScore(total, label, components, notes)
+    if buzz is not None and buzz < 0:
+        notes.append("Volume Buzz negative")
+    if mcdx.banker is not None and mcdx.banker_ma is not None and mcdx.banker < mcdx.banker_ma:
+        notes.append("Banker below MA")
+    if rs_rating is None:
+        notes.append("RS unavailable")
+    if plan.entry_high is not None and close > plan.entry_high * 1.03:
+        notes.append("Extended above Entry Zone")
+    return CompositeScore(unified.total_score, unified.label, components, notes, unified.score_version)

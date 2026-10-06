@@ -61,6 +61,24 @@ def test_build_scan_result_payload_publishes_only_scores_at_least_75():
     assert payload[0]["rank"] == 1
 
 
+def test_build_scan_result_payload_keeps_unified_score_breakdown():
+    rows = [{
+        "symbol": "AAA",
+        "flow_score": 88.4,
+        "flow_label": "YES",
+        "score_version": "volume-mcdx-flow-v1",
+        "score_components": {"flow": 25, "mcdx": 20, "volume": 18, "rs": 15, "swing_entry": 10},
+        "avg_value_20": 25_000_000_000,
+        "current_value": 6_000_000_000,
+        "decision": "BUY",
+    }]
+
+    payload = build_scan_result_payload(rows, {"AAA": 1}, "2026-10-06")
+
+    assert payload[0]["score_version"] == "volume-mcdx-flow-v1"
+    assert payload[0]["score_components"]["mcdx"] == 20
+
+
 def test_build_stock_signal_payload_keeps_indicator_fields():
     rows = [
         {

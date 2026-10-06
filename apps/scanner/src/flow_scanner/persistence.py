@@ -43,8 +43,7 @@ def build_scan_result_payload(
         if symbol_id is None:
             continue
         decision = str(row.get("decision") or "WATCH")
-        payload.append(
-            {
+        item = {
                 "market_date": market_date,
                 "symbol_id": symbol_id,
                 "rank": len(payload) + 1,
@@ -65,7 +64,11 @@ def build_scan_result_payload(
                 "is_new_candidate": decision in BUY_DECISIONS,
                 "is_deteriorating": decision in DETERIORATING_DECISIONS,
             }
-        )
+        if row.get("score_version") is not None:
+            item["score_version"] = _value(row, "score_version")
+        if row.get("score_components") is not None:
+            item["score_components"] = _value(row, "score_components")
+        payload.append(item)
         if len(payload) >= limit:
             break
     return payload
@@ -80,6 +83,8 @@ def build_stock_signal_payload(
     signal_fields = [
         "close",
         "flow_score",
+        "score_version",
+        "score_components",
         "flow_label",
         "pass_count",
         "total_count",
@@ -104,5 +109,9 @@ def build_stock_signal_payload(
             continue
         mapped = {"market_date": market_date, "symbol_id": symbol_id}
         mapped.update({field: _value(row, field) for field in signal_fields})
+        if row.get("score_version") is None:
+            mapped.pop("score_version", None)
+        if row.get("score_components") is None:
+            mapped.pop("score_components", None)
         payload.append(mapped)
     return payload
