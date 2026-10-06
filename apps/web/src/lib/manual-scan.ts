@@ -21,6 +21,11 @@ function clean(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function resolveWorkflow(value: unknown): string {
+  const workflow = clean(value);
+  return workflow === 'eod_scan_manual.yml' ? 'eod_scan.yml' : workflow || 'eod_scan.yml';
+}
+
 function isRealIsoDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
@@ -61,7 +66,7 @@ export function readManualScanConfig(env: Env): ManualScanConfigResult {
     config: {
       owner: clean(env.GITHUB_SCAN_OWNER) || 'duyduonglam',
       repo: clean(env.GITHUB_SCAN_REPO) || 'flow-eod-scanner',
-      workflow: clean(env.GITHUB_SCAN_WORKFLOW) || 'eod_scan.yml',
+      workflow: resolveWorkflow(env.GITHUB_SCAN_WORKFLOW),
       ref: clean(env.GITHUB_SCAN_REF) || 'main',
       token,
       manualSecret: manualSecret || undefined,
