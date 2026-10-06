@@ -23,7 +23,7 @@ function clean(value: unknown): string {
 
 function resolveWorkflow(value: unknown): string {
   const workflow = clean(value);
-  return workflow === 'eod_scan_manual.yml' ? 'eod_scan.yml' : workflow || 'eod_scan.yml';
+  return workflow === 'eod_scan.yml' ? workflow : 'eod_scan.yml';
 }
 
 function isRealIsoDate(value: string): boolean {

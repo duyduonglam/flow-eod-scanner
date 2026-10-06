@@ -89,6 +89,16 @@ test('migrates the removed manual workflow name to the unified workflow', () => 
   if (result.ok) assert.equal(result.config.workflow, 'eod_scan.yml');
 });
 
+test('ignores an unsupported workflow override for this scanner', () => {
+  const result = readManualScanConfig({
+    GITHUB_ACTIONS_DISPATCH_TOKEN: 'token-value',
+    GITHUB_SCAN_WORKFLOW: 'some-other-workflow.yml',
+  });
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.config.workflow, 'eod_scan.yml');
+});
+
 test('formats the current scan date in Vietnam time', () => {
   assert.equal(todayInVietnam(new Date('2026-09-05T18:15:00.000Z')), '2026-09-06');
 });
