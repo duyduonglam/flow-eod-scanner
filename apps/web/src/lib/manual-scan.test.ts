@@ -12,7 +12,7 @@ test('builds a GitHub workflow dispatch request with an optional market date', (
     {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'backfill_scan.yml',
+      workflow: '352393256',
       ref: 'main',
       token: 'token-value',
     },
@@ -21,7 +21,7 @@ test('builds a GitHub workflow dispatch request with an optional market date', (
 
   assert.equal(
     request.url,
-    'https://api.github.com/repos/duyduonglam/flow-eod-scanner/actions/workflows/backfill_scan.yml/dispatches',
+    'https://api.github.com/repos/duyduonglam/flow-eod-scanner/actions/workflows/352393256/dispatches',
   );
   assert.equal(request.init.method, 'POST');
   assert.equal(request.init.headers.Authorization, 'Bearer token-value');
@@ -36,7 +36,7 @@ test('omits workflow inputs when no market date override is provided', () => {
     {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'backfill_scan.yml',
+      workflow: '352393256',
       ref: 'main',
       token: 'token-value',
     },
@@ -71,7 +71,7 @@ test('keeps manual scan secret optional for dashboard-triggered scans', () => {
     config: {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'backfill_scan.yml',
+      workflow: '352393256',
       ref: 'main',
       token: 'token-value',
       manualSecret: undefined,
@@ -79,14 +79,14 @@ test('keeps manual scan secret optional for dashboard-triggered scans', () => {
   });
 });
 
-test('migrates removed manual workflow values to the backfill workflow', () => {
+test('migrates removed manual workflow values to the verified workflow id', () => {
   const result = readManualScanConfig({
     GITHUB_ACTIONS_DISPATCH_TOKEN: 'token-value',
-    GITHUB_SCAN_WORKFLOW: '352393256',
+    GITHUB_SCAN_WORKFLOW: 'eod_scan_manual.yml',
   });
 
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.config.workflow, 'backfill_scan.yml');
+  if (result.ok) assert.equal(result.config.workflow, '352393256');
 });
 
 test('ignores an unsupported workflow override for this scanner', () => {
@@ -96,7 +96,7 @@ test('ignores an unsupported workflow override for this scanner', () => {
   });
 
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.config.workflow, 'backfill_scan.yml');
+  if (result.ok) assert.equal(result.config.workflow, '352393256');
 });
 
 test('ignores an unsupported ref override for this scanner', () => {
