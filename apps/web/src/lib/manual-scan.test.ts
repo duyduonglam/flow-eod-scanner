@@ -12,7 +12,7 @@ test('builds a GitHub workflow dispatch request with an optional market date', (
     {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'eod_scan.yml',
+      workflow: 'manual_scan.yml',
       ref: 'main',
       token: 'token-value',
     },
@@ -21,7 +21,7 @@ test('builds a GitHub workflow dispatch request with an optional market date', (
 
   assert.equal(
     request.url,
-    'https://api.github.com/repos/duyduonglam/flow-eod-scanner/actions/workflows/eod_scan.yml/dispatches',
+    'https://api.github.com/repos/duyduonglam/flow-eod-scanner/actions/workflows/manual_scan.yml/dispatches',
   );
   assert.equal(request.init.method, 'POST');
   assert.equal(request.init.headers.Authorization, 'Bearer token-value');
@@ -36,7 +36,7 @@ test('omits workflow inputs when no market date override is provided', () => {
     {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'eod_scan.yml',
+      workflow: 'manual_scan.yml',
       ref: 'main',
       token: 'token-value',
     },
@@ -71,7 +71,7 @@ test('keeps manual scan secret optional for dashboard-triggered scans', () => {
     config: {
       owner: 'duyduonglam',
       repo: 'flow-eod-scanner',
-      workflow: 'eod_scan.yml',
+      workflow: 'manual_scan.yml',
       ref: 'main',
       token: 'token-value',
       manualSecret: undefined,
@@ -86,7 +86,7 @@ test('migrates the removed manual workflow name to the unified workflow', () => 
   });
 
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.config.workflow, 'eod_scan.yml');
+  if (result.ok) assert.equal(result.config.workflow, 'manual_scan.yml');
 });
 
 test('ignores an unsupported workflow override for this scanner', () => {
@@ -96,7 +96,7 @@ test('ignores an unsupported workflow override for this scanner', () => {
   });
 
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.config.workflow, 'eod_scan.yml');
+  if (result.ok) assert.equal(result.config.workflow, 'manual_scan.yml');
 });
 
 test('formats the current scan date in Vietnam time', () => {
