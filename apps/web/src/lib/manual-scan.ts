@@ -23,7 +23,7 @@ function clean(value: unknown): string {
 
 function resolveWorkflow(value: unknown): string {
   const workflow = clean(value);
-  return workflow === 'manual_scan.yml' ? workflow : 'manual_scan.yml';
+  return workflow === 'backfill_scan.yml' ? workflow : 'backfill_scan.yml';
 }
 
 function isRealIsoDate(value: string): boolean {
@@ -81,7 +81,9 @@ export function buildWorkflowDispatchRequest(
   const workflow = encodeURIComponent(config.workflow);
   const body = {
     ref: config.ref,
-    inputs: input.marketDate ? { market_date: input.marketDate } : {},
+    inputs: input.marketDate
+      ? { start_date: input.marketDate, end_date: input.marketDate, limit: '10' }
+      : {},
   };
 
   return {

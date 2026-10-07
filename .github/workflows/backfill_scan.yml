@@ -27,6 +27,8 @@ jobs:
           python-version: '3.11'
       - name: Install scanner
         run: pip install -e 'apps/scanner[dev]'
+      - name: Verify unified score contract
+        run: python -c "from flow_scanner.flow.unified_score import SCORE_VERSION; expected = 'volume-mcdx-flow-v1'; assert SCORE_VERSION == expected, f'Expected {expected}, got {SCORE_VERSION}'; print(f'Using unified score: {SCORE_VERSION}')"
       - name: Run deterministic tests
         run: pytest -q apps/scanner/tests
       - name: Backfill EOD scans
