@@ -99,6 +99,16 @@ test('ignores an unsupported workflow override for this scanner', () => {
   if (result.ok) assert.equal(result.config.workflow, '352393256');
 });
 
+test('ignores an unsupported ref override for this scanner', () => {
+  const result = readManualScanConfig({
+    GITHUB_ACTIONS_DISPATCH_TOKEN: 'token-value',
+    GITHUB_SCAN_REF: 'stale-feature-branch',
+  });
+
+  assert.equal(result.ok, true);
+  if (result.ok) assert.equal(result.config.ref, 'main');
+});
+
 test('formats the current scan date in Vietnam time', () => {
   assert.equal(todayInVietnam(new Date('2026-09-05T18:15:00.000Z')), '2026-09-06');
 });
