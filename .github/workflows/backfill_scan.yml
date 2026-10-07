@@ -1,5 +1,8 @@
 name: FLOW EOD Backfill
 on:
+  push:
+    paths:
+      - '.github/scan_requests/*.json'
   workflow_dispatch:
     inputs:
       start_date:
@@ -54,7 +57,14 @@ jobs:
             current=$(date -I -d "$current + 1 day")
           done
 
-          echo "Backfill sessions: $dates"
+          if [ -z "$START_DATE" ]; then
+            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep '^.github/scan_requests/.*\.json$' | tail -n 1)
+            START_DATE=$(python -c "import json, sys; print(json.load(open(sys.argv[1], encoding='utf-8'))['market_date'])" "$REQUEST_FILE")
+            END_DATE="$START_DATE"
+            LIMIT="10"
+          fi
+
+          echo "Backfill sessions: $START_DATE to $END_DATE"
           echo "Backfill $START_DATE to $END_DATE" >> "$GITHUB_STEP_SUMMARY"
 
           failed=0

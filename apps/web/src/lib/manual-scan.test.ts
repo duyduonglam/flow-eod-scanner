@@ -79,7 +79,7 @@ test('keeps manual scan secret optional for dashboard-triggered scans', () => {
   });
 });
 
-test('migrates the removed manual workflow name to the unified workflow', () => {
+test('migrates removed manual workflow values to the verified workflow id', () => {
   const result = readManualScanConfig({
     GITHUB_ACTIONS_DISPATCH_TOKEN: 'token-value',
     GITHUB_SCAN_WORKFLOW: 'eod_scan_manual.yml',
