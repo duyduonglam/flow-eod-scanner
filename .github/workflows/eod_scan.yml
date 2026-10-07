@@ -22,7 +22,7 @@ jobs:
       - name: Install scanner
         run: pip install -e 'apps/scanner[dev]'
       - name: Verify unified score contract
-        run: python -c "from flow_scanner.flow.unified_score import SCORE_VERSION; expected = 'volume-mcdx-flow-v1'; assert SCORE_VERSION == expected, f'Expected {expected}, got {SCORE_VERSION}'; print(f'Using unified score: {SCORE_VERSION}')"
+        run: python .github/scripts/verify_unified_score.py
       - name: Run deterministic tests
         run: pytest -q apps/scanner/tests
       - name: Run EOD scan and publish with unified score

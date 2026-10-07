@@ -31,7 +31,7 @@ jobs:
       - name: Install scanner
         run: pip install -e 'apps/scanner[dev]'
       - name: Verify unified score contract
-        run: python -c "from flow_scanner.flow.unified_score import SCORE_VERSION; expected = 'volume-mcdx-flow-v1'; assert SCORE_VERSION == expected, f'Expected {expected}, got {SCORE_VERSION}'; print(f'Using unified score: {SCORE_VERSION}')"
+        run: python .github/scripts/verify_unified_score.py
       - name: Run deterministic tests
         run: pytest -q apps/scanner/tests
       - name: Backfill EOD scans
@@ -47,6 +47,13 @@ jobs:
           TZ: Asia/Ho_Chi_Minh
         run: |
           set -u
+          if [ -z "$START_DATE" ]; then
+            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep '^.github/scan_requests/.*\.json$' | tail -n 1)
+            START_DATE=$(python -c "import json, sys; print(json.load(open(sys.argv[1], encoding='utf-8'))['market_date'])" "$REQUEST_FILE")
+            END_DATE="$START_DATE"
+            LIMIT="10"
+          fi
+
           dates=""
           current="$START_DATE"
           while [[ "$current" < "$END_DATE" || "$current" == "$END_DATE" ]]; do
@@ -56,13 +63,6 @@ jobs:
             fi
             current=$(date -I -d "$current + 1 day")
           done
-
-          if [ -z "$START_DATE" ]; then
-            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep '^.github/scan_requests/.*\.json$' | tail -n 1)
-            START_DATE=$(python -c "import json, sys; print(json.load(open(sys.argv[1], encoding='utf-8'))['market_date'])" "$REQUEST_FILE")
-            END_DATE="$START_DATE"
-            LIMIT="10"
-          fi
 
           echo "Backfill sessions: $START_DATE to $END_DATE"
           echo "Backfill $START_DATE to $END_DATE" >> "$GITHUB_STEP_SUMMARY"

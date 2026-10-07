@@ -76,7 +76,6 @@ export async function POST(request: Request) {
     {
       ok: false,
       error: 'GitHub chưa nhận lệnh quét.',
-      workflow: configResult.config.workflow,
       details: body.slice(0, 500),
     },
     { status: 502 },

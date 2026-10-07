@@ -23,7 +23,7 @@ function clean(value: unknown): string {
 
 function resolveWorkflow(value: unknown): string {
   const workflow = clean(value);
-  return workflow === '352393256' ? workflow : '352393256';
+  return workflow === 'backfill_scan.yml' ? workflow : 'backfill_scan.yml';
 }
 
 function isRealIsoDate(value: string): boolean {
