@@ -44,3 +44,7 @@ For future UI edits, elements at the same level must share typography, size, spa
 - `node --test tools/unified_score.test.mjs`
 - Run web tests/build when changing web code.
 - Never expose tokens, API keys, service-role keys or credential-bearing logs.
+
+## Latest completed session
+
+2026-10-08 correction run 37768435407: active universe 1524, valid histories 1486, published rows 7, price source FireAnt without fallback, web LIVE. DRI/PVP/BVH score >=80; PVT/NVB/BSR/MSR score 75–79.9. See the correction audit and before/after snapshots; do not claim full Data Contract v1.2 certification from the legacy VERIFIED label alone.
