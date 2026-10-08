@@ -1,0 +1,5 @@
+{
+  "market_date": "2026-10-08",
+  "revision_id": "2026-10-08-full-universe-pagination-1",
+  "reason": "Retry coverage correction after fixing shallow-checkout request detection"
+}

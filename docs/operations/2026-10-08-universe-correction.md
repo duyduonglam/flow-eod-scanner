@@ -18,3 +18,7 @@ Changes:
 Validation before publishing the patch: 63 scanner tests pass, including regression cases for 1524/2000 symbols and a reduced 200-row server cap. Score contract and JS parity tests are checked separately.
 
 Completion evidence and corrected-at time will be appended after the new run and web verification. LIVE and the legacy CLI VERIFIED label are not equivalent to full v1.2 certification; missing-history classifications and complete provenance remain limitations.
+
+## Trigger repair
+
+First correction attempt: Actions run 37768187019 passed all 63 scanner tests but failed before scanning with an empty REQUEST_FILE. Reproduced cause: checkout's default depth 1 makes `git diff-tree HEAD` unable to report the parent diff. A real Git fixture returned no request at depth 1 and the correct request at depth 2. Set checkout fetch-depth to 2. No data was written by that failed attempt.
