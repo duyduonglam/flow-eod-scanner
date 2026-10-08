@@ -101,7 +101,7 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  min-height: 118px;
+  min-height: 86px;
   margin-bottom: 16px;
   padding: 16px 18px;
   overflow: hidden;
@@ -509,11 +509,13 @@ select:focus-visible {
   font-weight: 850;
 }
 
+.dailyChange.up,
 .compactMetricLine.up,
 .compactMetricLine .up {
   color: var(--green);
 }
 
+.dailyChange.down,
 .compactMetricLine.down,
 .compactMetricLine .down {
   color: var(--red);
@@ -952,7 +954,7 @@ select:focus-visible {
 
 .scanTable {
   width: 100%;
-  min-width: 1380px;
+  min-width: 1432px;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
