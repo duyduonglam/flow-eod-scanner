@@ -960,9 +960,9 @@ select:focus-visible {
   border-spacing: 0;
 }
 
-.scanTable col.scanColSymbol { width: 67.2px; }
-.scanTable col.scanColChange { width: 80px; }
-.scanTable th:first-child, .scanTable td:first-child { text-align: center; padding-left: 8px; padding-right: 8px; }
+.scanTable col.scanColSymbol, .scanTable col.scanColChange { width: 67.2px; }
+.scanTable th:first-child, .scanTable td:first-child,
+.scanTable th:nth-child(2), .scanTable td:nth-child(2) { text-align: center; padding-left: 8px; padding-right: 8px; }
 .dailyChange { text-align: center; font-weight: 760; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .marketDetail { color: var(--muted); font-size: 12px; line-height: 1.4; }
 .marketAssessment { font-size: 14px; line-height: 1.55; margin: 14px 0 0; }
@@ -1740,3 +1740,15 @@ select:focus-visible {
     font-size: 22px;
   }
 }
+
+.marketLabel.withIcon { justify-content: space-between; flex-direction: row-reverse; }
+.marketSnapshot .marketIcon { color: #279e82; background: transparent; }
+.snapshotTitle { font-size: 18px; line-height: 24px; }
+.marketSnapshot .marketDetail { font-size: 14px; line-height: 1.4; }
+.marketSnapshot .compactMetricLine, .marketSnapshot .marketValue { font-size: 20px; }
+.marketSnapshot .marketCard { padding: 12px 16px; gap: 8px; }
+.marketForeign .compactMetricLine { font-size: 18px; color: var(--muted); }
+
+.marketDetail.up { color: var(--green); }
+.marketDetail.down { color: var(--red); }
+.marketLiquidity .compactMetricLine.accent { color: #007e9e; }

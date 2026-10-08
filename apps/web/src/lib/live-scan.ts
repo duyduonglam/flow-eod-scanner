@@ -186,7 +186,17 @@ export async function getMarketRegime(marketDate?: string | null): Promise<Marke
     .maybeSingle();
 
   if (error || !data) return null;
-  return normalizeMarketRegime(data as RawScanRow);
+  const regime = normalizeMarketRegime(data as RawScanRow);
+  const [counts, previous] = await Promise.all([
+    db.from('stock_signals').select('id', { count: 'exact', head: true }).eq('market_date', marketDate),
+    db.from('market_regimes').select('liquidity_value').lt('market_date', marketDate)
+      .order('market_date', { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  regime.validated_count = counts.error ? null : counts.count;
+  const previousLiquidity = toNumber(previous.data?.liquidity_value);
+  regime.liquidity_change_pct = !previous.error && previousLiquidity != null && previousLiquidity > 0 && regime.liquidity_value != null
+    ? (regime.liquidity_value / previousLiquidity - 1) * 100 : null;
+  return regime;
 }
 
 async function attachHeadlineNews(rows: ScanRow[]): Promise<ScanRow[]> {

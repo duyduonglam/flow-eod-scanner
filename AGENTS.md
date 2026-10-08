@@ -55,3 +55,6 @@ For future UI edits, elements at the same level must share typography, size, spa
 - All five snapshot cards include a consistent secondary description. Breadth and liquidity describe the scanned data set, not exchange-wide totals.
 - The Mã column is centered and 30% narrower (96px → 67.2px); adjacent % uses `stock_signals.change_pct`, computed from the same session's reference price (previous close only if reference absent). Show missing values as —, never as zero. Green/red denote rise/fall.
 - Migration `20261008132113_stock_signal_change_pct.sql` adds the nullable field without changing scoring or publication rules.
+
+- Snapshot follows the five-card market overview reference: selected data session, VN-Index, breadth, scanned-set trade value, and foreign buy/sell availability. Counts come from saved same-day stock_signals, not another project. Foreign flow is unavailable in the current database; never copy the reference image values. Liquidity comparison is between saved scanned sets, whose coverage can differ.
+- Both Mã and % columns use the same 67.2px width and centered headers/cells.

@@ -20,6 +20,8 @@ export type MarketRegime = {
   breadth_advancers: number | null;
   breadth_decliners: number | null;
   liquidity_value: number | null;
+  liquidity_change_pct?: number | null;
+  validated_count?: number | null;
   distribution_flag: boolean;
   summary: string | null;
   quick_assessment: string | null;

@@ -1,7 +1,7 @@
 import type { MarketRegime, ScanRow } from '@/lib/types';
 
 const indexFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
-const liquidityFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
+const liquidityFormatter = new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function pct(value: number | null | undefined): string {
   if (value == null) return '-';
@@ -10,7 +10,7 @@ function pct(value: number | null | undefined): string {
 }
 
 function liquidity(value: number | null | undefined): string {
-  return value == null ? '-' : `${liquidityFormatter.format(value / 1_000_000_000_000)} Nghìn tỉ`;
+  return value == null ? '-' : `${liquidityFormatter.format(value / 1_000_000_000_000)} nghìn tỷ`;
 }
 
 function changeClass(value: number | null | undefined): string {
@@ -80,21 +80,18 @@ export function MarketHeader({
 }) {
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
-  const qualifiedRows = rows.filter(
-    (row) => (row.flow_score ?? 0) >= 80 && row.decision !== 'DO NOT CHASE' && row.decision !== 'EXIT',
-  );
   const marketMode = marketRegime?.market_mode?.trim() || null;
   const indexChangeClass = changeClass(marketRegime?.index_change_pct);
   const liquidityChangeClass =
-    marketRegime?.liquidity_value == null ? '' : marketRegime?.distribution_flag ? 'down' : 'up';
+    changeClass(marketRegime?.liquidity_change_pct);
 
   return (
-    <section className="marketSnapshot" aria-label="Snapshot thị trường cuối ngày">
+    <section className="marketSnapshot" aria-label="Tổng quan thị trường">
       <div className="snapshotHeader">
         <div>
           <div className="snapshotTitle">
             <span className="snapshotDot" aria-hidden="true" />
-            Snapshot thị trường cuối ngày
+            Tổng quan thị trường
             {marketMode ? <span className={`status snapshotMode ${modeClass(marketMode)}`}>{marketMode}</span> : null}
           </div>
         </div>
@@ -109,32 +106,31 @@ export function MarketHeader({
           Phiên dữ liệu
         </div>
         <div className="marketValue">{marketDate ?? 'Demo'}</div>
-        <div className="marketDetail">{dataStatus === 'LIVE' ? 'Dữ liệu EOD đã công bố' : 'Dữ liệu minh họa'}</div>
+        <div className="marketDetail">{dataStatus === 'LIVE' ? `${marketRegime?.validated_count ?? '—'} mã hợp lệ · ${rows.length} mã công bố` : 'Dữ liệu minh họa'}</div>
       </div>
       <div className="marketCard marketIndex">
         <div className="marketLabel withIcon">
           <MarketIcon type="index" />
-          {marketRegime?.index_symbol || 'VNINDEX'}
+          {marketRegime?.index_symbol === 'VNINDEX' ? 'VN-INDEX' : marketRegime?.index_symbol || 'VN-INDEX'}
         </div>
         <div className={`compactMetricLine ${indexChangeClass}`}>
           <span>{marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}</span>
-          <span>{pct(marketRegime?.index_change_pct)}</span>
         </div>
-        <div className="marketDetail">So với phiên liền trước</div>
+        <div className={`marketDetail ${indexChangeClass}`}>{pct(marketRegime?.index_change_pct)} so với phiên trước</div>
       </div>
       <div className="marketCard marketBreadth">
         <div className="marketLabel withIcon">
           <MarketIcon type="breadth" />
-          Mã tăng/Mã giảm
+          Mã tăng / Mã giảm
         </div>
         <div className="compactMetricLine breadthValue">
           {advancers == null || decliners == null ? (
             '-'
           ) : (
             <>
-              <span className="breadthUp">{advancers}</span>
-              <span className="breadthDivider">/</span>
-              <span className="breadthDown">{decliners}</span>
+              <span className="breadthUp">{advancers} ↑</span>
+              <span className="breadthDivider">·</span>
+              <span className="breadthDown">{decliners} ↓</span>
             </>
           )}
         </div>
@@ -143,18 +139,18 @@ export function MarketHeader({
       <div className="marketCard marketLiquidity">
         <div className="marketLabel withIcon">
           <MarketIcon type="liquidity" />
-          Thanh khoản
+          GTGD tập mã đã quét
         </div>
-        <div className={`compactMetricLine ${liquidityChangeClass}`}>{liquidity(marketRegime?.liquidity_value)}</div>
-        <div className="marketDetail">GTGD trong tập dữ liệu đã quét</div>
+        <div className="compactMetricLine accent">{liquidity(marketRegime?.liquidity_value)}</div>
+        <div className={`marketDetail ${liquidityChangeClass}`}>{marketRegime?.liquidity_change_pct == null ? 'Chưa có so sánh phiên trước' : `${pct(marketRegime.liquidity_change_pct)} so với tập mã phiên trước`}</div>
       </div>
-      <div className="marketCard marketLeader">
+      <div className="marketCard marketForeign">
         <div className="marketLabel withIcon">
-          <MarketIcon type="leader" />
-          Mã đạt chuẩn
+          <MarketIcon type="liquidity" />
+          Khối ngoại mua / bán
         </div>
-        <div className="compactMetricLine accent">{qualifiedRows.length}</div>
-        <div className="marketDetail">Điểm ≥ 80 · {rows.length} mã công bố</div>
+        <div className="compactMetricLine">Chưa có dữ liệu</div>
+        <div className="marketDetail">Chưa có số liệu xác minh của phiên</div>
       </div>
       </div>
     </section>
