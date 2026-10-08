@@ -1,0 +1,5 @@
+{
+  "market_date": "2026-10-08",
+  "revision_id": "2026-10-08-full-universe-pagination-1",
+  "reason": "Correct truncated 1000-symbol universe; preserve prior published snapshot in docs/operations/2026-10-08-before-full-universe.json"
+}

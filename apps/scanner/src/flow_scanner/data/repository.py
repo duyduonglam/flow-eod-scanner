@@ -22,13 +22,28 @@ class SupabaseRepository:
         return headers
 
     def list_active_symbols(self) -> list[dict]:
-        response = self.session.get(
-            f'{self.url}/rest/v1/symbols',
-            params={'select':'id,symbol,exchange', 'is_active':'eq.true', 'asset_type':'eq.stock'},
-            headers=self._headers(), timeout=20,
-        )
-        response.raise_for_status()
-        return response.json()
+        rows: list[dict] = []
+        offset = 0
+        while True:
+            response = self.session.get(
+                f'{self.url}/rest/v1/symbols',
+                params={
+                    'select': 'id,symbol,exchange',
+                    'is_active': 'eq.true',
+                    'asset_type': 'eq.stock',
+                    'order': 'id.asc',
+                    'limit': '1000',
+                    'offset': str(offset),
+                },
+                headers=self._headers(), timeout=20,
+            )
+            response.raise_for_status()
+            page = response.json()
+            if not page:
+                return rows
+            rows.extend(page)
+            # Advance by the returned count: the server may cap below our limit.
+            offset += len(page)
 
     def upsert_symbols(self, rows: list[dict]) -> None:
         if not rows:

@@ -1,4 +1,5 @@
 from flow_scanner.data.repository import SupabaseRepository
+import pytest
 
 def test_repository_headers_use_service_key():
     repo=SupabaseRepository('https://example.supabase.co','secret')
@@ -118,3 +119,40 @@ def test_upsert_symbols_uses_symbol_conflict_key():
     assert session.posts[0]["json"] == [
         {"symbol": "VHM", "exchange": "HOSE", "asset_type": "stock", "is_active": True}
     ]
+
+
+class SymbolPageResponse(FakeResponse):
+    def __init__(self, rows):
+        self.rows = rows
+
+    def json(self):
+        return self.rows
+
+
+class SymbolPageSession:
+    def __init__(self, count, server_limit=1000):
+        self.rows = [
+            {"id": index, "symbol": f"S{index:04d}", "exchange": "HOSE"}
+            for index in range(1, count + 1)
+        ]
+        self.server_limit = server_limit
+        self.requests = []
+
+    def get(self, url, params, headers, timeout):
+        self.requests.append(params.copy())
+        offset = int(params.get("offset", 0))
+        limit = min(int(params.get("limit", 1000)), self.server_limit)
+        return SymbolPageResponse(self.rows[offset:offset + limit])
+
+
+@pytest.mark.parametrize("count,server_limit", [(1524, 1000), (2000, 1000), (524, 200), (0, 1000)])
+def test_list_active_symbols_reads_complete_universe_beyond_server_row_cap(count, server_limit):
+    session = SymbolPageSession(count, server_limit)
+    repo = SupabaseRepository("https://example.supabase.co", "secret", session=session)
+
+    rows = repo.list_active_symbols()
+
+    assert len(rows) == count
+    assert [row["id"] for row in rows] == list(range(1, count + 1))
+    assert all(params.get("order") == "id.asc" for params in session.requests)
+    assert all(params["is_active"] == "eq.true" and params["asset_type"] == "eq.stock" for params in session.requests)

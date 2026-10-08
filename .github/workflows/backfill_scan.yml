@@ -70,7 +70,7 @@ jobs:
           failed=0
           for market_date in $dates; do
             echo "::group::Backfill $market_date"
-            if timeout 8m python -m flow_scanner.cli \
+            if timeout 20m python -m flow_scanner.cli \
               --date "$market_date" \
               --limit "$LIMIT" \
               --max-lookback-days 0 \
