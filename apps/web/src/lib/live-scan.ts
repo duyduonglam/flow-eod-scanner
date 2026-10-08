@@ -70,6 +70,7 @@ function normalizeRow(row: JoinedScanRow): ScanRow {
     symbol_id: toNumber(row.symbol_id),
     market_date: toText(row.market_date),
     close: toNumber(row.close),
+    change_pct: toNumber(row.change_pct),
     flow_score: toNumber(row.flow_score ?? row.total_score),
     score_version: typeof row.score_version === 'string' ? row.score_version : null,
     score_components: row.score_components && typeof row.score_components === 'object'
@@ -250,7 +251,7 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
   const sortedDates = marketDates.toSorted();
   const { data, error } = await db
     .from('stock_signals')
-    .select('symbol_id, market_date, close, rs_rating, banker, banker_ma, hot_money, hot_money_ma, volume_buzz, ud_volume_ratio, score_version, score_components')
+    .select('symbol_id, market_date, close, change_pct, rs_rating, banker, banker_ma, hot_money, hot_money_ma, volume_buzz, ud_volume_ratio, score_version, score_components')
     .in('symbol_id', symbolIds)
     .gte('market_date', sortedDates[0])
     .lte('market_date', sortedDates[sortedDates.length - 1])
@@ -260,6 +261,7 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
 
   const metricsByKey = new Map<string, {
     close: number | null;
+    change_pct: number | null;
     rs_rating: number | null;
     banker: number | null;
     banker_ma: number | null;
@@ -276,6 +278,7 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
     if (symbolId == null || !marketDate) continue;
     metricsByKey.set(`${marketDate}:${symbolId}`, {
       close: toNumber(raw.close),
+      change_pct: toNumber(raw.change_pct),
       rs_rating: toNumber(raw.rs_rating),
       banker: toNumber(raw.banker),
       banker_ma: toNumber(raw.banker_ma),
@@ -297,6 +300,7 @@ async function attachSignalMetrics(rows: ScanRow[]): Promise<ScanRow[]> {
     return {
       ...row,
       close: row.close ?? metrics.close,
+      change_pct: row.change_pct ?? metrics.change_pct,
       rs_rating: row.rs_rating ?? metrics.rs_rating,
       banker: row.banker ?? metrics.banker,
       banker_ma: row.banker_ma ?? metrics.banker_ma,

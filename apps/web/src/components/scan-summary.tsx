@@ -1,4 +1,4 @@
-import { buildExclusions, buildQuickAssessments, splitDailyNarrative } from '@/lib/scan-view-model';
+import { buildExclusions, buildMarketAssessment, buildQuickAssessments, splitDailyNarrative } from '@/lib/scan-view-model';
 import type { MarketRegime, NewsItem, ScanRow } from '@/lib/types';
 
 const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
@@ -24,20 +24,21 @@ type Props = {
 };
 
 export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
+  const marketAssessment = buildMarketAssessment(marketRegime);
   const assessments = buildQuickAssessments(rows, 4);
   const exclusions = buildExclusions(rows, 5);
 
   return (
     <section className="summarySection" aria-label="Tổng kết phiên FLOW">
-      {marketRegime?.quick_assessment || assessments.length ? (
+      {marketAssessment || marketRegime?.quick_assessment || assessments.length ? (
         <article className="summaryPanel assessmentPanel">
           <div className="summaryHeading">
             <div>
               <div className="sectionLabel">Đánh giá nhanh mã nổi bật</div>
-              <div className="summaryHint">Nhận xét được lưu riêng theo phiên dữ liệu đang chọn.</div>
             </div>
             {marketDate ? <span className="summaryDate">{marketDate}</span> : null}
           </div>
+          {marketAssessment ? <p className="marketAssessment">{marketAssessment}</p> : null}
           {marketRegime?.quick_assessment ? (
             <ul className="summaryBullets">
               {splitDailyNarrative(marketRegime.quick_assessment).map((item) => <li key={item}>{item}</li>)}
@@ -80,7 +81,10 @@ export function ScanSummary({ rows, news, marketDate, marketRegime }: Props) {
 
       {
         <article className="summaryPanel newsPanel">
-          <div className="sectionLabel">Tin tức nổi bật chung</div>
+          <div className="summaryHeading">
+            <div className="sectionLabel">Tin tức nổi bật chung</div>
+            {marketDate ? <span className="summaryDate">{marketDate}</span> : null}
+          </div>
           <div className="generalNewsList">
             {news.length ? news.map((item) => {
               const meta = [item.symbol, item.source, publishedLabel(item.published_at)].filter(Boolean).join(' · ');

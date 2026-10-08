@@ -101,7 +101,7 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  min-height: 86px;
+  min-height: 118px;
   margin-bottom: 16px;
   padding: 16px 18px;
   overflow: hidden;
@@ -351,13 +351,13 @@ select:focus-visible {
 .marketCard {
   position: relative;
   display: grid;
-  grid-template-rows: 18px 32px;
+  grid-template-rows: 18px 32px minmax(30px, auto);
   align-content: center;
   gap: 10px;
   box-sizing: border-box;
   width: 100%;
-  height: 86px;
-  min-height: 86px;
+  height: 118px;
+  min-height: 118px;
   padding: 12px 20px;
   overflow: hidden;
   background: transparent;
@@ -958,7 +958,12 @@ select:focus-visible {
   border-spacing: 0;
 }
 
-.scanTable col.scanColSymbol { width: 96px; }
+.scanTable col.scanColSymbol { width: 67.2px; }
+.scanTable col.scanColChange { width: 80px; }
+.scanTable th:first-child, .scanTable td:first-child { text-align: center; padding-left: 8px; padding-right: 8px; }
+.dailyChange { text-align: center; font-weight: 760; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.marketDetail { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.marketAssessment { font-size: 14px; line-height: 1.55; margin: 14px 0 0; }
 .scanTable col.scanColScore { width: 112px; }
 .scanTable col.scanColSignal { width: 250px; }
 .scanTable col.scanColNews { width: 270px; }
@@ -1334,9 +1339,10 @@ select:focus-visible {
 }
 
 .assessmentPanel .assessmentList {
-  flex: 1;
-  gap: 0;
-  margin-top: 10px;
+  flex: none;
+  align-content: start;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .assessmentPanel,

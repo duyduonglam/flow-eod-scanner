@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildExclusions,
   buildQuickAssessments,
+  buildMarketAssessment,
   dedupeNews,
   findNewsUrlInHtml,
   normalizeTickerQuery,
@@ -240,4 +241,22 @@ test('general news is de-duplicated and keeps linked, newest items first', () =>
   assert.equal(result.length, 3);
   assert.equal(result[0].title, 'Tin C');
   assert.equal(result.filter((item) => item.url === 'https://example.com/a').length, 1);
+});
+
+
+test('quick assessments do not invent breakout or no-chase groups with no matching symbols', () => {
+  const rows = ['DRI', 'PVP', 'BVH', 'PVT'].map(symbol => ({ ...baseRow, symbol, volume_buzz: 80 }));
+  const result = buildQuickAssessments(rows);
+  assert.ok(result.every(item => !item.text.startsWith(';') && !item.text.startsWith(' do ')));
+  assert.ok(result.every(item => item.symbol !== 'Mạnh nhất' && item.symbol !== 'Không mua đuổi'));
+});
+
+test('market assessment changes with the selected session and never calls missing breadth weak', () => {
+  const riskOff = buildMarketAssessment({ market_mode: 'RISK OFF', index_change_pct: -0.82, breadth_advancers: 313, breadth_decliners: 340, distribution_flag: true });
+  const riskOn = buildMarketAssessment({ market_mode: 'RISK ON', index_change_pct: 1.2, breadth_advancers: 400, breadth_decliners: 200, distribution_flag: false });
+  assert.match(riskOff, /RISK OFF/);
+  assert.match(riskOff, /313.*340/);
+  assert.match(riskOn, /RISK ON/);
+  assert.notEqual(riskOff, riskOn);
+  assert.equal(buildMarketAssessment(null), null);
 });

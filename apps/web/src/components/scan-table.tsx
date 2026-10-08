@@ -106,6 +106,7 @@ export function ScanTable({
         <table className="scanTable">
           <colgroup>
             <col className="scanColSymbol" />
+            <col className="scanColChange" />
             <col className="scanColScore" />
             <col className="scanColSignal" />
             <col className="scanColNews" />
@@ -119,6 +120,7 @@ export function ScanTable({
           <thead>
             <tr>
               <th>Mã</th>
+              <th title="Thay đổi giá trong phiên so với giá tham chiếu">%</th>
               <th>Điểm tổng</th>
               <th>Tín hiệu chính</th>
               <th>Tin tức nổi bật</th>
@@ -151,6 +153,9 @@ export function ScanTable({
                     {row.close != null ? <div className="symbolPrice">{priceFormatter.format(row.close)}</div> : null}
                     {inEntryZone ? <span className="entryBadge">ENTRY</span> : null}
                     {showMarketDate ? <div className="symbolDate">{row.market_date}</div> : null}
+                  </td>
+                  <td className={`dailyChange ${row.change_pct == null || row.change_pct === 0 ? '' : row.change_pct > 0 ? 'up' : 'down'}`}>
+                    {row.change_pct == null ? '—' : `${row.change_pct > 0 ? '+' : ''}${row.change_pct.toFixed(2)}%`}
                   </td>
                   <td>
                     <div className="scoreCell">
@@ -188,7 +193,7 @@ export function ScanTable({
               })
             ) : (
               <tr>
-                <td className="emptyTable" colSpan={10}>
+                <td className="emptyTable" colSpan={11}>
                   {emptyMessage}
                 </td>
               </tr>

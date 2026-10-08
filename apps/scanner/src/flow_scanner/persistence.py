@@ -82,6 +82,7 @@ def build_stock_signal_payload(
     payload: list[dict[str, Any]] = []
     signal_fields = [
         "close",
+        "change_pct",
         "flow_score",
         "score_version",
         "score_components",

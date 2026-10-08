@@ -33,7 +33,7 @@ Updated: 2026-10-08 (Asia/Ho_Chi_Minh).
 ## Reporting and interface preferences
 
 Respond in Vietnamese. Required table:
-`Mã/Giá hiện tại | Điểm tổng | Tín hiệu chính | Tin tức nổi bật | Entry Zone | Stop & Distance | R Targets | Decision`.
+`Mã/Giá hiện tại | % thay đổi phiên | Điểm tổng | Tín hiệu chính | Tin tức nổi bật | Entry Zone | Stop & Distance | R Targets | Decision`.
 Follow with a brief assessment, notable exclusions and relevant invalidation. Mark absent verified ticker news as unavailable. Treat decisions as scanner labels, not personal trade recommendations.
 For future UI edits, elements at the same level must share typography, size, spacing and alignment; prioritize balanced, consistent presentation.
 
@@ -48,3 +48,10 @@ For future UI edits, elements at the same level must share typography, size, spa
 ## Latest completed session
 
 2026-10-08 correction run 37768435407: active universe 1524, valid histories 1486, published rows 7, price source FireAnt without fallback, web LIVE. DRI/PVP/BVH score >=80; PVT/NVB/BSR/MSR score 75–79.9. See the correction audit and before/after snapshots; do not claim full Data Contract v1.2 certification from the legacy VERIFIED label alone.
+
+## Daily dashboard behavior (2026-10-08)
+
+- Quick assessment derives market context from the selected session's regime, VNINDEX change, breadth and distribution flag; preserve saved per-session editorial notes. Only show ticker groups with matching data; use decision labels for retest/watch/buy groupings.
+- All five snapshot cards include a consistent secondary description. Breadth and liquidity describe the scanned data set, not exchange-wide totals.
+- The Mã column is centered and 30% narrower (96px → 67.2px); adjacent % uses `stock_signals.change_pct`, computed from the same session's reference price (previous close only if reference absent). Show missing values as —, never as zero. Green/red denote rise/fall.
+- Migration `20261008132113_stock_signal_change_pct.sql` adds the nullable field without changing scoring or publication rules.

@@ -31,6 +31,7 @@ export type ScanRow = {
   symbol_id?: number | null;
   market_date: string;
   close: number | null;
+  change_pct?: number | null;
   flow_score: number | null;
   score_version?: string | null;
   score_components?: Record<string, number> | null;

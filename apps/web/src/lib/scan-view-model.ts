@@ -324,16 +324,9 @@ export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAsses
   if (rows.length >= 4) {
     const ranked = rows.toSorted((a, b) => (b.flow_score ?? -1) - (a.flow_score ?? -1));
     const strongest = ranked.filter((row) => /breakout/i.test(row.main_signal)).slice(0, 3);
-    const pullback = [
-      ...strongest,
-      ...ranked.filter(
-        (row) =>
-          !strongest.some((item) => item.symbol === row.symbol) &&
-          row.rs_rating != null &&
-          row.rs_rating >= 16 &&
-          (row.volume_buzz ?? 0) >= 0,
-      ),
-    ].slice(0, 4);
+    const pullback = ranked.filter((row) => row.decision === 'BUY RETEST').slice(0, 4);
+    const watch = ranked.filter((row) => row.decision === 'WATCH').slice(0, 4);
+    const buys = ranked.filter((row) => ['BUY', 'TEST BUY'].includes(row.decision)).slice(0, 4);
     const noChase = ranked.filter((row) => row.decision === 'DO NOT CHASE');
     const moneyWatch = ranked.filter(
       (row) =>
@@ -349,15 +342,17 @@ export function buildQuickAssessments(rows: SummaryRow[], limit = 4): QuickAsses
       market_date: rows[0]?.market_date ?? '',
       score: null,
       decision: '',
-      text: `${symbols.map((row) => row.symbol).join(', ')}${detail}`,
+      text: symbols.length ? `${symbols.map((row) => row.symbol).join(', ')}${detail}` : '',
     });
 
     return [
-      label('Mạnh nhất', strongest, '; đều có breakout và volume xác nhận tốt hơn nhóm còn lại.'),
-      label('Chờ pullback', pullback, '.'),
+      label('Mạnh nhất', strongest, '; có tín hiệu breakout trong phiên.'),
+      label('Chờ retest', pullback, '.'),
+      label('Theo dõi', watch, '.'),
+      label('Tín hiệu mua', buys, '.'),
       label('Không mua đuổi', noChase, ' do giá đã cao hoặc Hot Money quá nóng.'),
       label('Theo dõi dòng tiền', moneyWatch, '.'),
-    ].filter((item) => item.text.trim().length > 1);
+    ].filter((item) => item.text.length > 0).slice(0, Math.max(0, limit));
   }
 
   return rows
@@ -459,4 +454,26 @@ export function dedupeNews<T extends NewsSummaryItem>(items: T[], limit = 5): T[
     if (result.length >= limit) break;
   }
   return result;
+}
+
+export function buildMarketAssessment(market: {
+  market_mode?: string | null;
+  index_change_pct?: number | null;
+  breadth_advancers?: number | null;
+  breadth_decliners?: number | null;
+  distribution_flag?: boolean | null;
+} | null | undefined): string | null {
+  if (!market) return null;
+  const mode = market.market_mode?.trim();
+  const parts: string[] = [];
+  if (mode) parts.push(`Trạng thái ${mode}`);
+  if (market.index_change_pct != null) {
+    const change = market.index_change_pct;
+    parts.push(`VNINDEX ${change > 0 ? '+' : ''}${change.toFixed(2)}%`);
+  }
+  if (market.breadth_advancers != null && market.breadth_decliners != null) {
+    parts.push(`${market.breadth_advancers} mã tăng / ${market.breadth_decliners} mã giảm`);
+  }
+  if (market.distribution_flag) parts.push('Có tín hiệu phân phối');
+  return parts.length ? parts.join(' · ') + '.' : null;
 }

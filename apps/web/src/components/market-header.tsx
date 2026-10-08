@@ -109,6 +109,7 @@ export function MarketHeader({
           Phiên dữ liệu
         </div>
         <div className="marketValue">{marketDate ?? 'Demo'}</div>
+        <div className="marketDetail">{dataStatus === 'LIVE' ? 'Dữ liệu EOD đã công bố' : 'Dữ liệu minh họa'}</div>
       </div>
       <div className="marketCard marketIndex">
         <div className="marketLabel withIcon">
@@ -119,6 +120,7 @@ export function MarketHeader({
           <span>{marketRegime?.index_close == null ? '-' : indexFormatter.format(marketRegime.index_close)}</span>
           <span>{pct(marketRegime?.index_change_pct)}</span>
         </div>
+        <div className="marketDetail">So với phiên liền trước</div>
       </div>
       <div className="marketCard marketBreadth">
         <div className="marketLabel withIcon">
@@ -136,6 +138,7 @@ export function MarketHeader({
             </>
           )}
         </div>
+        <div className="marketDetail">Trong tập dữ liệu đã quét</div>
       </div>
       <div className="marketCard marketLiquidity">
         <div className="marketLabel withIcon">
@@ -143,6 +146,7 @@ export function MarketHeader({
           Thanh khoản
         </div>
         <div className={`compactMetricLine ${liquidityChangeClass}`}>{liquidity(marketRegime?.liquidity_value)}</div>
+        <div className="marketDetail">GTGD trong tập dữ liệu đã quét</div>
       </div>
       <div className="marketCard marketLeader">
         <div className="marketLabel withIcon">
@@ -150,6 +154,7 @@ export function MarketHeader({
           Mã đạt chuẩn
         </div>
         <div className="compactMetricLine accent">{qualifiedRows.length}</div>
+        <div className="marketDetail">Điểm ≥ 80 · {rows.length} mã công bố</div>
       </div>
       </div>
     </section>

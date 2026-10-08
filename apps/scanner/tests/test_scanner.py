@@ -48,3 +48,13 @@ def test_stock_signal_payload_converts_non_json_floats_to_null():
     assert payload[0]["banker"] is None
     assert payload[0]["hot_money"] is None
     assert payload[0]["close"] == 10.0
+
+
+def test_daily_change_uses_current_session_reference_and_is_persisted():
+    from dataclasses import replace
+    rows = history('AAA', 0.001)
+    rows[-1] = replace(rows[-1], close=25.0, reference=20.0)
+    result = scan_universe({'AAA': rows}, history('VNINDEX', 0.0005))
+    assert result[0]['change_pct'] == 25.0
+    payload = build_stock_signal_payload(result, {'AAA': 1}, result[0]['market_date'])
+    assert payload[0]['change_pct'] == 25.0

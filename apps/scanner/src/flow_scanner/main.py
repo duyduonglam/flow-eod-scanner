@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import asdict
+from math import isfinite
 from flow_scanner.domain.models import OHLCVRecord
 from flow_scanner.indicators.relative_strength import relative_performance, percentile_rs
 from flow_scanner.indicators.mcdx import latest_mcdx
@@ -43,6 +44,10 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
     for symbol, rows in histories.items():
         if not rows:
             continue
+        reference = rows[-1].reference
+        if reference is None and len(rows) > 1:
+            reference = rows[-2].close
+        change_pct = (rows[-1].close / reference - 1) * 100 if reference is not None and isfinite(reference) and reference > 0 else None
         closes = [r.close for r in rows]
         highs = [r.high for r in rows]
         lows = [r.low for r in rows]
@@ -56,6 +61,7 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
                 'symbol': symbol,
                 'market_date': rows[-1].market_date.isoformat(),
                 'close': rows[-1].close,
+                'change_pct': change_pct,
                 'flow_score': None,
                 'flow_label': 'N/A',
                 'main_signal': 'Insufficient history',
@@ -86,6 +92,7 @@ def scan_universe(histories: dict[str, list[OHLCVRecord]], index_history: list[O
             'symbol': symbol,
             'market_date': rows[-1].market_date.isoformat(),
             'close': rows[-1].close,
+            'change_pct': change_pct,
             'current_value': values[-1],
             'avg_value_20': sum(values[-20:]) / min(len(values), 20),
             'flow_score': composite.total_score,

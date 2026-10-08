@@ -84,6 +84,7 @@ def test_build_stock_signal_payload_keeps_indicator_fields():
         {
             "symbol": "AAA",
             "close": 10.2,
+            "change_pct": None,
             "flow_score": 88.4,
             "flow_label": "YES",
             "avg_value_20": 25_000_000_000,
@@ -112,6 +113,7 @@ def test_build_stock_signal_payload_keeps_indicator_fields():
             "market_date": "2026-08-25",
             "symbol_id": 42,
             "close": 10.2,
+            "change_pct": None,
             "flow_score": 88.4,
             "flow_label": "YES",
             "pass_count": 9,
