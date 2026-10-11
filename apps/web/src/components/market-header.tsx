@@ -153,7 +153,6 @@ export function MarketHeader({
         </div>
         <div className="compactMetricLine" title="Giá trị mua / bán, đơn vị tỷ đồng">{foreignAvailable ? <><span className="up">{foreignNumber(marketRegime?.foreign_buy_value)}</span><span> / </span><span className="down">{foreignNumber(marketRegime?.foreign_sell_value)}</span></> : 'Chưa có dữ liệu'}</div>
         <div className={`marketDetail ${changeClass(marketRegime?.foreign_net_value)}`}>{foreignAvailable ? `Ròng ${marketRegime!.foreign_net_value! > 0 ? '+' : ''}${foreignNumber(marketRegime?.foreign_net_value)} tỷ` : 'Chưa có số liệu xác minh của phiên'}</div>
-        {foreignAvailable ? <div className="marketDetail" title={`Cập nhật: ${marketRegime?.foreign_fetched_at ?? ''}`}>{marketRegime?.foreign_scope} · {marketRegime?.foreign_source}</div> : null}
       </div>
       </div>
     </section>
