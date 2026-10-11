@@ -78,6 +78,8 @@ export function MarketHeader({
   marketRegime?: MarketRegime | null;
   rows?: ScanRow[];
 }) {
+  const foreignAvailable = marketRegime?.foreign_buy_value != null && marketRegime?.foreign_sell_value != null && marketRegime?.foreign_net_value != null;
+  const foreignNumber = (value: number | null | undefined) => liquidityFormatter.format((value ?? 0) / 1_000_000_000);
   const advancers = marketRegime?.breadth_advancers ?? null;
   const decliners = marketRegime?.breadth_decliners ?? null;
   const marketMode = marketRegime?.market_mode?.trim() || null;
@@ -149,8 +151,9 @@ export function MarketHeader({
           <MarketIcon type="liquidity" />
           Khối ngoại mua / bán
         </div>
-        <div className="compactMetricLine">Chưa có dữ liệu</div>
-        <div className="marketDetail">Chưa có số liệu xác minh của phiên</div>
+        <div className="compactMetricLine" title="Giá trị mua / bán, đơn vị tỷ đồng">{foreignAvailable ? <><span className="up">{foreignNumber(marketRegime?.foreign_buy_value)}</span><span> / </span><span className="down">{foreignNumber(marketRegime?.foreign_sell_value)}</span></> : 'Chưa có dữ liệu'}</div>
+        <div className={`marketDetail ${changeClass(marketRegime?.foreign_net_value)}`}>{foreignAvailable ? `Ròng ${marketRegime!.foreign_net_value! > 0 ? '+' : ''}${foreignNumber(marketRegime?.foreign_net_value)} tỷ` : 'Chưa có số liệu xác minh của phiên'}</div>
+        {foreignAvailable ? <div className="marketDetail" title={`Cập nhật: ${marketRegime?.foreign_fetched_at ?? ''}`}>{marketRegime?.foreign_scope} · {marketRegime?.foreign_source}</div> : null}
       </div>
       </div>
     </section>

@@ -140,3 +140,6 @@ class SupabaseRepository:
             return
         self.delete_news_items_for_date(market_date)
         self.insert_news_items(rows)
+
+    def upsert_foreign_flow(self, row: dict) -> None:
+        self._upsert("market_foreign_flows", [row], "market_date")

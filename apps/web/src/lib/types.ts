@@ -20,6 +20,12 @@ export type MarketRegime = {
   breadth_advancers: number | null;
   breadth_decliners: number | null;
   liquidity_value: number | null;
+  foreign_buy_value?: number | null;
+  foreign_sell_value?: number | null;
+  foreign_net_value?: number | null;
+  foreign_source?: string | null;
+  foreign_scope?: string | null;
+  foreign_fetched_at?: string | null;
   liquidity_change_pct?: number | null;
   validated_count?: number | null;
   distribution_flag: boolean;

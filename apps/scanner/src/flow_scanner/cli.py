@@ -9,6 +9,7 @@ from flow_scanner.data.providers.factory import build_provider_chain
 from flow_scanner.data.repository import SupabaseRepository
 from flow_scanner.news import attach_headline_news, build_news_payload, fetch_fireant_news, fetch_market_news
 from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
+from flow_scanner.foreign_flow import fetch_foreign_flow
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
 
 MIN_SYMBOLS_FOR_MARKET_SCAN = 0
@@ -134,6 +135,15 @@ def main() -> None:
         news_status = "ERROR"
         news_error = str(exc)
 
+    foreign_flow_status = "ERROR"
+    foreign_flow_error = None
+    try:
+        foreign_flow = fetch_foreign_flow(date.fromisoformat(market_date), providers[0])
+        repo.upsert_foreign_flow(foreign_flow)
+        foreign_flow_status = "PUBLISHED"
+    except Exception as exc:
+        foreign_flow_error = str(exc)
+
     scan_rows = build_scan_result_payload(rows, symbol_ids, market_date, limit=args.limit)
     signal_rows = build_stock_signal_payload(rows, symbol_ids, market_date)
     repo.upsert_stock_signal_rows(signal_rows)
@@ -157,6 +167,8 @@ def main() -> None:
         "fallback_sources_actually_used": result.get("fallback_sources_actually_used", []),
         "pipeline_status": "VERIFIED" if not result.get("fallback_sources_actually_used") else "VERIFIED_FALLBACK",
         "publish_status": "PUBLISHED",
+        "foreign_flow_status": foreign_flow_status,
+        "foreign_flow_error": foreign_flow_error,
         "news_status": news_status,
         "news_published": len(news_items),
         "news_source": news_source,

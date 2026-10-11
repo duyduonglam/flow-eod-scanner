@@ -58,3 +58,9 @@ For future UI edits, elements at the same level must share typography, size, spa
 
 - Snapshot follows the five-card market overview reference: selected data session, VN-Index, breadth, scanned-set trade value, and foreign buy/sell availability. Counts come from saved same-day stock_signals, not another project. Foreign flow is unavailable in the current database; never copy the reference image values. Liquidity comparison is between saved scanned sets, whose coverage can differ.
 - Both Mã and % columns use the same 67.2px width and centered headers/cells.
+
+## Khối ngoại Snapshot (2026-10-11)
+
+- `market_foreign_flows` lưu tổng mua/bán/ròng đúng phiên, VND, HOSE + HNX + UPCoM từ FireAnt historical-quotes (`VNINDEX`, `HNXINDEX`, `UPINDEX`), gồm provenance/request/hash và fetched_at.
+- CLI thu thập cả 3 sàn; thiếu bất kỳ sàn/ngày/field thì không công bố tổng thiếu và giữ phiên đã xác minh trước đó. Không dùng các dòng 0 thiếu dữ liệu của Cophieu68.
+- Snapshot query theo ngày đang chọn, hiển thị tỷ đồng, nguồn và phạm vi; không phụ thuộc danh sách mã đủ điểm. Đã backfill 2026-10-08 và 2026-10-09.

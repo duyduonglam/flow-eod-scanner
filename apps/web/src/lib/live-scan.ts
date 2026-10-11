@@ -187,11 +187,18 @@ export async function getMarketRegime(marketDate?: string | null): Promise<Marke
 
   if (error || !data) return null;
   const regime = normalizeMarketRegime(data as RawScanRow);
-  const [counts, previous] = await Promise.all([
+  const [counts, previous, foreign] = await Promise.all([
     db.from('stock_signals').select('id', { count: 'exact', head: true }).eq('market_date', marketDate),
     db.from('market_regimes').select('liquidity_value').lt('market_date', marketDate)
       .order('market_date', { ascending: false }).limit(1).maybeSingle(),
+    db.from('market_foreign_flows').select('buy_value,sell_value,net_value,source,scope,fetched_at').eq('market_date', marketDate).maybeSingle(),
   ]);
+  regime.foreign_buy_value = foreign.error ? null : toNumber(foreign.data?.buy_value);
+  regime.foreign_sell_value = foreign.error ? null : toNumber(foreign.data?.sell_value);
+  regime.foreign_net_value = foreign.error ? null : toNumber(foreign.data?.net_value);
+  regime.foreign_source = foreign.error ? null : foreign.data?.source ?? null;
+  regime.foreign_scope = foreign.error ? null : foreign.data?.scope ?? null;
+  regime.foreign_fetched_at = foreign.error ? null : foreign.data?.fetched_at ?? null;
   regime.validated_count = counts.error ? null : counts.count;
   const previousLiquidity = toNumber(previous.data?.liquidity_value);
   regime.liquidity_change_pct = !previous.error && previousLiquidity != null && previousLiquidity > 0 && regime.liquidity_value != null
