@@ -8,7 +8,7 @@ export type EarlyRow = {
 };
 export async function getEarlyDiscoveries(marketDate:string|null) {
   const db=getSupabase();
-  if (!db || !marketDate || marketDate<'2026-10-19') return {status:'PENDING',rows:[] as EarlyRow[]};
+  if (!db || !marketDate) return {status:'PENDING',rows:[] as EarlyRow[]};
   const run=await db.from('early_scan_runs').select('status,candidate_count').eq('market_date',marketDate).maybeSingle();
   if (run.error) return {status:'ERROR',rows:[] as EarlyRow[]};
   if (!run.data || run.data.status!=='COMPLETE') return {status:'PENDING',rows:[] as EarlyRow[]};

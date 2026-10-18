@@ -89,6 +89,7 @@ def main() -> None:
     parser.add_argument("--retry-sleep-seconds", type=float, default=65.0, help="Seconds to wait before retrying a provider rate limit.")
     parser.add_argument("--max-rate-limit-retries", type=int, default=2, help="Provider rate-limit retries per symbol/date.")
     parser.add_argument("--min-symbols", type=int, default=MIN_SYMBOLS_FOR_MARKET_SCAN, help="Refresh the market universe when Supabase has fewer active symbols. Default keeps the configured Supabase universe to avoid free-provider rate limits.")
+    parser.add_argument("--experimental-history", action="store_true", help="Explicitly enable durable history and the current experimental screen for an authorized historical session.")
     args = parser.parse_args()
     requested_date = date.fromisoformat(args.date)
     if requested_date.weekday() >= 5:
@@ -106,7 +107,7 @@ def main() -> None:
     if not symbols:
         raise SystemExit("No active stock symbols found after attempting universe refresh.")
     cache = None
-    feature_active = args.date >= EFFECTIVE_DATE
+    feature_active = args.experimental_history or args.date >= EFFECTIVE_DATE
     if feature_active:
         if not repo.url.startswith("https://cyyffkziqiefrxmbdmyr.supabase.co"):
             raise SystemExit("Wrong Supabase project: this runtime belongs to VNSUPERSTOCK Vercel")

@@ -13,6 +13,11 @@ on:
         description: End date in YYYY-MM-DD
         required: true
         default: '2026-08-24'
+      experimental_history:
+        description: Enable durable history and current early screen for a historical session
+        type: boolean
+        required: false
+        default: false
       limit:
         description: Maximum ranked rows to publish per session
         required: false
@@ -46,6 +51,7 @@ jobs:
           START_DATE: ${{ github.event.inputs.start_date }}
           END_DATE: ${{ github.event.inputs.end_date }}
           LIMIT: ${{ github.event.inputs.limit }}
+          EXPERIMENTAL_HISTORY: ${{ github.event.inputs.experimental_history }}
           TZ: Asia/Ho_Chi_Minh
         run: |
           set -u
@@ -54,6 +60,12 @@ jobs:
             START_DATE=$(python -c "import json, sys; print(json.load(open(sys.argv[1], encoding='utf-8'))['market_date'])" "$REQUEST_FILE")
             END_DATE="$START_DATE"
             LIMIT="10"
+            EXPERIMENTAL_HISTORY=$(python -c "import json, sys; print(str(json.load(open(sys.argv[1], encoding='utf-8')).get('experimental_history', False)).lower())" "$REQUEST_FILE")
+          fi
+
+          EXPERIMENT_ARGS=()
+          if [ "$EXPERIMENTAL_HISTORY" = "true" ]; then
+            EXPERIMENT_ARGS=(--experimental-history)
           fi
 
           dates=""
@@ -77,7 +89,7 @@ jobs:
               --limit "$LIMIT" \
               --max-lookback-days 0 \
               --retry-sleep-seconds 0 \
-              --max-rate-limit-retries 0; then
+              --max-rate-limit-retries 0 "${EXPERIMENT_ARGS[@]}"; then
               echo "- $market_date: OK" >> "$GITHUB_STEP_SUMMARY"
             else
               failed=$((failed + 1))
@@ -88,5 +100,6 @@ jobs:
           done
 
           if [ "$failed" -gt 0 ]; then
-            echo "::warning::$failed sessions were skipped or failed. Check provider availability/rate limits."
+            echo "::error::$failed sessions were skipped or failed. Check provider availability/rate limits."
+            exit 1
           fi
