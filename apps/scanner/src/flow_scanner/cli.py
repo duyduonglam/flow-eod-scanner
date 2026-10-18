@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from flow_scanner.data.providers.factory import build_provider_chain
 from flow_scanner.data.repository import SupabaseRepository
 from flow_scanner.news import attach_headline_news, build_news_payload, fetch_fireant_news, fetch_market_news
-from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
+from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload, build_early_result_payload
 from flow_scanner.foreign_flow import fetch_foreign_flow
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
 from flow_scanner.data.history_cache import CachedPriceProvider
@@ -176,13 +176,7 @@ def main() -> None:
         repo.replace_news_items_for_date(market_date, news_items)
     early_rows = []
     if feature_active and market_date == args.date:
-        scores = {r["symbol"]: r for r in rows}
-        for early in result.get("early_rows", []):
-            item = {k: v for k, v in early.items() if k != "symbol"}
-            item["symbol_id"] = symbol_ids[early["symbol"]]
-            item["flow_score"] = scores[early["symbol"]].get("flow_score")
-            item["change_pct"] = scores[early["symbol"]].get("change_pct")
-            early_rows.append(item)
+        early_rows = build_early_result_payload(result.get("early_rows", []), rows, symbol_ids, market_date)
         repo.publish_early_rows(market_date, early_rows, cache.stats)
 
     print(json.dumps({

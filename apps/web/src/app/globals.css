@@ -1761,3 +1761,5 @@ select:focus-visible {
 .earlyTable { table-layout: auto; min-width: 880px; }
 .earlyTable th, .earlyTable td { padding: 12px; }
 .earlyDiscovery h2 { margin: 0; }
+
+.earlyDiscoveryTable .status { white-space: normal; text-align: center; }

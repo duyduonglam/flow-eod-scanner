@@ -122,3 +122,20 @@ def build_stock_signal_payload(
         payload.append(mapped)
     return payload
 
+
+
+def build_early_result_payload(early_rows, scored_rows, symbol_ids, market_date):
+    """Preserve the existing same-session plan; early discovery has no score floor."""
+    scores = {r['symbol']: r for r in scored_rows}
+    fields = ('flow_score', 'change_pct', 'entry_low', 'entry_high', 'stop_price',
+              'stop_distance_pct', 'one_r', 'two_r', 'three_r')
+    payload = []
+    for early in early_rows:
+        symbol = early['symbol']
+        if early['market_date'] != market_date:
+            raise ValueError('Early screen and trade plan dates differ')
+        item = {k: v for k, v in early.items() if k != 'symbol'}
+        item['symbol_id'] = symbol_ids[symbol]
+        item.update({field: _value(scores[symbol], field) for field in fields})
+        payload.append(item)
+    return payload

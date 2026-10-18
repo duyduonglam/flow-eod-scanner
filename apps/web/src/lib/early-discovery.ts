@@ -4,6 +4,8 @@ export type EarlyRow = {
   change_pct:number|null; flow_score:number|null; volume_ratio:number; extension_pct:number;
   avg_value_20:number; current_value:number; dema21:number; ema20:number; ema50:number;
   ema200:number; upper_bb:number; adjusted_close:number;
+  entry_low:number|null; entry_high:number|null; stop_price:number|null; stop_distance_pct:number|null;
+  one_r:number|null; two_r:number|null; three_r:number|null;
   rs_rating:number; ichimoku_priority:number; cloud_green:boolean; cloud_position:string;
 };
 export async function getEarlyDiscoveries(marketDate:string|null) {

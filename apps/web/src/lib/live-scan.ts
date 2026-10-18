@@ -384,7 +384,8 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
   if (error || !data?.length) return [];
   // Include every stored signal, even below the main publication threshold.
   const plans = await db.from('scan_results').select('*').eq('symbol_id', symbolRow.id).order('market_date', { ascending: false }).limit(240);
-  const byDate = new Map((plans.data ?? []).map(r => [r.market_date, r]));
+  const earlyPlans = await db.from('early_discoveries').select('market_date,entry_low,entry_high,stop_price,stop_distance_pct,one_r,two_r,three_r').eq('symbol_id', symbolRow.id).order('market_date', {ascending: false}).limit(240);
+  const byDate = new Map([...(earlyPlans.data ?? []), ...(plans.data ?? [])].map(r => [r.market_date, r]));
   const merged = data.map((r: RawScanRow) => normalizeRow({ ...r, ...byDate.get(r.market_date), symbols: {symbol: normalizedSymbol} } as JoinedScanRow));
   return sortRowsByHistoryDate(await attachHeadlineNews(merged));
 }

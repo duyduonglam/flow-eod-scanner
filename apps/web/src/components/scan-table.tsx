@@ -66,6 +66,32 @@ function HeadlineNews({ row }: { row: ScanRow }) {
   );
 }
 
+export function ScanTableColumns() {
+  return (<colgroup>
+            <col className="scanColSymbol" />
+            <col className="scanColChange" />
+            <col className="scanColScore" />
+            <col className="scanColSignal" />
+            <col className="scanColNews" />
+            <col className="scanColEntry" />
+            <col className="scanColStop" />
+            <col className="scanColReward" />
+            <col className="scanColReward" />
+            <col className="scanColReward" />
+            <col className="scanColDecision" />
+          </colgroup>);
+}
+
+export function TradePlanCells({row}: {row: Pick<ScanRow, 'close' | 'entry_low' | 'entry_high' | 'stop_price' | 'stop_distance_pct' | 'one_r' | 'two_r' | 'three_r'>}) {
+  return <>
+    <td className="entryCell">{row.entry_low == null ? '—' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
+    <td className="num riskMetric"><div className="stopCell"><strong>{fmt(row.stop_price)}</strong><span>{row.stop_distance_pct == null ? '—' : `${fmt(row.stop_distance_pct, 1)}%`}</span></div></td>
+    <RewardCell value={row.one_r} close={row.close} />
+    <RewardCell value={row.two_r} close={row.close} />
+    <RewardCell value={row.three_r} close={row.close} />
+  </>;
+}
+
 export function ScanTable({
   rows,
   dataStamp,
@@ -104,19 +130,7 @@ export function ScanTable({
       </div>
       <div className="tableWrap">
         <table className="scanTable">
-          <colgroup>
-            <col className="scanColSymbol" />
-            <col className="scanColChange" />
-            <col className="scanColScore" />
-            <col className="scanColSignal" />
-            <col className="scanColNews" />
-            <col className="scanColEntry" />
-            <col className="scanColStop" />
-            <col className="scanColReward" />
-            <col className="scanColReward" />
-            <col className="scanColReward" />
-            <col className="scanColDecision" />
-          </colgroup>
+          <ScanTableColumns />
           <thead>
             <tr>
               <th>Mã</th>
@@ -175,16 +189,7 @@ export function ScanTable({
                   <td className="signal">
                     <HeadlineNews row={row} />
                   </td>
-                  <td className="entryCell">{row.entry_low == null ? '-' : `${fmt(row.entry_low)}-${fmt(row.entry_high)}`}</td>
-                  <td className="num riskMetric">
-                    <div className="stopCell">
-                      <strong>{fmt(row.stop_price)}</strong>
-                      <span>{row.stop_distance_pct == null ? '-' : `${fmt(row.stop_distance_pct, 1)}%`}</span>
-                    </div>
-                  </td>
-                  <RewardCell value={row.one_r} close={row.close} />
-                  <RewardCell value={row.two_r} close={row.close} />
-                  <RewardCell value={row.three_r} close={row.close} />
+                  <TradePlanCells row={row} />
                   <td className="decision">
                     {row.decision_available === false ? <span className="muted">—</span> : <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>}
                   </td>

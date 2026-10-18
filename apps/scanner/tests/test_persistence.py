@@ -168,3 +168,13 @@ def test_build_scan_result_payload_excludes_illiquid_rows_from_main_list():
 
     assert [row["symbol_id"] for row in payload] == [1]
 
+
+
+def test_early_payload_preserves_same_session_trade_plan_without_score_floor():
+    from flow_scanner.persistence import build_early_result_payload
+    early=[{'symbol':'AAA','market_date':'2026-09-16','stage':'PREPARING'}]
+    scored=[{'symbol':'AAA','flow_score':59.8,'change_pct':1.2,'entry_low':10,'entry_high':10.3,'stop_price':9.2,'stop_distance_pct':9.36,'one_r':11.1,'two_r':12.05,'three_r':13}]
+    result=build_early_result_payload(early,scored,{'AAA':1},'2026-09-16')[0]
+    assert result['flow_score']==59.8
+    assert result['entry_low']==10 and result['stop_price']==9.2
+    assert (result['one_r'],result['two_r'],result['three_r'])==(11.1,12.05,13)
