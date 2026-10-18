@@ -4,6 +4,7 @@ export type EarlyRow = {
   change_pct:number|null; flow_score:number|null; volume_ratio:number; extension_pct:number;
   avg_value_20:number; current_value:number; dema21:number; ema20:number; ema50:number;
   ema200:number; upper_bb:number; adjusted_close:number;
+  rs_rating:number; ichimoku_priority:number; cloud_green:boolean; cloud_position:string;
 };
 export async function getEarlyDiscoveries(marketDate:string|null) {
   const db=getSupabase();
@@ -14,7 +15,7 @@ export async function getEarlyDiscoveries(marketDate:string|null) {
   const rows:EarlyRow[]=[];
   for(let offset=0;;offset+=1000){
     const result=await db.from('early_discoveries').select('*,symbols!inner(symbol)').eq('market_date',marketDate)
-      .order('stage',{ascending:true}).order('volume_ratio',{ascending:false}).order('symbol_id').range(offset,offset+999);
+      .order('stage',{ascending:true}).order('rs_rating',{ascending:false}).order('volume_ratio',{ascending:false}).order('symbol_id').range(offset,offset+999);
     if(result.error) return {status:'ERROR',rows:[] as EarlyRow[]};
     const page=result.data??[];
     rows.push(...page.map(r=>({...r,symbol:r.symbols.symbol}) as EarlyRow));

@@ -202,10 +202,12 @@ class SupabaseRepository:
         self._upsert('price_history_state', [state], 'symbol_id')
 
     def start_early_run(self, market_date):
-        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'RUNNING', 'formula_version': 'early-dema-bb-v1', 'candidate_count': None, 'cache_stats': None}], 'market_date')
+        from flow_scanner.flow.early_discovery import FORMULA_VERSION
+        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'RUNNING', 'formula_version': FORMULA_VERSION, 'candidate_count': None, 'cache_stats': None}], 'market_date')
 
     def publish_early_rows(self, market_date, rows, cache_stats):
+        from flow_scanner.flow.early_discovery import FORMULA_VERSION
         response = self.session.delete(f'{self.url}/rest/v1/early_discoveries', params={'market_date': f'eq.{market_date}'}, headers=self._headers(), timeout=30)
         response.raise_for_status()
         self._upsert('early_discoveries', rows, 'market_date,symbol_id')
-        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'COMPLETE', 'formula_version': 'early-dema-bb-v1', 'candidate_count': len(rows), 'cache_stats': cache_stats}], 'market_date')
+        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'COMPLETE', 'formula_version': FORMULA_VERSION, 'candidate_count': len(rows), 'cache_stats': cache_stats}], 'market_date')

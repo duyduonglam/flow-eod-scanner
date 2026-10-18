@@ -4,12 +4,17 @@ from statistics import fmean, pstdev
 from flow_scanner.domain.models import OHLCVRecord
 from flow_scanner.indicators.moving_averages import ema
 
-FORMULA_VERSION = 'early-dema-bb-v1'
+FORMULA_VERSION = 'early-dema-bb-rs-ichi-v2'
 EFFECTIVE_DATE = '2026-10-19'
 
 
-def classify_early(rows: list[OHLCVRecord]) -> dict | None:
+def classify_early(rows: list[OHLCVRecord], rs_rating: float | None = None) -> dict | None:
+    if rs_rating is None or not isfinite(rs_rating) or rs_rating < 80 or rs_rating > 100:
+        return None
     if len(rows) < 260:
+        return None
+    cloud = ichimoku_context(rows)
+    if cloud['cloud_position'] != 'ABOVE':
         return None
     closes = [r.close / r.adj_ratio for r in rows]
     if any(not isfinite(c) or c <= 0 for c in closes):
@@ -45,10 +50,27 @@ def classify_early(rows: list[OHLCVRecord]) -> dict | None:
             return None
         stage = 'NEW_BREAKOUT'
     return {
-        'formula_version': FORMULA_VERSION, 'stage': stage,
+        'formula_version': FORMULA_VERSION, 'stage': stage, 'rs_rating': rs_rating,
+        **cloud,
         'dema21': dema, 'ema20': e20[-1], 'ema50': e50[-1], 'ema200': e200[-1],
         'upper_bb': upper, 'adjusted_close': closes[-1], 'price_basis': 'fireant_adjusted',
         'volume_ratio': volume_ratio, 'extension_pct': extension,
         'avg_value_20': avg_value, 'current_value': current_value,
         'close': rows[-1].close,
     }
+
+
+def ichimoku_context(rows: list[OHLCVRecord]) -> dict:
+    """Cloud at the scan session: 9/26/52 spans displaced 26 sessions forward."""
+    endpoint = len(rows) - 1 - 26
+    def midpoint(period):
+        window = rows[endpoint-period+1:endpoint+1]
+        return (max(r.high/r.adj_ratio for r in window) + min(r.low/r.adj_ratio for r in window))/2
+    span_a = (midpoint(9) + midpoint(26))/2
+    span_b = midpoint(52)
+    top, bottom = max(span_a,span_b), min(span_a,span_b)
+    close = rows[-1].close/rows[-1].adj_ratio
+    position = 'ABOVE' if close > top else 'BELOW' if close < bottom else 'INSIDE'
+    green = span_a > span_b
+    return {'cloud_green':green, 'cloud_position':position, 'cloud_top':top, 'cloud_bottom':bottom,
+            'ichimoku_priority': 1 if position=='ABOVE' else 0}

@@ -214,6 +214,7 @@ def run_eod_pipeline(
             )
 
     rows = scan_universe(histories, index_history)
+    same_session_rs = {row["symbol"]: row.get("rs_rating") for row in rows}
     used_sources = {
         _display_source(record.source)
         for history in [index_history, *histories.values()]
@@ -228,7 +229,7 @@ def run_eod_pipeline(
         'scanned':len(histories),
         'rows':rows,
         'early_rows': [dict(symbol=symbol, market_date=market_date.isoformat(), **screen)
-                       for symbol, history in histories.items() if (screen := classify_early(history))],
+                       for symbol, history in histories.items() if (screen := classify_early(history, rs_rating=same_session_rs.get(symbol)))],
         'market_regime': _market_regime_payload(market_date, index_symbol, index_history, histories),
         'conflicts':conflicts,
         'primary_source': primary_source,
