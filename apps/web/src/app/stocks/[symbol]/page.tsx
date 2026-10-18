@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getScanRowBySymbol } from '@/lib/live-scan';
+import { PriceHistory } from '@/components/price-history';
 import type { Decision, ScanRow } from '@/lib/types';
 
 type StockPageProps = {
@@ -82,7 +83,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
     row.close == null ? null : ['Close', fmt(row.close)],
     ['Score', row.flow_score == null ? '-' : `${row.flow_score.toFixed(1)}%`],
     ['Label', row.flow_label || '-'],
-    ['Decision', row.decision],
+    ['Decision', row.decision_available === false ? '—' : row.decision],
   ].filter((metric): metric is [string, string] => metric != null);
 
   return (
@@ -93,7 +94,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
             Quay lại scanner
           </Link>
           <div className="detailTitle">
-            {row.symbol} / {row.decision}
+            {row.symbol} / {row.decision_available === false ? 'Lịch sử dữ liệu' : row.decision}
           </div>
           <div className="subtitle">Ngày dữ liệu {row.market_date}</div>
         </div>
@@ -133,10 +134,11 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           </div>
           <div className="detailBlock">
             <span>Invalidation</span>
-            <p>{row.invalidation || 'Giá đóng cửa dưới Stop hoặc Swing chuyển DOWN.'}</p>
+            <p>{row.invalidation || (row.stop_price == null ? 'Chưa có kế hoạch giao dịch được lưu cho phiên này.' : 'Giá đóng cửa dưới Stop hoặc Swing chuyển DOWN.')}</p>
           </div>
         </section>
       </div>
+      <PriceHistory symbol={row.symbol} marketDate={row.market_date} />
     </main>
   );
 }

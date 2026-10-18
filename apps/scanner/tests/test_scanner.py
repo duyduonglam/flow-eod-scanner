@@ -58,3 +58,9 @@ def test_daily_change_uses_current_session_reference_and_is_persisted():
     assert result[0]['change_pct'] == 25.0
     payload = build_stock_signal_payload(result, {'AAA': 1}, result[0]['market_date'])
     assert payload[0]['change_pct'] == 25.0
+
+
+def test_all_signal_history_preserves_actual_decision_and_summary():
+    payload = build_stock_signal_payload([{'symbol':'AAA','decision':'DO NOT CHASE','main_signal':'Actual computed signal','flow_score':61}], {'AAA':1}, '2026-10-19')
+    assert payload[0]['decision']=='DO NOT CHASE'
+    assert payload[0]['main_signal']=='Actual computed signal'

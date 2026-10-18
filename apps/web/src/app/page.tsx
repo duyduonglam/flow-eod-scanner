@@ -2,6 +2,8 @@ import { DashboardControls } from '@/components/dashboard-controls';
 import { MarketHeader } from '@/components/market-header';
 import { ScanSummary } from '@/components/scan-summary';
 import { ScanTable } from '@/components/scan-table';
+import { EarlyDiscoveryTable } from '@/components/early-discovery-table';
+import { getEarlyDiscoveries } from '@/lib/early-discovery';
 import { getScanRows, getSessionNews } from '@/lib/live-scan';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +23,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const isHistoryView = Boolean(searchSymbol || decisionFilter);
   const qualityRows = rows.filter((row) => row.flow_score != null && row.flow_score >= 80);
   const watchRows = rows.filter((row) => row.flow_score != null && row.flow_score >= 75 && row.flow_score < 80);
+  const early = await getEarlyDiscoveries(marketDate);
   const sessionNews = isHistoryView ? [] : await getSessionNews(marketDate);
   const stamp = searchSymbol
     ? decisionFilter
@@ -96,6 +99,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </>
       )}
 
+      {isHistoryView ? null : <EarlyDiscoveryTable rows={early.rows} status={early.status} marketDate={marketDate} />}
       {isHistoryView ? null : <ScanSummary rows={rows} news={sessionNews} marketDate={marketDate} marketRegime={marketRegime} />}
 
       <section className="notes">

@@ -16,6 +16,7 @@ class OHLCVRecord:
     volume: int
     source: str
     fetched_at: datetime | None = None
+    adj_ratio: float = 1.0
 
 @dataclass(frozen=True)
 class ValidatedPrice:

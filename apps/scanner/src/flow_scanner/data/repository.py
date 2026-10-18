@@ -143,3 +143,69 @@ class SupabaseRepository:
 
     def upsert_foreign_flow(self, row: dict) -> None:
         self._upsert("market_foreign_flows", [row], "market_date")
+
+    def _read_all(self, table: str, params: dict) -> list[dict]:
+        rows = []
+        while True:
+            response = self.session.get(
+                f'{self.url}/rest/v1/{table}',
+                params={**params, 'offset': str(len(rows)), 'limit': '1000'},
+                headers=self._headers(), timeout=60,
+            )
+            response.raise_for_status()
+            page = response.json()
+            if not page:
+                return rows
+            rows.extend(page)
+
+    def list_history_states(self) -> dict[int, dict]:
+        return {int(r['symbol_id']): r for r in self._read_all('price_history_state', {'select': '*', 'order': 'symbol_id.asc'})}
+
+    def history_symbol_ids(self) -> dict[str, int]:
+        return {r['symbol']: int(r['id']) for r in self._read_all('symbols', {'select': 'id,symbol', 'asset_type': 'eq.index', 'order': 'id.asc'})}
+
+    def read_price_history(self, symbol_id, start, end):
+        from datetime import date, datetime
+        from flow_scanner.domain.models import OHLCVRecord
+        rows = self._read_all('daily_prices', {
+            'select': 'market_date,open,high,low,close,reference,volume,source,fetched_at,adj_ratio,symbols!inner(symbol)',
+            'symbol_id': f'eq.{symbol_id}', 'source': 'eq.fireant',
+            'and': f'(market_date.gte.{start.isoformat()},market_date.lte.{end.isoformat()})',
+            'validation_status': 'eq.VALID', 'order': 'market_date.asc',
+        })
+        return [OHLCVRecord(
+            r['symbols']['symbol'], date.fromisoformat(r['market_date']),
+            float(r['open']), float(r['high']), float(r['low']), float(r['close']),
+            float(r['reference']) if r['reference'] is not None else None,
+            int(r['volume']), r['source'],
+            datetime.fromisoformat(r['fetched_at']) if r['fetched_at'] else None,
+            float(r['adj_ratio']),
+        ) for r in rows]
+
+    def save_price_history(self, symbol_id, rows, state, revisions):
+        from dataclasses import asdict
+        from datetime import datetime, timezone
+        def payload(row):
+            return {
+                'symbol_id': symbol_id, 'market_date': row.market_date.isoformat(),
+                'open': row.open, 'high': row.high, 'low': row.low, 'close': row.close,
+                'reference': row.reference, 'volume': row.volume, 'source': 'fireant',
+                'adj_ratio': row.adj_ratio, 'validation_status': 'VALID',
+                'fetched_at': (row.fetched_at or datetime.now(timezone.utc)).isoformat(),
+            }
+        # Archive previous canonical values before correction; never delete old dates.
+        if revisions:
+            archive = [{'symbol_id': symbol_id, 'market_date': r.market_date.isoformat(), 'previous_value': payload(r)} for r in revisions]
+            response = self.session.post(f'{self.url}/rest/v1/price_history_revisions', headers=self._headers({'Prefer':'return=minimal'}), json=archive, timeout=60)
+            response.raise_for_status()
+        self._upsert('daily_prices', [payload(r) for r in rows], 'symbol_id,market_date,source')
+        self._upsert('price_history_state', [state], 'symbol_id')
+
+    def start_early_run(self, market_date):
+        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'RUNNING', 'formula_version': 'early-dema-bb-v1', 'candidate_count': None, 'cache_stats': None}], 'market_date')
+
+    def publish_early_rows(self, market_date, rows, cache_stats):
+        response = self.session.delete(f'{self.url}/rest/v1/early_discoveries', params={'market_date': f'eq.{market_date}'}, headers=self._headers(), timeout=30)
+        response.raise_for_status()
+        self._upsert('early_discoveries', rows, 'market_date,symbol_id')
+        self._upsert('early_scan_runs', [{'market_date': market_date, 'status': 'COMPLETE', 'formula_version': 'early-dema-bb-v1', 'candidate_count': len(rows), 'cache_stats': cache_stats}], 'market_date')

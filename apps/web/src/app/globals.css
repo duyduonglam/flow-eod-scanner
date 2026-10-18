@@ -1752,3 +1752,12 @@ select:focus-visible {
 .marketDetail.up { color: var(--green); }
 .marketDetail.down { color: var(--red); }
 .marketLiquidity .compactMetricLine.accent { color: #007e9e; }
+
+/* Experimental radar and price history reuse the canonical table surface. */
+.earlyFormula { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.65; }
+.earlyFormula summary { cursor: pointer; font-weight: 600; }
+.earlyFormula summary:focus-visible { outline: 2px solid var(--info); outline-offset: 4px; }
+.earlyFormula p { margin: 8px 0; }
+.earlyTable { table-layout: auto; min-width: 880px; }
+.earlyTable th, .earlyTable td { padding: 12px; }
+.earlyDiscovery h2 { margin: 0; }

@@ -81,6 +81,8 @@ def build_stock_signal_payload(
 ) -> list[dict[str, Any]]:
     payload: list[dict[str, Any]] = []
     signal_fields = [
+        "decision",
+        "main_signal",
         "close",
         "change_pct",
         "flow_score",
@@ -114,6 +116,9 @@ def build_stock_signal_payload(
             mapped.pop("score_version", None)
         if row.get("score_components") is None:
             mapped.pop("score_components", None)
+        for optional in ("decision", "main_signal"):
+            if optional not in row:
+                mapped.pop(optional, None)
         payload.append(mapped)
     return payload
 

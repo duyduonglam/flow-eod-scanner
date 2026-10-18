@@ -79,4 +79,5 @@ class FireAntProvider:
             volume=int(row.get('totalVolume', row.get('volume', 0))),
             source='fireant',
             fetched_at=datetime.now().astimezone(),
+            adj_ratio=float(row.get('adjRatio', 1.0)),
         )

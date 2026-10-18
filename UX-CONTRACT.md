@@ -27,3 +27,7 @@ Inline status text is used for scan progress, success, and failure. News links o
 ## Locale
 
 Owned UI copy uses Vietnamese. Dates use ISO values for filters and `vi-VN` formatting for published news timestamps where available.
+
+## Experimental radar and history
+
+The early-discovery table reuses the canonical native table, scroll container, ticker links and status badges. Its formula uses an accessible native details/summary. A completed empty session differs from pending collection and read errors; none are replaced by demo data. Ticker history includes scores below publication thresholds. Stock detail compares raw traded close, reference-based daily price change, stored score and previous stored comparable-version score; missing historical scores remain empty. Dashboard session selection follows completed market context even when the main shortlist is empty.

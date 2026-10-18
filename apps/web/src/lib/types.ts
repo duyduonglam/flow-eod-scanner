@@ -57,6 +57,7 @@ export type ScanRow = {
   two_r: number | null;
   three_r: number | null;
   decision: Decision;
+  decision_available?: boolean;
   invalidation: string;
   rs_rating?: number | null;
   banker?: number | null;

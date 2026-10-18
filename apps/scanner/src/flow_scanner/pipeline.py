@@ -3,10 +3,13 @@ from dataclasses import asdict
 from datetime import date, timedelta
 import time
 from typing import Iterable
+from concurrent.futures import ThreadPoolExecutor
 from flow_scanner.domain.models import OHLCVRecord
 from flow_scanner.data.validator import resolve_price
 from flow_scanner.flow.market_regime import classify_market_mode
 from flow_scanner.main import scan_universe
+from flow_scanner.flow.early_discovery import classify_early
+from flow_scanner.data.history_cache import HistoryCacheError
 
 class PipelineError(RuntimeError): pass
 class ProviderRateLimitError(RuntimeError): pass
@@ -64,6 +67,8 @@ def _fetch_first_history(
                 if retry_sleep_seconds > 0:
                     time.sleep(retry_sleep_seconds)
                 continue
+            except HistoryCacheError:
+                raise
             except Exception as exc:
                 if _is_rate_limit_error(exc):
                     if attempt >= max_rate_limit_retries:
@@ -147,6 +152,7 @@ def run_eod_pipeline(
     primary_only: bool = False,
     required_source: str | None = None,
     min_coverage_ratio: float = 0.0,
+    history_workers: int = 1,
 ) -> dict:
     start = market_date - timedelta(days=history_lookback_days)
     index_histories = _fetch_first_history(
@@ -169,8 +175,8 @@ def run_eod_pipeline(
 
     histories: dict[str, list[OHLCVRecord]] = {}
     conflicts: list[dict] = []
-    for symbol in symbols:
-        candidates = _fetch_first_history(
+    def fetch_symbol(symbol):
+        return _fetch_first_history(
             providers,
             symbol,
             start,
@@ -179,6 +185,12 @@ def run_eod_pipeline(
             max_rate_limit_retries=max_rate_limit_retries,
             primary_only=primary_only,
         )
+    if history_workers > 1:
+        with ThreadPoolExecutor(max_workers=min(history_workers, 4)) as executor:
+            candidate_histories = list(executor.map(fetch_symbol, symbols))
+    else:
+        candidate_histories = [fetch_symbol(symbol) for symbol in symbols]
+    for symbol, candidates in zip(symbols, candidate_histories):
         if not candidates:
             continue
         primary = candidates[0][1]
@@ -215,6 +227,8 @@ def run_eod_pipeline(
         'market_date':market_date.isoformat(),
         'scanned':len(histories),
         'rows':rows,
+        'early_rows': [dict(symbol=symbol, market_date=market_date.isoformat(), **screen)
+                       for symbol, history in histories.items() if (screen := classify_early(history))],
         'market_regime': _market_regime_payload(market_date, index_symbol, index_history, histories),
         'conflicts':conflicts,
         'primary_source': primary_source,

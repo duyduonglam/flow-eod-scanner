@@ -186,7 +186,7 @@ export function ScanTable({
                   <RewardCell value={row.two_r} close={row.close} />
                   <RewardCell value={row.three_r} close={row.close} />
                   <td className="decision">
-                    <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>
+                    {row.decision_available === false ? <span className="muted">—</span> : <span className={`status ${decisionClass(row.decision)}`}>{row.decision}</span>}
                   </td>
                 </tr>
                 );

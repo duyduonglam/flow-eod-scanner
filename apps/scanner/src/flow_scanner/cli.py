@@ -11,6 +11,8 @@ from flow_scanner.news import attach_headline_news, build_news_payload, fetch_fi
 from flow_scanner.persistence import build_scan_result_payload, build_stock_signal_payload
 from flow_scanner.foreign_flow import fetch_foreign_flow
 from flow_scanner.pipeline import PipelineError, run_eod_pipeline
+from flow_scanner.data.history_cache import CachedPriceProvider
+from flow_scanner.flow.early_discovery import EFFECTIVE_DATE
 
 MIN_SYMBOLS_FOR_MARKET_SCAN = 0
 
@@ -67,6 +69,7 @@ def _run_with_fallback(
                 primary_only=True,
                 required_source='fireant',
                 min_coverage_ratio=0.9,
+                history_workers=4 if isinstance(providers[0], CachedPriceProvider) else 1,
             )
         except PipelineError as exc:
             last_error = exc
@@ -87,6 +90,10 @@ def main() -> None:
     parser.add_argument("--max-rate-limit-retries", type=int, default=2, help="Provider rate-limit retries per symbol/date.")
     parser.add_argument("--min-symbols", type=int, default=MIN_SYMBOLS_FOR_MARKET_SCAN, help="Refresh the market universe when Supabase has fewer active symbols. Default keeps the configured Supabase universe to avoid free-provider rate limits.")
     args = parser.parse_args()
+    requested_date = date.fromisoformat(args.date)
+    if requested_date.weekday() >= 5:
+        print(json.dumps({"status": "NO_NEW_TRADING_SESSION", "requested_date": args.date}))
+        return
 
     repo = SupabaseRepository(_env("SUPABASE_URL"), _env("SUPABASE_SERVICE_ROLE_KEY"))
     providers = build_provider_chain()
@@ -98,6 +105,17 @@ def main() -> None:
             symbols, symbol_ids = _load_symbols(repo)
     if not symbols:
         raise SystemExit("No active stock symbols found after attempting universe refresh.")
+    cache = None
+    feature_active = args.date >= EFFECTIVE_DATE
+    if feature_active:
+        if not repo.url.startswith("https://cyyffkziqiefrxmbdmyr.supabase.co"):
+            raise SystemExit("Wrong Supabase project: this runtime belongs to VNSUPERSTOCK Vercel")
+        # VNINDEX is normally already in symbols; ensure its cache has a stable FK.
+        repo._upsert("symbols", [{"symbol": "VNINDEX", "exchange": "INDEX", "asset_type": "index", "is_active": True}], "symbol")
+        cache_ids = {**symbol_ids, **repo.history_symbol_ids()}
+        cache = CachedPriceProvider(providers[0], repo, cache_ids)
+        providers = [cache, *providers[1:]]
+        repo.start_early_run(args.date)
     result = _run_with_fallback(
         date.fromisoformat(args.date),
         symbols,
@@ -106,6 +124,8 @@ def main() -> None:
         args.retry_sleep_seconds,
         args.max_rate_limit_retries,
     )
+    if cache and cache.errors:
+        raise SystemExit("History cache did not complete; refusing publication")
     market_date = str(result["market_date"])
     rows = list(result["rows"])
 
@@ -153,6 +173,16 @@ def main() -> None:
     repo.upsert_scan_rows(scan_rows)
     if news_items:
         repo.replace_news_items_for_date(market_date, news_items)
+    early_rows = []
+    if feature_active and market_date == args.date:
+        scores = {r["symbol"]: r for r in rows}
+        for early in result.get("early_rows", []):
+            item = {k: v for k, v in early.items() if k != "symbol"}
+            item["symbol_id"] = symbol_ids[early["symbol"]]
+            item["flow_score"] = scores[early["symbol"]].get("flow_score")
+            item["change_pct"] = scores[early["symbol"]].get("change_pct")
+            early_rows.append(item)
+        repo.publish_early_rows(market_date, early_rows, cache.stats)
 
     print(json.dumps({
         "status": "OK",
@@ -162,6 +192,8 @@ def main() -> None:
         "active_symbols": len(symbols),
         "refreshed_symbols": refreshed_symbols,
         "published": len(scan_rows),
+        "early_published": len(early_rows),
+        "history_cache": cache.stats if cache else None,
         "conflicts": result.get("conflicts", []),
         "primary_source": result.get("primary_source"),
         "fallback_sources_actually_used": result.get("fallback_sources_actually_used", []),

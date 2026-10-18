@@ -87,6 +87,7 @@ function normalizeRow(row: JoinedScanRow): ScanRow {
     two_r: toNumber(row.two_r),
     three_r: toNumber(row.three_r),
     decision: toDecision(row.decision),
+    decision_available: decisions.includes(row.decision as Decision),
     invalidation: toText(row.invalidation),
     rs_rating: toNumber(row.rs_rating),
     banker: toNumber(row.banker),
@@ -341,7 +342,7 @@ async function getRowsForDate(marketDate: string): Promise<ScanRow[] | null> {
     .eq('market_date', marketDate)
     .order('rank', { ascending: true });
 
-  if (error || !data?.length) return null;
+  if (error) return null;
   return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))));
 }
 
@@ -350,7 +351,7 @@ export async function getAvailableScanDates(): Promise<string[]> {
   if (!db) return [];
 
   const { data, error } = await db
-    .from('scan_results')
+    .from('market_regimes')
     .select('market_date')
     .order('market_date', { ascending: false })
     .limit(240);
@@ -374,15 +375,18 @@ export async function getScanHistoryBySymbol(symbol: string): Promise<ScanRow[]>
   if (symbolError || !symbolRow?.id) return [];
 
   const { data, error } = await db
-    .from('scan_results')
+    .from('stock_signals')
     .select('*, symbols!inner(symbol, exchange)')
     .eq('symbol_id', symbolRow.id)
     .order('market_date', { ascending: false })
-    .order('rank', { ascending: true })
     .limit(240);
 
   if (error || !data?.length) return [];
-  return prepareDisplayRows(await attachHeadlineNews(await attachSignalMetrics(data.map((row: RawScanRow) => normalizeRow(row as JoinedScanRow)))), true);
+  // Include every stored signal, even below the main publication threshold.
+  const plans = await db.from('scan_results').select('*').eq('symbol_id', symbolRow.id).order('market_date', { ascending: false }).limit(240);
+  const byDate = new Map((plans.data ?? []).map(r => [r.market_date, r]));
+  const merged = data.map((r: RawScanRow) => normalizeRow({ ...r, ...byDate.get(r.market_date), symbols: {symbol: normalizedSymbol} } as JoinedScanRow));
+  return sortRowsByHistoryDate(await attachHeadlineNews(merged));
 }
 
 export async function getScanHistoryByDecision(decision: DecisionFilter): Promise<ScanRow[]> {
@@ -479,9 +483,9 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
     };
   }
 
-  if (marketDate) {
+  if (marketDate && dates.includes(marketDate)) {
     const selectedRows = await getRowsForDate(marketDate);
-    if (selectedRows?.length) {
+    if (selectedRows !== null) {
       const rows = selectedRows.filter((row) => !decisionFilter || row.decision === decisionFilter);
       return {
         rows,
@@ -507,6 +511,17 @@ export async function getScanRows(marketDate?: string | null, symbolQuery?: stri
       searchSymbol: null,
       decisionFilter,
       marketRegime: null,
+    };
+  }
+
+  // A completed session can legitimately have no main-list candidates.
+  // Its date must still own the market snapshot and experimental screen.
+  if (dates[0]) {
+    const rows = await getRowsForDate(dates[0]);
+    if (rows !== null) return {
+      rows, dataStatus: 'LIVE', marketDate: dates[0], source: 'live' as const,
+      dates, searchSymbol: null, decisionFilter: null,
+      marketRegime: await getMarketRegime(dates[0]),
     };
   }
 
@@ -545,11 +560,17 @@ export async function getLatestScanRows() {
 export async function getScanRowBySymbol(symbol: string, marketDate?: string | null) {
   const normalizedSymbol = normalizeTickerQuery(symbol);
   if (!normalizedSymbol) return null;
-  if (!marketDate) {
-    const rows = await getScanHistoryBySymbol(normalizedSymbol);
-    return rows[0] ?? null;
-  }
-  const { rows } = await getScanRows(marketDate);
-  return rows.find((row) => row.symbol.toUpperCase() === normalizedSymbol) ?? null;
+  const history = await getScanHistoryBySymbol(normalizedSymbol);
+  const saved = marketDate ? history.find(row => row.market_date === marketDate) : history[0];
+  if (saved) return saved;
+  // New/short-history stocks may have valid prices before a score is computable.
+  const db = getSupabase();
+  if (!db) return null;
+  const stock = await db.from('symbols').select('id').eq('symbol', normalizedSymbol).maybeSingle();
+  if (!stock.data) return null;
+  let query = db.from('daily_prices').select('market_date,close').eq('symbol_id', stock.data.id).eq('source', 'fireant').eq('validation_status', 'VALID');
+  if (marketDate) query = query.eq('market_date', marketDate);
+  const price = await query.order('market_date', {ascending: false}).limit(1).maybeSingle();
+  return price.data ? normalizeRow({...price.data, symbol: normalizedSymbol, main_signal: 'Chưa có điểm được lưu cho phiên này', flow_label: 'N/A'}) : null;
 }
 
